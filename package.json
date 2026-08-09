@@ -1,0 +1,34 @@
+{
+  "name": "ollama-2",
+  "productName": "OlinaAI",
+  "version": "1.0.0",
+  "description": "OlinaAI: a fast, private, cross-platform AI assistant desktop app built with Electron and Vite, supporting multiple models (Ollama, OpenAI, OpenCode) with streaming, themes, file uploads, and image (vision) support.",
+  "main": "out/main/index.js",
+  "author": "OlinaAI",
+  "license": "MIT",
+  "homepage": "https://github.com/OlinaAI/OlinaAI",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OlinaAI/OlinaAI.git"
+  },
+  "bugs": {
+    "url": "https://github.com/OlinaAI/OlinaAI/issues"
+  },
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "start": "electron-vite preview"
+  },
+  "devDependencies": {
+    "electron": "^43.3.0",
+    "electron-vite": "^5.0.0",
+    "vite": "^8.2.1"
+  },
+  "allowScripts": {
+    "electron@43.3.0": true
+  },
+  "dependencies": {
+    "highlight.js": "^11.11.1"
+  }
+}
