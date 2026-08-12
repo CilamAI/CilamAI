@@ -30,9 +30,9 @@ WizardSmallImageFile=..\resources\installer-small.bmp
 Source: "..\release\win-unpacked\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{group}\CilamAI"; Filename: "{app}\CilamAI.exe"
+Name: "{group}\CilamAI"; Filename: "{app}\CilamAI.exe"; IconFilename: "{app}\CilamAI.exe"
 Name: "{group}\Uninstall CilamAI"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\CilamAI"; Filename: "{app}\CilamAI.exe"; Tasks: desktopicon
+Name: "{autodesktop}\CilamAI"; Filename: "{app}\CilamAI.exe"; IconFilename: "{app}\CilamAI.exe"; Tasks: desktopicon
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"; Flags: unchecked
