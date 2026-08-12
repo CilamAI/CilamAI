@@ -1,34 +1,55 @@
 {
-  "name": "ollama-2",
-  "productName": "OlinaAI",
-  "version": "1.0.0",
-  "description": "OlinaAI: a fast, private, cross-platform AI assistant desktop app built with Electron and Vite, supporting multiple models (Ollama, OpenAI, OpenCode) with streaming, themes, file uploads, and image (vision) support.",
+  "name": "cilamai",
+  "productName": "CilamAI",
+  "description": "CilamAI Desktop App",
+  "version": "0.1.0",
+  "type": "module",
   "main": "out/main/index.js",
-  "author": "OlinaAI",
-  "license": "MIT",
-  "homepage": "https://github.com/OlinaAI/OlinaAI",
+  "bin": {
+    "cilamai": "bin/cilamai.js"
+  },
+  "author": "CilamAI",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/OlinaAI/OlinaAI.git"
+    "url": "https://github.com/CilamAI/CilamAI.git"
   },
-  "bugs": {
-    "url": "https://github.com/OlinaAI/OlinaAI/issues"
-  },
+  "files": [
+    "bin",
+    "out",
+    "resources",
+    "LICENSE"
+  ],
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "start": "electron-vite preview"
+    "start": "electron-vite preview",
+    "dist": "electron-vite build && electron-builder --win --x64",
+    "iss": "node scripts/iss.mjs",
+    "console": "electron Console/console.js"
+  },
+  "build": {
+    "appId": "com.cilamai.desktop",
+    "productName": "CilamAI",
+    "win": {
+      "target": "dir"
+    },
+    "directories": {
+      "output": "release"
+    }
   },
   "devDependencies": {
     "electron": "^43.3.0",
+    "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
-    "vite": "^8.2.1"
+    "vite": "^7.3.6"
   },
   "allowScripts": {
     "electron@43.3.0": true
   },
   "dependencies": {
-    "highlight.js": "^11.11.1"
+    "highlight.js": "^11.11.1",
+    "pngjs": "^7.0.0"
   }
 }

