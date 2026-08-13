@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CilamAI Library - MiMo V2.5</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-white dark:bg-black text-gray-900 dark:text-gray-100 min-h-screen flex flex-col">
+
+    <!-- Navigation -->
+    <nav class="relative flex items-center justify-between px-6 py-4 max-w-[1440px] mx-auto w-full">
+        <!-- Left: Logo and Links -->
+        <div class="flex items-center gap-8">
+            <a href="desktop.html" class="flex items-center gap-2">
+                <img src="https://file.garden/aPSLaf7myCkWreuK/Untitled_design__9_-removebg-preview.png"
+                    alt="CilamAI Logo" class="w-8 h-8 object-contain">
+                <span class="font-bold text-lg text-gray-900 dark:text-white">CilamAI</span>
+            </a>
+            <div class="hidden md:flex gap-6 text-sm font-medium text-gray-700 dark:text-gray-300">
+                <a href="models.html" class="hover:text-black dark:hover:text-white transition-colors">Models</a>
+                <a href="docs.html" class="hover:text-black dark:hover:text-white transition-colors">Docs</a>
+            </div>
+        </div>
+
+        <!-- Right: Theme & Action -->
+        <div class="flex items-center gap-3">
+            <a href="https://github.com/CilamAI/CilamAI" target="_blank" rel="noopener noreferrer" class="p-2 text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-[#111111] focus:outline-none" title="GitHub Repository">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" /></svg>
+            </a>
+            <button onclick="toggleTheme()"
+                class="p-2 text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none"
+                title="Toggle Dark/Light Mode">
+                <svg id="theme-sun" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <svg id="theme-moon" class="w-5 h-5 block" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+            </button>
+            <a href="thanks.html"
+                class="text-sm font-medium bg-[#1c1c1c] dark:bg-white text-white dark:text-gray-900 px-5 py-2 rounded-full hover:bg-black dark:hover:bg-gray-100 transition-colors">Download</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-[900px] w-full mx-auto px-6 py-12">
+
+        <!-- Model Header -->
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-3">mimo-v2.5</h1>
+            <div class="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-3">
+                <span class="flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Updated 2 days ago
+                </span>
+            </div>
+            <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4">MiMo V2.5 is an advanced AI coding
+                &amp; reasoning model fine‑tuned for high efficiency and fast local inference.</p>
+            <div class="flex items-center gap-2">
+                <span
+                    class="bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/50 text-xs font-medium px-2.5 py-0.5 rounded-full">code</span>
+                <span
+                    class="bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/50 text-xs font-medium px-2.5 py-0.5 rounded-full">thinking</span>
+                <span
+                    class="bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/50 dark:border-amber-800/50 text-xs font-medium px-2.5 py-0.5 rounded-full">CilamAI</span>
+            </div>
+        </div>
+
+        <!-- Divider -->
+        <hr class="border-gray-200 dark:border-[#222222] my-6">
+
+        <!-- Stats Card -->
+        <div class="border border-gray-200 dark:border-[#222222] rounded-xl overflow-hidden">
+            <div class="grid grid-cols-3 divide-x divide-gray-200 dark:divide-gray-800">
+                <!-- Usage -->
+                <div class="p-5">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Usage</p>
+                    <div class="flex items-center gap-1 mb-1.5">
+                        <span class="w-4 h-2 rounded-full bg-gray-900 dark:bg-white"></span>
+                        <span class="w-4 h-2 rounded-full bg-gray-900 dark:bg-white"></span>
+                        <span class="w-4 h-2 rounded-full bg-gray-900 dark:bg-white"></span>
+                    </div>
+                    <p class="text-sm font-medium text-green-600 dark:text-green-400">high</p>
+                </div>
+                <!-- Context -->
+                <div class="p-5">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Context</p>
+                    <p class="text-xl font-bold text-gray-900 dark:text-white">128K</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">tokens</p>
+                </div>
+                <!-- Size -->
+                <div class="p-5">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Size</p>
+                    <p class="text-xl font-bold text-gray-900 dark:text-white">14B</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">parameters</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Readme -->
+        <div class="mt-12">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Readme</h2>
+            <div class="rounded-xl overflow-hidden">
+                <div class="p-0">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">mimo-v2.5</h3>
+                    <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4">MiMo V2.5 is an advanced AI coding &amp; reasoning model fine-tuned for high efficiency and fast local inference. Run it entirely offline on your computer with CilamAI.</p>
+                    <div class="space-y-4">
+                        <div class="bg-gray-50 dark:bg-[#15161a] border border-gray-200 dark:border-[#26282e] rounded-lg p-4 shadow-sm">
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-500 mb-2">Install</p>
+                            <code class="text-sm font-mono text-gray-900 dark:text-gray-200"><span class="text-gray-400 dark:text-gray-500 select-none">$</span> npm install</code>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-[#15161a] border border-gray-200 dark:border-[#26282e] rounded-lg p-4 shadow-sm">
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-500 mb-2">Run</p>
+                            <code class="text-sm font-mono text-gray-900 dark:text-gray-200"><span class="text-gray-400 dark:text-gray-500 select-none">$</span> npm start</code>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-[#15161a] border border-gray-200 dark:border-[#26282e] rounded-lg p-4 shadow-sm">
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-500 mb-3">Features</p>
+                            <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                                <li>Open-source and free</li>
+                                <li>Runs fully offline</li>
+                                <li>128K context window</li>
+                                <li>14B parameters</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Applications -->
+        <div class="mt-12">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Applications</h2>
+            <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-6">Use MiMo V2.5 with your favorite tools and platforms.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <a href="#" class="group border border-gray-200 dark:border-[#222222] rounded-xl p-5 hover:border-gray-400 dark:hover:border-gray-600 transition-colors">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-9 h-9 rounded-lg bg-gray-100 dark:bg-[#111111] flex items-center justify-center">
+                            <img src="logos/opencode.png" alt="opencode logo" class="w-6 h-6 object-contain">
+                        </div>
+                        <h3 class="text-base font-semibold text-gray-900 dark:text-white group-hover:underline">opencode</h3>
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Terminal-first AI coding agent that runs models locally.</p>
+                </a>
+                <a href="#" class="group border border-gray-200 dark:border-[#222222] rounded-xl p-5 hover:border-gray-400 dark:hover:border-gray-600 transition-colors">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-9 h-9 rounded-lg bg-gray-100 dark:bg-[#111111] flex items-center justify-center">
+                            <img src="logos/claude.png" alt="Claude logo" class="w-6 h-6 object-contain">
+                        </div>
+                        <h3 class="text-base font-semibold text-gray-900 dark:text-white group-hover:underline">Claude</h3>
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Anthropic's assistant for chat, code, and analysis.</p>
+                </a>
+                <a href="#" class="group border border-gray-200 dark:border-[#222222] rounded-xl p-5 hover:border-gray-400 dark:hover:border-gray-600 transition-colors">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-9 h-9 rounded-lg bg-gray-100 dark:bg-[#111111] flex items-center justify-center">
+                            <img src="logos/grok.png" alt="Grok logo" class="w-6 h-6 object-contain">
+                        </div>
+                        <h3 class="text-base font-semibold text-gray-900 dark:text-white group-hover:underline">Grok</h3>
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">xAI's conversational model with real-time awareness.</p>
+                </a>
+                <a href="#" class="group border border-gray-200 dark:border-[#222222] rounded-xl p-5 hover:border-gray-400 dark:hover:border-gray-600 transition-colors">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-9 h-9 rounded-lg bg-gray-100 dark:bg-[#111111] flex items-center justify-center">
+                            <img src="logos/github.png" alt="GitHub logo" class="w-6 h-6 object-contain dark:invert">
+                        </div>
+                        <h3 class="text-base font-semibold text-gray-900 dark:text-white group-hover:underline">GitHub</h3>
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Where code lives — clone, build, and share your work.</p>
+                </a>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        function applyTheme(isDark) {
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('theme-sun')?.classList.remove('hidden');
+                document.getElementById('theme-moon')?.classList.add('hidden');
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('theme-sun')?.classList.add('hidden');
+                document.getElementById('theme-moon')?.classList.remove('hidden');
+            }
+        }
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('cilamai-theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+            applyTheme(isDark);
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const newTheme = isDark ? 'light' : 'dark';
+            localStorage.setItem('cilamai-theme', newTheme);
+            applyTheme(!isDark);
+        }
+
+        initTheme();
+    </script>
+
+</body>
+
+</html>

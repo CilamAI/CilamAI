@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CilamAI</title>
+  <link rel="icon" href="./assets/favicon-C0RpBe3M.ico" />
+  <script type="module" crossorigin src="./assets/index-CO6hcLQV.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-imd-2yuQ.css">
+</head>
+
+<body>
+  <div class="startup-loading" id="startup-loading">
+  </div>
+
+  <section class="onboarding" data-onboarding hidden>
+    <div class="onboarding-content">
+      <div class="onboarding-illustration" data-onboarding-illustration aria-hidden="true"></div>
+      <h1 data-onboarding-title>Welcome to CilamAI</h1>
+      <p data-onboarding-subtitle>Let's get you set up.</p>
+    </div>
+    <div class="onboarding-controls">
+      <div class="onboarding-actions">
+        <button type="button" class="onboarding-back" data-onboarding-back hidden><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3M7 4 3 8l4 4" /></svg> Back</button>
+        <button type="button" class="onboarding-next" data-onboarding-next>Get Started <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8 4l4 4-4 4" /></svg></button>
+      </div>
+      <div class="onboarding-dots" data-onboarding-dots aria-label="Onboarding progress"></div>
+    </div>
+  </section>
+
+  <div class="titlebar">
+    <span class="titlebar-title">
+      <img src="./assets/favicon-C0RpBe3M.ico" alt="" class="titlebar-icon" />
+      <span>CilamAI</span>
+    </span>
+    <nav class="titlebar-menu">
+      <div class="tb-menu-item" data-menu="file">
+        <span>File</span>
+        <div class="tb-menu-dropdown">
+          <button type="button" data-action="upload">Upload</button>
+          <button type="button" data-action="screenshot">Screenshot</button>
+        </div>
+      </div>
+      <div class="tb-menu-item" data-menu="view">
+        <span>View</span>
+        <div class="tb-menu-dropdown">
+          <button type="button" data-action="settings">Settings</button>
+          <button type="button" data-action="search">Search</button>
+          <button type="button" data-action="new-chat">New Chat</button>
+          <div class="tb-submenu">
+            <button type="button" class="tb-submenu-toggle">Model
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="m9 18 6-6-6-6" />
+              </svg>
+            </button>
+            <div class="tb-submenu-menu"></div>
+          </div>
+        </div>
+      </div>
+      <div class="tb-menu-item" data-menu="window">
+        <span>Window</span>
+        <div class="tb-menu-dropdown">
+          <button type="button" data-action="minimize">Minimize</button>
+          <button type="button" data-action="maximize">Maximize</button>
+          <button type="button" data-action="restore">Restore</button>
+          <hr />
+          <button type="button" data-action="close">Close</button>
+        </div>
+      </div>
+      <div class="tb-menu-item" data-menu="help">
+        <span>Help</span>
+        <div class="tb-menu-dropdown">
+          <button type="button" data-action="help">CilamAI</button>
+          <button type="button" data-action="release-notes">Release Notes</button>
+          <button type="button" data-action="check-updates">Check for Updates</button>
+        </div>
+      </div>
+    </nav>
+    <div class="titlebar-controls">
+      <button type="button" class="tb-btn" data-win-min aria-label="Minimize">
+        <svg viewBox="0 0 10 10" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.2">
+          <line x1="0.5" y1="5" x2="9.5" y2="5" />
+        </svg>
+      </button>
+      <button type="button" class="tb-btn" data-win-max aria-label="Maximize">
+        <svg class="tb-max" viewBox="0 0 10 10" width="10" height="10" fill="none" stroke="currentColor"
+          stroke-width="1.2">
+          <rect x="0.5" y="0.5" width="9" height="9" rx="1" />
+        </svg>
+        <svg class="tb-restore" viewBox="0 0 10 10" width="10" height="10" fill="none" stroke="currentColor"
+          stroke-width="1.2" hidden>
+          <path d="M3 3h6.5v6.5H3z" />
+          <path d="M7 3V1.5H1v6H2.5" />
+        </svg>
+      </button>
+      <button type="button" class="tb-btn tb-close" data-win-close aria-label="Close">
+        <svg viewBox="0 0 10 10" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.2">
+          <line x1="0.5" y1="0.5" x2="9.5" y2="9.5" />
+          <line x1="9.5" y1="0.5" x2="0.5" y2="9.5" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <nav class="icon-rail" aria-label="Navigation">
+    <button class="rail-btn" data-view="chat" data-reset="true" aria-label="New Chat">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+      </svg>
+    </button>
+    <button class="rail-btn" data-view="chat" aria-label="Launch">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path
+          d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z" />
+      </svg>
+    </button>
+    <button class="rail-btn" data-search-toggle aria-label="Search">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="7" />
+        <path d="m21 21-4.3-4.3" />
+      </svg>
+    </button>
+    <button class="rail-btn" data-view="settings" aria-label="Settings">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3" />
+        <path
+          d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0 .33-1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+      </svg>
+    </button>
+    <div class="rail-spacer"></div>
+    <button class="rail-btn" id="github-btn" aria-label="GitHub">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+        <path
+          d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+      </svg>
+    </button>
+    <button class="rail-btn" data-credit-toggle aria-label="Credits">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="8" cy="8" r="6" />
+        <path d="M18.09 10.37A6 6 0 1 1 10.34 18" />
+        <path d="M7 6h1v4" />
+        <path d="m16.71 13.88.7.71-2.82 2.82" />
+      </svg>
+    </button>
+  </nav>
+
+  <main class="main">
+    <h1 class="welcome-text" data-i18n="welcomeTitle">How can I help you today?</h1>
+
+    <div class="chat"></div>
+    <button type="button" class="scroll-bottom-btn" aria-label="Scroll to bottom">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="19" x2="12" y2="5" />
+        <polyline points="5 12 12 5 19 12" />
+      </svg>
+    </button>
+
+    <div class="session-loading" hidden>
+      <svg class="search-loader md3-loader" viewBox="0 0 50 50">
+        <circle class="md3-loader-circle md3-loader-path" cx="25" cy="25" r="20"></circle>
+      </svg>
+      <span class="loading-text" data-i18n="loading">Loading...</span>
+    </div>
+
+    <section class="search-page" hidden>
+      <div class="search-page-head">
+        <input type="text" class="search-page-input" placeholder="Search messages..."
+          data-i18n-placeholder="searchPlaceholder" />
+        <button type="button" class="search-clear-btn" data-search-clear data-i18n="clearAll" hidden></button>
+      </div>
+      <div class="search-page-count" hidden></div>
+      <div class="search-page-loading" hidden>
+        <svg class="search-loader md3-loader" viewBox="0 0 50 50">
+          <circle class="md3-loader-circle md3-loader-path" cx="25" cy="25" r="20"></circle>
+        </svg>
+      </div>
+      <div class="search-page-empty" data-i18n="searchNoResults" hidden></div>
+      <div class="search-page-results"></div>
+    </section>
+
+    <div class="limited-banner" hidden>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <span data-i18n="limitedOutput">Limited output: credits exhausted.</span>
+    </div>
+
+    <form class="composer">
+      <div class="composer-files" hidden></div>
+      <div class="commands-menu" hidden>
+        <button type="button" class="command-item" data-command="/clear">
+          <span>clear</span><span class="command-desc">Clear conversation</span>
+        </button>
+        <button type="button" class="command-item" data-command="/model">
+          <span>model</span><span class="command-desc">Switch model</span>
+        </button>
+        <button type="button" class="command-item" data-command="/search">
+          <span>search</span><span class="command-desc">Search sessions</span>
+        </button>
+        <button type="button" class="command-item" data-command="/settings">
+          <span>settings</span><span class="command-desc">Open settings</span>
+        </button>
+      </div>
+      <input type="text" placeholder="Send a message" class="composer-input" data-i18n="placeholder" />
+      <div class="composer-actions">
+        <div class="attach-menu-wrap">
+          <button type="button" class="composer-btn attach" aria-label="Attach" data-attach-toggle>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </button>
+          <div class="attach-menu" hidden>
+            <button type="button" class="attach-menu-item" data-upload>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+              </svg>
+              <span data-i18n="uploadFile">Upload File</span>
+            </button>
+            <button type="button" class="attach-menu-item" data-screenshot>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+              <span data-i18n="takeScreenshot">Take a Screenshot</span>
+            </button>
+          </div>
+        </div>
+        <div class="model-select">
+          <button type="button" class="model-select-btn" aria-label="Model" data-model-toggle>
+            <span class="model-name">MiMo V2.5</span>
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
+          <div class="model-menu" hidden>
+            <div class="model-options">
+              <button type="button" class="model-option">gemma4:26b</button>
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="composer-btn send" aria-label="Send">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="19" x2="12" y2="5" />
+            <polyline points="5 12 12 5 19 12" />
+          </svg>
+        </button>
+        <button type="button" class="composer-btn stop" aria-label="Stop" hidden>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <rect x="6" y="6" width="12" height="12" rx="2" />
+          </svg>
+        </button>
+      </div>
+    </form>
+
+    <section class="settings-view" hidden>
+      <h2 data-i18n="settings">Settings</h2>
+      <div class="setting-field theme-setting">
+        <span data-i18n="theme">Theme</span>
+        <div class="theme-options">
+          <label class="theme-card">
+            <input type="radio" name="theme" value="dark" />
+            <svg viewBox="0 0 96 60" class="theme-preview" aria-hidden="true">
+              <rect width="96" height="60" rx="8" fill="#121212" />
+              <rect x="4" y="4" width="22" height="52" rx="6" fill="#1c1c1c" />
+              <rect x="8" y="10" width="14" height="5" rx="2.5" fill="#2a2a2a" />
+              <rect x="8" y="20" width="14" height="5" rx="2.5" fill="#2a2a2a" />
+              <rect x="30" y="10" width="38" height="7" rx="3.5" fill="#2a2a2a" />
+              <rect x="30" y="24" width="60" height="12" rx="6" fill="#2a2a2a" />
+              <circle cx="86" cy="48" r="4" fill="#f0f0f0" />
+            </svg>
+            <span data-i18n="dark">Dark</span>
+          </label>
+          <label class="theme-card">
+            <input type="radio" name="theme" value="system" />
+            <svg viewBox="0 0 96 60" class="theme-preview" aria-hidden="true">
+              <rect width="48" height="60" x="0" rx="8" fill="#ffffff" />
+              <rect width="48" height="60" x="48" fill="#121212" />
+              <rect x="4" y="4" width="22" height="52" rx="6" fill="#f2f2f2" />
+              <rect x="52" y="4" width="22" height="52" rx="6" fill="#1c1c1c" />
+              <rect x="30" y="10" width="14" height="7" rx="3.5" fill="#e6e6e6" />
+              <rect x="30" y="24" width="14" height="12" rx="6" fill="#e6e6e6" />
+              <rect x="78" y="10" width="14" height="7" rx="3.5" fill="#2a2a2a" />
+              <rect x="78" y="24" width="14" height="12" rx="6" fill="#2a2a2a" />
+              <circle cx="86" cy="48" r="4" fill="#121212" />
+            </svg>
+            <span data-i18n="system">System</span>
+          </label>
+          <label class="theme-card">
+            <input type="radio" name="theme" value="light" />
+            <svg viewBox="0 0 96 60" class="theme-preview" aria-hidden="true">
+              <rect width="96" height="60" rx="8" fill="#ffffff" />
+              <rect x="4" y="4" width="22" height="52" rx="6" fill="#f2f2f2" />
+              <rect x="8" y="10" width="14" height="5" rx="2.5" fill="#e6e6e6" />
+              <rect x="8" y="20" width="14" height="5" rx="2.5" fill="#e6e6e6" />
+              <rect x="30" y="10" width="38" height="7" rx="3.5" fill="#e6e6e6" />
+              <rect x="30" y="24" width="60" height="12" rx="6" fill="#e6e6e6" />
+              <circle cx="86" cy="48" r="4" fill="#111111" />
+            </svg>
+            <span data-i18n="light">Light</span>
+          </label>
+          <label class="theme-card">
+            <input type="radio" name="theme" value="blue" />
+            <svg viewBox="0 0 96 60" class="theme-preview" aria-hidden="true">
+              <rect width="96" height="60" rx="8" fill="#0d1524" />
+              <rect x="4" y="4" width="22" height="52" rx="6" fill="#16233c" />
+              <rect x="8" y="10" width="14" height="5" rx="2.5" fill="#223252" />
+              <rect x="8" y="20" width="14" height="5" rx="2.5" fill="#223252" />
+              <rect x="30" y="10" width="38" height="7" rx="3.5" fill="#223252" />
+              <rect x="30" y="24" width="60" height="12" rx="6" fill="#223252" />
+              <circle cx="86" cy="48" r="4" fill="#4d9fff" />
+            </svg>
+            <span data-i18n="blue">Blue</span>
+          </label>
+          <label class="theme-card">
+            <input type="radio" name="theme" value="red" />
+            <svg viewBox="0 0 96 60" class="theme-preview" aria-hidden="true">
+              <rect width="96" height="60" rx="8" fill="#1c0d0d" />
+              <rect x="4" y="4" width="22" height="52" rx="6" fill="#331616" />
+              <rect x="8" y="10" width="14" height="5" rx="2.5" fill="#4a2020" />
+              <rect x="8" y="20" width="14" height="5" rx="2.5" fill="#4a2020" />
+              <rect x="30" y="10" width="38" height="7" rx="3.5" fill="#4a2020" />
+              <rect x="30" y="24" width="60" height="12" rx="6" fill="#4a2020" />
+              <circle cx="86" cy="48" r="4" fill="#ff5a5a" />
+            </svg>
+            <span data-i18n="red">Red</span>
+          </label>
+          <label class="theme-card">
+            <input type="radio" name="theme" value="yellow" />
+            <svg viewBox="0 0 96 60" class="theme-preview" aria-hidden="true">
+              <rect width="96" height="60" rx="8" fill="#171407" />
+              <rect x="4" y="4" width="22" height="52" rx="6" fill="#2b250e" />
+              <rect x="8" y="10" width="14" height="5" rx="2.5" fill="#3f3618" />
+              <rect x="8" y="20" width="14" height="5" rx="2.5" fill="#3f3618" />
+              <rect x="30" y="10" width="38" height="7" rx="3.5" fill="#3f3618" />
+              <rect x="30" y="24" width="60" height="12" rx="6" fill="#3f3618" />
+              <circle cx="86" cy="48" r="4" fill="#f5c518" />
+            </svg>
+            <span data-i18n="yellow">Yellow</span>
+          </label>
+          <label class="theme-card">
+            <input type="radio" name="theme" value="green" />
+            <svg viewBox="0 0 96 60" class="theme-preview" aria-hidden="true">
+              <rect width="96" height="60" rx="8" fill="#0c1710" />
+              <rect x="4" y="4" width="22" height="52" rx="6" fill="#12261a" />
+              <rect x="8" y="10" width="14" height="5" rx="2.5" fill="#1a3524" />
+              <rect x="8" y="20" width="14" height="5" rx="2.5" fill="#1a3524" />
+              <rect x="30" y="10" width="38" height="7" rx="3.5" fill="#1a3524" />
+              <rect x="30" y="24" width="60" height="12" rx="6" fill="#1a3524" />
+              <circle cx="86" cy="48" r="4" fill="#3ddc84" />
+            </svg>
+            <span data-i18n="green">Green</span>
+          </label>
+          <label class="theme-card">
+            <input type="radio" name="theme" value="black" />
+            <svg viewBox="0 0 96 60" class="theme-preview" aria-hidden="true">
+              <rect width="96" height="60" rx="8" fill="#000000" />
+              <rect x="4" y="4" width="22" height="52" rx="6" fill="#000000" />
+              <rect x="8" y="10" width="14" height="5" rx="2.5" fill="#1a1a1a" />
+              <rect x="8" y="20" width="14" height="5" rx="2.5" fill="#1a1a1a" />
+              <rect x="30" y="10" width="38" height="7" rx="3.5" fill="#1a1a1a" />
+              <rect x="30" y="24" width="60" height="12" rx="6" fill="#1a1a1a" />
+              <circle cx="86" cy="48" r="4" fill="#f0f0f0" />
+            </svg>
+            <span data-i18n="black">Black</span>
+          </label>
+        </div>
+      </div>
+      <hr class="setting-divider" />
+      <div class="setting-field">
+        <h3 class="setting-section" data-i18n="startup">Startup</h3> <label class="setting-check">
+          <input type="checkbox" id="startup-launch" />
+          <span class="switch" aria-hidden="true"><span class="switch-thumb"></span></span>
+          <span data-i18n="launchStartup">Launch on startup</span>
+        </label>
+
+      </div>
+      <hr class="setting-divider" />
+      <div class="setting-field">
+        <h3 class="setting-section" data-i18n="font">Font</h3>
+        <div class="setting-row">
+          <span data-i18n="chatTextSize">Chat text size</span>
+          <div class="font-select">
+            <button type="button" class="font-select-btn" id="font-select-toggle">
+              <span id="font-select-label">Default (14px)</span>
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </button>
+            <div class="font-select-menu" hidden>
+              <button type="button" class="font-option" data-font-size="13">Small (13px)</button>
+              <button type="button" class="font-option" data-font-size="14">Default (14px)</button>
+              <button type="button" class="font-option" data-font-size="15">Large (15px)</button>
+              <button type="button" class="font-option" data-font-size="17">Extra large (17px)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <hr class="setting-divider" />
+      <div class="setting-field">
+        <h3 class="setting-section" data-i18n="language">Language</h3>
+        <div class="setting-row">
+          <span data-i18n="appLanguage">App language</span>
+          <div class="lang-select">
+            <button type="button" class="lang-select-btn" id="lang-select-toggle">
+              <span id="lang-select-label">English</span>
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </button>
+            <div class="lang-select-menu" hidden>
+              <button type="button" class="lang-option" data-lang="en">English</button>
+              <button type="button" class="lang-option" data-lang="ko">Korean</button>
+              <button type="button" class="lang-option" data-lang="tr">Turkish</button>
+              <button type="button" class="lang-option" data-lang="ru">Russian</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="setting-divider" />
+      <div class="setting-field">
+        <div class="setting-head">
+          <h3 class="setting-section" data-i18n="hotkeys">Hotkeys</h3>
+        </div>
+        <p class="setting-desc" data-i18n="hotkeysDesc">Click a shortcut to record a new key combination.</p>
+        <div class="hotkeys-list" id="hotkeys-list"></div>
+        <div class="hotkeys-actions">
+          <button type="button" class="setting-btn" id="reset-hotkeys" data-i18n="resetToDefaults">Reset to
+            defaults</button>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="help-view" hidden>
+      <h2 data-i18n="help">Help</h2>
+      <div class="help-section">
+        <div class="about-header">
+          <img src="./assets/favicon-C0RpBe3M.ico" alt="" class="about-icon" />
+          <div class="about-title">
+            <h3 data-i18n="about">About</h3>
+            <p class="about-app-name">CilamAI</p>
+            <p class="help-version">Version</p>
+          </div>
+        </div>
+        <p class="help-text" data-i18n="aboutText">CilamAI is a desktop AI chat application powered by local and cloud
+          models.</p>
+      </div>
+      <div class="help-section">
+        <h3 data-i18n="keyboardShortcuts">Keyboard Shortcuts</h3>
+        <div class="help-shortcuts">
+          <div class="help-shortcut"><span data-i18n="newChat">New Chat</span><kbd>Ctrl + N</kbd></div>
+          <div class="help-shortcut"><span data-i18n="settings">Settings</span><kbd>Ctrl + ,</kbd></div>
+          <div class="help-shortcut"><span data-i18n="search">Search</span><kbd>Ctrl + F</kbd></div>
+          <div class="help-shortcut"><span data-i18n="send">Send</span><kbd>Enter</kbd></div>
+          <div class="help-shortcut"><span data-i18n="stop">Stop</span><kbd>Esc</kbd></div>
+        </div>
+      </div>
+      <div class="help-section">
+        <h3 data-i18n="links">Links</h3>
+        <div class="help-links">
+          <a class="help-link" href="https://github.com/CilamAI/CilamAI" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+              <path
+                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+            </svg>
+            <span data-i18n="github">GitHub</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="release-notes-view" hidden>
+      <div class="release-loading" hidden>
+        <svg class="md3-loader" viewBox="0 0 50 50">
+          <circle class="md3-loader-circle md3-loader-path" cx="25" cy="25" r="20"></circle>
+        </svg>
+      </div>
+      <div class="release-body">
+        <div class="release-layout">
+          <aside class="release-date-list">
+            <div class="release-date-list-header">In this update</div>
+            <div class="release-date-item active" data-date="v0.1.0">
+              <span class="release-item-version">v0.1.0</span>
+              <span class="release-item-date">August 12, 2026</span>
+            </div>
+          </aside>
+          <div class="release-content">
+            <div class="release-section" data-date="v0.1.0">
+              <div class="release-version-header">
+                <h3>v0.1.0</h3>
+                <span class="release-version-date">August 12, 2026</span>
+              </div>
+              <img class="release-screenshot" src="./assets/release-notes-design-D0llPOhq.jpg"
+                alt="Release notes design" />
+              <h4>New Features</h4>
+              <ul class="release-list">
+                <li>Initial release of CilamAI desktop chat application</li>
+                <li>Real-time streaming responses for instant feedback</li>
+                <li>Multi-language support: English, Korean, Turkish, Russian</li>
+                <li>File upload functionality for document sharing in chat</li>
+                <li>Screenshot capture tool integrated into chat</li>
+                <li>Session search and history management</li>
+                <li>Model selection and switching between available models</li>
+                <li>Credit/usage tracking with 24-hour reset cycle</li>
+                <li>Context window display showing token usage (0/200K)</li>
+                <li>Notification system with error, warning, and info states</li>
+                <li>Help menu with keyboard shortcuts and links</li>
+                <li>GitHub integration for repository access</li>
+              </ul>
+              <h4>Customization</h4>
+              <ul class="release-list">
+                <li>Multiple theme options: Dark, Light, System, Blue, Red, Yellow, Green, Black</li>
+                <li>Adjustable chat text size (Small, Default, Large, Extra Large)</li>
+                <li>Customizable hotkeys with reset to defaults option</li>
+                <li>Launch on startup option</li>
+              </ul>
+              <h4>Core Features</h4>
+              <ul class="release-list">
+                <li>Real-time chat with streaming responses</li>
+                <li>Message history with search functionality</li>
+                <li>Model selection and switching</li>
+                <li>Credit/usage tracking and context window management</li>
+                <li>Help menu with keyboard shortcuts and links</li>
+                <li>GitHub integration for repository access</li>
+              </ul>
+              <h4>Bug Fixes & Improvements</h4>
+              <ul class="release-list">
+                <li>Optimized performance for smooth chat experience</li>
+                <li>Improved markdown rendering for better readability</li>
+                <li>Enhanced input history navigation</li>
+                <li>Stable window management (minimize, maximize, restore)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+
+  <div class="confirm-overlay" hidden>
+    <div class="confirm-dialog">
+      <div class="confirm-header">
+        <div class="confirm-icon">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+        </div>
+        <p class="confirm-text" data-i18n="deleteConfirm">Are you sure you want to delete this session?</p>
+      </div>
+      <div class="confirm-actions">
+        <button type="button" class="confirm-btn" data-confirm-cancel data-i18n="cancel"></button>
+        <button type="button" class="confirm-btn danger" data-confirm-ok data-i18n="delete"></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ctx-menu" hidden>
+    <button type="button" class="ctx-menu-item danger" data-ctx-delete data-i18n="deleteSession"></button>
+  </div>
+
+  <div class="credit-menu" hidden>
+    <div class="credit-limit-warning" data-credit-warning hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <span class="credit-limit-warning-text">CilamAI will pause when the limit is reached.</span>
+    </div>
+    <div class="credit-menu-head">
+      <span class="credit-menu-title" data-i18n="credits">Credits</span>
+      <span class="credit-menu-balance" data-credit-balance></span>
+    </div>
+    <div class="credit-bar">
+      <div class="credit-bar-fill" data-credit-bar></div>
+    </div>
+    <div class="credit-menu-stats">
+      <span data-i18n="creditsUsed">Used</span>
+      <span class="credit-menu-numbers"><span data-credit-used>0</span> / <span data-credit-limit>100</span></span>
+    </div>
+    <div class="credit-menu-context">
+      <span data-i18n="contextWindow">Context Window</span>
+      <span class="credit-menu-numbers"><span data-context-count>0</span></span>
+    </div>
+    <div class="credit-menu-time">
+      <span data-i18n="creditsTime">Reset in</span>
+      <span data-credit-time>00:00:00</span>
+    </div>
+  </div>
+
+  <div class="notification" role="alert" hidden>
+    <svg class="notification-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
+    <span class="notification-msg"></span>
+  </div>
+</body>
+
+</html>

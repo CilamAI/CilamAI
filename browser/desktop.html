@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CilamAI Desktop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        }
+
+        .scrollbar-none::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-none {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .carousel-slide {
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .carousel-slide-active {
+            opacity: 1;
+            transform: scale(1);
+            display: block;
+        }
+
+        .carousel-slide-hidden {
+            opacity: 0;
+            transform: scale(0.97);
+            display: none;
+        }
+
+        @keyframes textGradientShine {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(24px) scale(0.98);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes rainbowPulseGlow {
+            0% {
+                opacity: 0.35;
+                background-position: 0% 50%;
+                transform: translate(-50%, -10px) scale(0.95);
+            }
+
+            50% {
+                opacity: 0.75;
+                background-position: 100% 50%;
+                transform: translate(-50%, 10px) scale(1.15);
+            }
+
+            100% {
+                opacity: 0.35;
+                background-position: 0% 50%;
+                transform: translate(-50%, -10px) scale(0.95);
+            }
+        }
+
+        .animate-rainbow-glow {
+            background: linear-gradient(90deg, rgba(255, 0, 85, 0.35), rgba(255, 85, 0, 0.35), rgba(255, 204, 0, 0.35), rgba(0, 255, 102, 0.35), rgba(0, 204, 255, 0.35), rgba(153, 0, 255, 0.35), rgba(255, 0, 85, 0.35));
+            background-size: 200% 200%;
+            animation: rainbowPulseGlow 7s ease-in-out infinite;
+        }
+
+        @keyframes rainbowShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 200% 50%;
+            }
+        }
+
+        .hero-title-animated {
+            color: #111827;
+            background: linear-gradient(90deg, #e6005c, #ff6600, #d9a400, #00a64a, #0099cc, #7a00cc, #e6005c);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fadeInUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards, rainbowShift 4s linear infinite;
+        }
+
+        .dark .hero-title-animated {
+            color: #f3f4f6;
+            background: linear-gradient(90deg, #ff0055, #ff5500, #ffcc00, #00ff66, #00ccff, #9900ff, #ff0055);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-animate {
+            opacity: 0;
+            animation: fadeInUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .hero-delay-1 {
+            animation-delay: 0.15s;
+        }
+
+        .hero-delay-2 {
+            animation-delay: 0.3s;
+        }
+
+        .hero-delay-3 {
+            animation-delay: 0.45s;
+        }
+
+        @keyframes scroll {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        @keyframes slideInRight {
+            0% {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            0% {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .chat-a {
+            animation: fadeA 10s ease infinite;
+        }
+
+        .chat-b {
+            animation: fadeB 10s ease infinite;
+        }
+
+        @keyframes fadeA {
+
+            0%,
+            45% {
+                opacity: 1;
+            }
+
+            50%,
+            100% {
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeB {
+
+            0%,
+            45% {
+                opacity: 0;
+            }
+
+            50%,
+            95% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        @keyframes floating {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-12px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        .animate-float {
+            animation: floating 6s ease-in-out infinite;
+        }
+    </style>
+</head>
+
+<body class="bg-black text-[#111827] dark:text-gray-100 min-h-screen">
+
+
+    <!-- Navigation -->
+    <nav class="relative flex items-center justify-between px-6 py-4 w-full">
+        <!-- Left: Logo and Links -->
+        <div class="flex items-center gap-8">
+            <a href="desktop.html" class="flex items-center">
+                <img src="https://file.garden/aPSLaf7myCkWreuK/Untitled_design__9_-removebg-preview.png"
+                    alt="CilamAI Logo" class="w-8 h-8 object-contain">
+            </a>
+            <div class="hidden md:flex gap-6 text-sm font-medium text-gray-700 dark:text-gray-300">
+                <a href="models.html" class="hover:text-black dark:hover:text-white transition-colors">Models</a>
+                <a href="docs.html" class="hover:text-black dark:hover:text-white transition-colors">Docs</a>
+            </div>
+        </div>
+
+        <!-- Right: Auth, Theme and Action -->
+        <div class="flex items-center gap-3">
+            <a href="https://github.com/CilamAI/CilamAI" target="_blank" rel="noopener noreferrer" class="p-2 text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-[#111111] focus:outline-none" title="GitHub Repository">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" /></svg>
+            </a>
+            <a href="thanks.html"
+                class="text-sm font-medium bg-white text-black px-5 py-2 rounded-full hover:bg-gray-200 transition-colors">Download</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex flex-col items-center mt-24 px-4 w-full">
+
+        <!-- Hero Section -->
+        <div class="text-center flex flex-col items-center max-w-4xl w-full">
+
+            <h1
+                class="text-4xl md:text-[44px] leading-tight font-semibold mb-8 text-gray-900 dark:text-white hero-animate">
+                Build with CilamAI,<br>
+                on your computer and in the free model
+            </h1>
+
+            <a href="thanks.html"
+                class="hero-animate hero-delay-1 bg-white text-black px-8 py-3 rounded-full font-medium hover:bg-gray-200 transition-all hover:scale-105 active:scale-95 shadow-sm">
+                Download
+            </a>
+
+            <div class="mt-6 flex justify-center w-full px-4 hero-animate hero-delay-2">
+                <div
+                    class="relative bg-gray-50 dark:bg-[#15161a] border border-gray-200 dark:border-[#26282e] rounded-lg px-4 py-2.5 flex items-center gap-3 font-mono text-xs sm:text-[13px] max-w-full shadow-sm">
+                    <span class="text-gray-400 dark:text-gray-500 select-none">$</span>
+                    <code
+                        class="text-gray-700 dark:text-gray-200 whitespace-nowrap text-left">irm https://raw.githubusercontent.com/CilamAI/CilamAI/refs/heads/main/install.ps1 | iex</code>
+                    <button onclick="copyCommand(this)"
+                        class="text-gray-400 hover:text-black dark:hover:text-white transition-colors flex-shrink-0 flex items-center ml-1"
+                        title="Copy to clipboard">
+                        <!-- Success Check Icon -->
+                        <svg class="h-4 w-4 text-green-600 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="2" id="copy-success-icon">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <!-- Default Clipboard Icon -->
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" id="copy-icon">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <p class="mt-4 text-xs text-gray-500 dark:text-gray-400 hero-animate hero-delay-3">
+                Free to start & open source software.
+            </p>
+        </div>
+
+        <!-- Features Section -->
+        <div class="mt-32 max-w-[1100px] w-full flex justify-center mb-20 px-4">
+            <!-- App Screenshot -->
+            <img src="https://file.garden/aPSLaf7myCkWreuK/before%20windows%2010.png" alt="CilamAI App Screenshot"
+                class="rounded-xl shadow-2xl overflow-hidden w-full border border-gray-200 dark:border-gray-800 animate-float">
+        </div>
+
+    </main>
+
+
+
+    <script>
+        function copyCommand(btn) {
+            const text = 'irm https://raw.githubusercontent.com/CilamAI/CilamAI/refs/heads/main/install.ps1 | iex';
+            navigator.clipboard.writeText(text).then(() => {
+                const status = btn.querySelector('#copy-success-icon');
+                const icon = btn.querySelector('#copy-icon');
+                status.classList.remove('hidden');
+                icon.classList.add('hidden');
+                setTimeout(() => {
+                    status.classList.add('hidden');
+                    icon.classList.remove('hidden');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+
+</html>
