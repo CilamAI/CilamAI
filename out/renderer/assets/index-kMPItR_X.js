@@ -52983,7 +52983,7 @@ async function init() {
       ["Choose your language", "Select the language you want to use throughout the CilamAI interface. You can change this later from Settings.", '<svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="27"/><path d="M21 48h54M48 21c8 8 12 17 12 27s-4 19-12 27c-8-8-12-17-12-27s4-19 12-27ZM27 31c12 6 30 6 42 0M27 65c12-6 30-6 42 0"/></svg>'],
       ["Pick a model", "Choose the model that best fits your task. You can switch models at any time while working in a conversation.", '<svg viewBox="0 0 96 96"><path d="m48 19 27 15v28L48 77 21 62V34l27-15Z"/><path d="m21 34 27 15 27-15M48 49v28M36 27l27 15"/></svg>'],
       ["Customize your experience", "Personalize CilamAI with your preferred theme, language, font size, startup behavior, and chat display options.", '<svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="12"/><path d="M48 19v10M48 67v10M19 48h10M67 48h10M28 28l7 7M61 61l7 7M68 28l-7 7M35 61l-7 7"/><circle cx="48" cy="48" r="27"/></svg>'],
-      ["You are ready", "Start a new conversation, attach files or screenshots, search your sessions, and use the sidebar tools whenever you need them.", '<svg viewBox="0 0 96 96"><path d="M24 25h48v35H42L29 72V60h-5V25Z"/><path d="M35 42h26M35 50h17"/></svg>'],
+      ["You are ready", "Start a new conversation, attach files or screenshots, search your sessions, and use the tools whenever you need them.", '<svg viewBox="0 0 96 96"><path d="M24 25h48v35H42L29 72V60h-5V25Z"/><path d="M35 42h26M35 50h17"/></svg>'],
       ["Enjoy CilamAI", "Everything is ready. Click Finish to open your workspace and start getting useful answers from CilamAI.", '<svg viewBox="0 0 96 96"><path d="m48 18 7 20 21 1-16 13 5 21-17-12-17 12 5-21-16-13 21-1 7-20Z"/></svg>']
     ];
     let step = 0;

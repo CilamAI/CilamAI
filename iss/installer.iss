@@ -25,6 +25,11 @@ VersionInfoDescription=CilamAI Setup
 VersionInfoProductName=CilamAI
 VersionInfoProductVersion=0.1.0
 WizardImageFile=..\resources\sidebar.bmp
+#ifdef SIGNTOOL
+SignTool=mysigntool
+SignedUninstaller=yes
+#endif
+
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

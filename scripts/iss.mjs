@@ -71,15 +71,18 @@ if (!existsSync(iscc)) {
   process.exit(1)
 }
 
-const issFile = process.argv[2] || path.join(root, 'iss', 'installer.iss')
+const hasExplicitIss = process.argv[2] && (process.argv[2].endsWith('.iss') || (existsSync(process.argv[2]) && !process.argv[2].startsWith('/')))
+const issFile = hasExplicitIss ? process.argv[2] : path.join(root, 'iss', 'installer.iss')
 if (!existsSync(issFile)) {
   console.error(`Installer script not found: ${issFile}`)
   process.exit(1)
 }
 
+const extraArgs = hasExplicitIss ? process.argv.slice(3) : process.argv.slice(2)
+
 console.log(`Building installer: ${issFile}`)
 console.log(`Using ISCC: ${iscc}`)
-const child = spawn(iscc, [issFile, ...process.argv.slice(3)], { stdio: 'inherit' })
+const child = spawn(iscc, [issFile, ...extraArgs], { stdio: 'inherit' })
 child.on('exit', (code) => process.exit(code ?? 1))
 child.on('error', (err) => {
   console.error(`Failed to run ${iscc}:`, err.message)

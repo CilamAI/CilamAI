@@ -998,6 +998,11 @@ body {
   color: var(--text);
 }
 
+.rail-btn.active {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
 .main {
   display: flex;
   flex-direction: column;
@@ -2058,7 +2063,6 @@ body {
   width: 100%;
   color: var(--text-dim);
   font-size: 13px;
-  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 18px 20px;
 }
