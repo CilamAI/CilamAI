@@ -52076,6 +52076,11 @@ let provider = settings.provider || "opencode";
 let baseUrl = settings.url || "";
 let openaiUrl = settings.openaiUrl || "https://console.opencode.ai/inference/openai/v1";
 let apiKey = settings.apiKey || "";
+let opencodeApiKey = settings.opencodeApiKey || "";
+let claudeApiKey = settings.claudeApiKey || "";
+let grokApiKey = settings.grokApiKey || "";
+let geminiApiKey = settings.geminiApiKey || "";
+let zaiApiKey = settings.zaiApiKey || "";
 let showThinking = settings.showThinking !== false;
 let theme = settings.theme || "dark";
 let resolvedTheme = theme;
@@ -52093,15 +52098,28 @@ const OPENCODE_URL = "https://console.opencode.ai/inference/openai/v1";
 const CUSTOM_MODEL_ROUTES = {
   "mimo-v2.5-free": { url: OPENCODE_URL, org: "Xiaomi LLM Core Team" }
 };
+const getProviderApiKey = (model) => {
+  const m = (model || "").toLowerCase();
+  if (m.includes("claude")) return claudeApiKey;
+  if (m.includes("grok")) return grokApiKey;
+  if (m.includes("gemini")) return geminiApiKey;
+  if (m.includes("z.ai") || m.includes("zai")) return zaiApiKey;
+  if (m.includes("opencode") || m.includes("mimo") || m === "auto") return opencodeApiKey;
+  return apiKey;
+};
 const routeForModel = (model) => {
-  if (model === "auto") return { url: `${OPENCODE_URL}/chat/completions`, model: "mimo-v2.5-free", provider: "opencode", apiKey, org: "Xiaomi LLM Core Team" };
+  const currentKey = getProviderApiKey(model);
+  if (model === "auto") return { url: `${OPENCODE_URL}/chat/completions`, model: "mimo-v2.5-free", provider: "opencode", apiKey: currentKey, org: "Xiaomi LLM Core Team" };
   const custom = CUSTOM_MODEL_ROUTES[model];
-  if (custom) return { url: `${custom.url}/chat/completions`, model, provider: "opencode", apiKey, org: custom.org || "" };
-  return { url: chatUrl(), model, provider, apiKey };
+  if (custom) return { url: `${custom.url}/chat/completions`, model, provider: "opencode", apiKey: currentKey, org: custom.org || "" };
+  return { url: chatUrl(), model, provider, apiKey: currentKey };
 };
 const chatUrl = () => isOpenAI() ? `${openaiUrl}/chat/completions` : `${baseUrl}/api/chat`;
 const tagsUrl = () => isOpenAI() ? `${openaiUrl}/models` : `${baseUrl}/api/tags`;
-const apiHeaders = () => apiKey ? { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` } : { "Content-Type": "application/json" };
+const apiHeaders = () => {
+  const currentKey = getProviderApiKey(settings.model || "");
+  return currentKey ? { "Content-Type": "application/json", Authorization: `Bearer ${currentKey}` } : { "Content-Type": "application/json" };
+};
 const messages = [];
 const pendingImages = [];
 const inputHistory = [];
@@ -52743,6 +52761,29 @@ async function loadModels() {
     { fullName: "auto", displayName: "Auto" },
     { fullName: "mimo-v2.5-free", displayName: "MiMo V2.5" }
   ];
+  if (claudeApiKey) {
+    customModels.push(
+      { fullName: "claude-fable-5", displayName: "Claude Fable 5" },
+      { fullName: "claude-opus-4-8", displayName: "Claude Opus 4.8" },
+      { fullName: "claude-sonnet-5", displayName: "Claude Sonnet 5" },
+      { fullName: "claude-haiku-4-5", displayName: "Claude Haiku 4.5" },
+      { fullName: "claude", displayName: "Claude" }
+    );
+  }
+  if (geminiApiKey) {
+    customModels.push(
+      { fullName: "gemini-3.6-flash", displayName: "Gemini 3.6 Flash" },
+      { fullName: "gemini-3.5-flash-lite", displayName: "Gemini 3.5 Flash Lite" },
+      { fullName: "gemini", displayName: "Gemini" }
+    );
+  }
+  if (grokApiKey) {
+    customModels.push(
+      { fullName: "grok-4.5", displayName: "Grok 4.5" },
+      { fullName: "grok-4.3", displayName: "Grok 4.3" },
+      { fullName: "grok", displayName: "Grok" }
+    );
+  }
   let items = [];
   try {
     const data = await fetchJson(tagsUrl(), { headers: apiHeaders() });
@@ -52803,6 +52844,8 @@ async function loadModels() {
 }
 function showSettings() {
   document.querySelector(".settings-view").hidden = false;
+  const akv = document.querySelector(".api-key-view");
+  if (akv) akv.hidden = true;
   document.querySelector(".help-view").hidden = true;
   document.querySelector(".release-notes-view").hidden = true;
   document.querySelector(".welcome-text").hidden = true;
@@ -52860,6 +52903,8 @@ async function loadLocale(lang) {
 }
 function showChat() {
   document.querySelector(".settings-view").hidden = true;
+  const akv = document.querySelector(".api-key-view");
+  if (akv) akv.hidden = true;
   document.querySelector(".help-view").hidden = true;
   document.querySelector(".release-notes-view").hidden = true;
   document.querySelector(".chat").hidden = false;
@@ -52871,8 +52916,33 @@ function showChat() {
   const main = document.querySelector(".main");
   document.querySelector(".welcome-text").hidden = main.classList.contains("has-chat");
 }
+function showApiKeyConfig() {
+  document.querySelector(".settings-view").hidden = true;
+  document.querySelector(".help-view").hidden = true;
+  document.querySelector(".release-notes-view").hidden = true;
+  document.querySelector(".chat").hidden = true;
+  document.querySelector(".composer").hidden = true;
+  document.querySelector(".welcome-text").hidden = true;
+  const sp = document.querySelector(".search-page");
+  if (sp) sp.hidden = true;
+  const akv = document.querySelector(".api-key-view");
+  if (akv) akv.hidden = false;
+  document.querySelector(".main").classList.add("has-chat");
+  const opencodeInput = document.getElementById("opencode-api-key");
+  if (opencodeInput) opencodeInput.value = opencodeApiKey || "";
+  const claudeInput = document.getElementById("claude-api-key");
+  if (claudeInput) claudeInput.value = claudeApiKey || "";
+  const grokInput = document.getElementById("grok-api-key");
+  if (grokInput) grokInput.value = grokApiKey || "";
+  const geminiInput = document.getElementById("gemini-api-key");
+  if (geminiInput) geminiInput.value = geminiApiKey || "";
+  const zaiInput = document.getElementById("zai-api-key");
+  if (zaiInput) zaiInput.value = zaiApiKey || "";
+}
 function showHelp() {
   document.querySelector(".settings-view").hidden = true;
+  const akv = document.querySelector(".api-key-view");
+  if (akv) akv.hidden = true;
   document.querySelector(".help-view").hidden = false;
   document.querySelector(".release-notes-view").hidden = true;
   document.querySelector(".chat").hidden = true;
@@ -52890,6 +52960,8 @@ function showHelp() {
 }
 function showReleaseNotes() {
   document.querySelector(".settings-view").hidden = true;
+  const akv = document.querySelector(".api-key-view");
+  if (akv) akv.hidden = true;
   document.querySelector(".help-view").hidden = true;
   const rn = document.querySelector(".release-notes-view");
   if (!rn) return;
@@ -53356,8 +53428,13 @@ async function init() {
           window.electron?.checkUpdates?.().then((result) => {
             if (!result?.ok) throw new Error(result?.error || "Update check failed");
             if (result.latest && result.latest !== result.current) {
+              const fileUrl = result.downloadUrl || result.url;
               showNotification(`Downloading CilamAI v${result.latest}...`, "info");
-              window.electron?.openExternal?.(result.downloadUrl || result.url);
+              window.electron?.downloadAndInstall?.(fileUrl).then(() => {
+                showNotification("Installing update...", "info");
+              }).catch((e) => {
+                showNotification(`Download failed: ${e.message}`, "error");
+              });
               return;
             }
             showNotification(`You're up to date (v${result.current}).`, "info");
@@ -53403,7 +53480,27 @@ async function init() {
     if (res?.key) saveApiKey(res.key);
   });
   window.electron?.getEnvConfig?.().then((cfg) => {
-    if (cfg?.opencodeApiKey && !apiKey) saveApiKey(cfg.opencodeApiKey);
+    if (cfg?.opencodeApiKey && !opencodeApiKey) {
+      opencodeApiKey = cfg.opencodeApiKey;
+      settings.opencodeApiKey = opencodeApiKey;
+    }
+    if (cfg?.claudeApiKey && !claudeApiKey) {
+      claudeApiKey = cfg.claudeApiKey;
+      settings.claudeApiKey = claudeApiKey;
+    }
+    if (cfg?.grokApiKey && !grokApiKey) {
+      grokApiKey = cfg.grokApiKey;
+      settings.grokApiKey = grokApiKey;
+    }
+    if (cfg?.geminiApiKey && !geminiApiKey) {
+      geminiApiKey = cfg.geminiApiKey;
+      settings.geminiApiKey = geminiApiKey;
+    }
+    if (cfg?.zaiApiKey && !zaiApiKey) {
+      zaiApiKey = cfg.zaiApiKey;
+      settings.zaiApiKey = zaiApiKey;
+    }
+    localStorage.setItem("ollama-settings", JSON.stringify(settings));
   });
   const runIpcCommand = (command) => {
     if (!command) return;
@@ -53722,6 +53819,8 @@ async function init() {
   const openSearchPage2 = () => {
     if (!searchPage) return;
     document.querySelector(".settings-view").hidden = true;
+    const akv = document.querySelector(".api-key-view");
+    if (akv) akv.hidden = true;
     document.querySelector(".help-view").hidden = true;
     document.querySelector(".release-notes-view").hidden = true;
     document.querySelector(".welcome-text").hidden = true;
@@ -53774,6 +53873,8 @@ async function init() {
         currentSessionId = null;
         saveSessions();
         document.querySelector(".settings-view").hidden = true;
+        const akv = document.querySelector(".api-key-view");
+        if (akv) akv.hidden = true;
         document.querySelector(".help-view").hidden = true;
         document.querySelector(".release-notes-view").hidden = true;
         document.querySelector(".welcome-text").hidden = true;
@@ -54044,6 +54145,43 @@ async function init() {
     if (modelMenu && !modelMenu.hidden && !modelMenu.contains(e.target)) {
       modelMenu.hidden = true;
     }
+  });
+  document.querySelector("[data-api-key-toggle]")?.addEventListener("click", () => {
+    if (modelMenu) modelMenu.hidden = true;
+    showApiKeyConfig();
+  });
+  document.getElementById("save-api-key")?.addEventListener("click", () => {
+    const opencodeInput = document.getElementById("opencode-api-key");
+    const claudeInput = document.getElementById("claude-api-key");
+    const grokInput = document.getElementById("grok-api-key");
+    const geminiInput = document.getElementById("gemini-api-key");
+    const zaiInput = document.getElementById("zai-api-key");
+    if (opencodeInput) {
+      opencodeApiKey = opencodeInput.value.trim();
+      settings.opencodeApiKey = opencodeApiKey;
+    }
+    if (claudeInput) {
+      claudeApiKey = claudeInput.value.trim();
+      settings.claudeApiKey = claudeApiKey;
+    }
+    if (grokInput) {
+      grokApiKey = grokInput.value.trim();
+      settings.grokApiKey = grokApiKey;
+    }
+    if (geminiInput) {
+      geminiApiKey = geminiInput.value.trim();
+      settings.geminiApiKey = geminiApiKey;
+    }
+    if (zaiInput) {
+      zaiApiKey = zaiInput.value.trim();
+      settings.zaiApiKey = zaiApiKey;
+    }
+    localStorage.setItem("ollama-settings", JSON.stringify(settings));
+    showNotification("API Keys saved successfully", "info");
+    showChat();
+  });
+  document.getElementById("cancel-api-key")?.addEventListener("click", () => {
+    showChat();
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && modelMenu) modelMenu.hidden = true;

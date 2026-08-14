@@ -11,6 +11,17 @@
             darkMode: 'class'
         }
     </script>
+    <script>
+        // Inline theme initialization to avoid FOUC
+        const savedTheme = localStorage.getItem('cilamai-theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
@@ -55,15 +66,29 @@
             }
         }
 
+        @keyframes rainbowBorder {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .rainbow-gradient {
+            background: linear-gradient(270deg, #ff3b30, #ff9500, #ffcc00, #4cd964, #5ac8fa, #007aff, #5856d6, #ff2d55);
+            background-size: 800% 800%;
+            animation: rainbowBorder 8s ease infinite;
+        }
+
         @keyframes fadeInUp {
             0% {
                 opacity: 0;
-                transform: translateY(24px) scale(0.98);
+                transform: translateY(30px) scale(0.92);
+                filter: blur(12px);
             }
 
             100% {
                 opacity: 1;
                 transform: translateY(0) scale(1);
+                filter: blur(0);
             }
         }
 
@@ -104,22 +129,37 @@
         }
 
         .hero-title-animated {
-            color: #111827;
-            background: linear-gradient(90deg, #e6005c, #ff6600, #d9a400, #00a64a, #0099cc, #7a00cc, #e6005c);
+            background: linear-gradient(90deg, #1a73e8, #a142f4, #ea4335, #fbbc04, #1a73e8);
             background-size: 200% auto;
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
+            color: transparent;
             animation: fadeInUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards, rainbowShift 4s linear infinite;
         }
 
         .dark .hero-title-animated {
-            color: #f3f4f6;
-            background: linear-gradient(90deg, #ff0055, #ff5500, #ffcc00, #00ff66, #00ccff, #9900ff, #ff0055);
+            background: linear-gradient(90deg, #1a73e8, #a142f4, #ea4335, #fbbc04, #1a73e8);
             background-size: 200% auto;
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
+            color: transparent;
+            animation: fadeInUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards, rainbowShift 4s linear infinite;
+        }
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(60px);
+            transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .scroll-reveal.reveal-up {
+            transform: translateY(-60px);
+        }
+
+        .scroll-reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .hero-animate {
@@ -228,94 +268,305 @@
         .animate-float {
             animation: floating 6s ease-in-out infinite;
         }
+
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(50px) scale(0.95);
+            filter: blur(10px);
+            transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1), filter 1s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: opacity, transform, filter;
+        }
+
+        .scroll-reveal.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            filter: blur(0);
+        }
+
+        .mask-fade-bottom {
+            mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+        }
+
+        @keyframes strokePulse {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        .google-stroke {
+            border: 1.5px solid transparent !important;
+            background: linear-gradient(#f9fafb, #f9fafb) padding-box,
+                        linear-gradient(90deg, #1a73e8, #a142f4, #ea4335, #fbbc04, #1a73e8) border-box;
+            background-size: 200% auto;
+            animation: strokePulse 4s linear infinite;
+        }
+
+        .dark .google-stroke {
+            background: linear-gradient(#15161a, #15161a) padding-box,
+                        linear-gradient(90deg, #1a73e8, #a142f4, #ea4335, #fbbc04, #1a73e8) border-box;
+            background-size: 200% auto;
+        }
     </style>
 </head>
 
-<body class="bg-black text-[#111827] dark:text-gray-100 min-h-screen">
-
-
+<body class="bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-gray-100 min-h-screen relative transition-colors duration-300">
+    <!-- Particle Animation Background (Welcome Section Only) -->
+    <div id="particles-js" class="absolute top-0 left-0 w-full h-[90vh] z-0 pointer-events-none opacity-100 dark:opacity-60 mask-fade-bottom"></div>
     <!-- Navigation -->
-    <nav class="relative flex items-center justify-between px-6 py-4 w-full">
-        <!-- Left: Logo and Links -->
-        <div class="flex items-center gap-8">
-            <a href="desktop.html" class="flex items-center">
-                <img src="https://file.garden/aPSLaf7myCkWreuK/Untitled_design__9_-removebg-preview.png"
-                    alt="CilamAI Logo" class="w-8 h-8 object-contain">
-            </a>
-            <div class="hidden md:flex gap-6 text-sm font-medium text-gray-700 dark:text-gray-300">
-                <a href="models.html" class="hover:text-black dark:hover:text-white transition-colors">Models</a>
-                <a href="docs.html" class="hover:text-black dark:hover:text-white transition-colors">Docs</a>
-            </div>
-        </div>
-
-        <!-- Right: Auth, Theme and Action -->
-        <div class="flex items-center gap-3">
-            <a href="https://github.com/CilamAI/CilamAI" target="_blank" rel="noopener noreferrer" class="p-2 text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-[#111111] focus:outline-none" title="GitHub Repository">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" /></svg>
-            </a>
-            <a href="thanks.html"
-                class="text-sm font-medium bg-white text-black px-5 py-2 rounded-full hover:bg-gray-200 transition-colors">Download</a>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <main class="flex flex-col items-center mt-24 px-4 w-full">
-
-        <!-- Hero Section -->
-        <div class="text-center flex flex-col items-center max-w-4xl w-full">
-
-            <h1
-                class="text-4xl md:text-[44px] leading-tight font-semibold mb-8 text-gray-900 dark:text-white hero-animate">
-                Build with CilamAI,<br>
-                on your computer and in the free model
-            </h1>
-
-            <a href="thanks.html"
-                class="hero-animate hero-delay-1 bg-white text-black px-8 py-3 rounded-full font-medium hover:bg-gray-200 transition-all hover:scale-105 active:scale-95 shadow-sm">
-                Download
-            </a>
-
-            <div class="mt-6 flex justify-center w-full px-4 hero-animate hero-delay-2">
-                <div
-                    class="relative bg-gray-50 dark:bg-[#15161a] border border-gray-200 dark:border-[#26282e] rounded-lg px-4 py-2.5 flex items-center gap-3 font-mono text-xs sm:text-[13px] max-w-full shadow-sm">
-                    <span class="text-gray-400 dark:text-gray-500 select-none">$</span>
-                    <code
-                        class="text-gray-700 dark:text-gray-200 whitespace-nowrap text-left">irm https://raw.githubusercontent.com/CilamAI/CilamAI/refs/heads/main/install.ps1 | iex</code>
-                    <button onclick="copyCommand(this)"
-                        class="text-gray-400 hover:text-black dark:hover:text-white transition-colors flex-shrink-0 flex items-center ml-1"
-                        title="Copy to clipboard">
-                        <!-- Success Check Icon -->
-                        <svg class="h-4 w-4 text-green-600 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                            stroke-width="2" id="copy-success-icon">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <!-- Default Clipboard Icon -->
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round" id="copy-icon">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                        </svg>
-                    </button>
+    <!-- Tailwind JIT trigger for JS classes: bg-white/90 dark:bg-black/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 py-2 -->
+    <nav id="desktop-nav" class="fixed top-0 left-0 flex items-center justify-between px-4 md:px-6 py-4 w-full z-50 transition-all duration-300">
+            <!-- Left: Logo and Links -->
+            <div class="flex items-center gap-4 md:gap-8">
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-btn" class="md:hidden p-1 -ml-1 text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors focus:outline-none" aria-label="Toggle Menu">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path id="hamburger-icon" stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                        <path id="close-icon" class="hidden" stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                <a href="desktop.html" class="flex items-center transition-transform hover:scale-105">
+                    <img src="https://file.garden/aPSLaf7myCkWreuK/Untitled_design__9_-removebg-preview.png"
+                        alt="CilamAI Logo" class="w-8 h-8 object-contain">
+                </a>
+                <div class="hidden md:flex gap-6 text-sm font-medium text-gray-600 dark:text-gray-300">
+                    <a href="models.html" class="hover:text-black dark:hover:text-white transition-colors">Models</a>
+                    <a href="docs.html" class="hover:text-black dark:hover:text-white transition-colors">Docs</a>
                 </div>
             </div>
 
-            <p class="mt-4 text-xs text-gray-500 dark:text-gray-400 hero-animate hero-delay-3">
-                Free to start & open source software.
-            </p>
+            <!-- Right: Auth, Theme and Action -->
+            <div class="flex items-center gap-2 md:gap-4">
+                <button onclick="toggleTheme()" class="p-2 text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none" title="Toggle Dark/Light Mode">
+                    <!-- Sun Icon -->
+                    <svg id="theme-sun" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <!-- Moon Icon -->
+                    <svg id="theme-moon" class="w-5 h-5 block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
+                <a href="https://github.com/CilamAI/CilamAI" target="_blank" rel="noopener noreferrer" class="p-2 text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none" title="GitHub Repository">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" /></svg>
+                </a>
+                <a href="thanks.html"
+                    class="text-xs md:text-sm font-medium bg-black text-white dark:bg-white dark:text-black px-4 md:px-5 py-1.5 md:py-2 rounded-full hover:opacity-80 transition-opacity">Download</a>
+            </div>
+        </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-menu" class="fixed inset-0 top-[64px] z-50 hidden md:hidden bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 transition-opacity duration-300 overflow-y-auto">
+        <div class="flex flex-col px-6 py-4 gap-4 text-lg font-medium text-gray-600 dark:text-gray-300">
+            <a href="models.html" class="hover:text-black dark:hover:text-white transition-colors py-2 border-b border-gray-100 dark:border-gray-800">Models</a>
+            <a href="docs.html" class="hover:text-black dark:hover:text-white transition-colors py-2 border-b border-gray-100 dark:border-gray-800">Docs</a>
+            <!-- Sidebar Navigation Links for Mobile -->
+            <div class="mt-4 flex flex-col gap-2">
+                <h3 class="font-semibold text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Getting Started</h3>
+                <a href="docs.html" class="text-base text-gray-600 dark:text-gray-400 py-1">Overview</a>
+                <a href="installation.html" class="text-base text-gray-600 dark:text-gray-400 py-1">Installation</a>
+                <a href="prerequisites.html" class="text-base text-gray-600 dark:text-gray-400 py-1">Prerequisites</a>
+                
+                <h3 class="font-semibold text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-4 mb-2">Usage & Guides</h3>
+                <a href="running-locally.html" class="text-base text-gray-600 dark:text-gray-400 py-1">Running Locally</a>
+                <a href="shortcuts.html" class="text-base text-gray-600 dark:text-gray-400 py-1">Keyboard Shortcuts</a>
+                
+                <h3 class="font-semibold text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-4 mb-2">Reference</h3>
+                <a href="languages.html" class="text-base text-gray-600 dark:text-gray-400 py-1">Supported Languages</a>
+                <a href="license.html" class="text-base text-gray-600 dark:text-gray-400 py-1">License</a>
+                <a href="credits.html" class="text-base text-gray-600 dark:text-gray-400 py-1">Credits</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Wrapper -->
+    <div class="relative z-10 w-full">
+        <!-- Main Content -->
+        <main class="flex flex-col items-center mt-24 md:mt-32 px-4 w-full">
+
+        <!-- Hero Section -->
+        <div class="relative text-center flex flex-col items-center max-w-4xl w-full">
+
+                <h1 id="typewriter-title"
+                    class="text-3xl sm:text-4xl md:text-[44px] leading-tight font-light mb-6 md:mb-8 text-gray-900 dark:text-white hero-animate min-h-[90px] md:min-h-[110px]">
+                    Build with CilamAI,<br>
+                    on your computer and in the free model
+                </h1>
+
+
+
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 w-full sm:w-auto hero-animate hero-delay-2">
+                    <a href="thanks.html"
+                        class="w-full sm:w-[200px] text-center bg-black text-white dark:bg-white dark:text-black px-8 py-3 rounded-full font-medium hover:opacity-80 transition-opacity hover:scale-105 active:scale-95 shadow-sm">
+                        Download
+                    </a>
+                    <a href="docs.html"
+                        class="w-full sm:w-[200px] text-center bg-gray-100 text-gray-900 dark:bg-white dark:text-black px-8 py-3 rounded-full font-medium hover:bg-gray-200 dark:hover:bg-gray-200 transition-all hover:scale-105 active:scale-95 shadow-sm border border-gray-200 dark:border-transparent">
+                        Documentation
+                    </a>
+                </div>
+
+                <p class="mt-8 text-xs text-gray-500 dark:text-gray-400 hero-animate hero-delay-3">
+                    Free to start & open source software.
+                </p>
+
+                <!-- Scroll Indicator -->
+                <div class="mt-16 flex flex-col items-center justify-center animate-bounce text-gray-400 dark:text-gray-600 hero-animate hero-delay-3 select-none pointer-events-none">
+                    <span class="text-[10px] uppercase tracking-widest mb-2 font-medium">Scroll</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                    </svg>
+                </div>
+            </div>
+
+        <!-- Features Section (Desktop) -->
+        <div class="relative mt-16 md:mt-32 max-w-[1100px] w-full flex justify-center px-2 md:px-4 scroll-reveal">
+                
+                <img src="https://file.garden/aPSLaf7myCkWreuK/before%20windows%2010.png" alt="CilamAI App Screenshot"
+                    class="relative rounded-lg md:rounded-xl shadow-xl md:shadow-2xl overflow-hidden w-full border border-gray-200 dark:border-gray-800 animate-float bg-white dark:bg-[#0a0a0a]">
         </div>
 
-        <!-- Features Section -->
-        <div class="mt-32 max-w-[1100px] w-full flex justify-center mb-20 px-4">
-            <!-- App Screenshot -->
-            <img src="https://file.garden/aPSLaf7myCkWreuK/before%20windows%2010.png" alt="CilamAI App Screenshot"
-                class="rounded-xl shadow-2xl overflow-hidden w-full border border-gray-200 dark:border-gray-800 animate-float">
-        </div>
-
-    </main>
-
-
+        </main>
+    </div>
 
     <script>
+        function applyTheme(isDark) {
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('theme-sun')?.classList.remove('hidden');
+                document.getElementById('theme-moon')?.classList.add('hidden');
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('theme-sun')?.classList.add('hidden');
+                document.getElementById('theme-moon')?.classList.remove('hidden');
+            }
+            initParticles();
+        }
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('cilamai-theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+            applyTheme(isDark);
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const newTheme = isDark ? 'light' : 'dark';
+            localStorage.setItem('cilamai-theme', newTheme);
+            applyTheme(!isDark);
+        }
+
+        function initParticles() {
+            if (typeof particlesJS === 'undefined') return;
+
+            const isDark = document.documentElement.classList.contains('dark');
+            const lineColor = isDark ? "#ffffff" : "#94a3b8"; // White for dark mode, Slate for light mode
+            
+            particlesJS("particles-js", {
+                "particles": {
+                    "number": { "value": 60, "density": { "enable": true, "value_area": 800 } },
+                    "color": { "value": ["#1a73e8", "#a142f4", "#ea4335", "#fbbc04"] },
+                    "shape": { "type": "circle" },
+                    "opacity": { "value": 0.6, "random": true, "anim": { "enable": true, "speed": 1, "opacity_min": 0.1, "sync": false } },
+                    "size": { "value": 3.5, "random": true, "anim": { "enable": true, "speed": 2, "size_min": 0.5, "sync": false } },
+                    "line_linked": { "enable": true, "distance": 150, "color": lineColor, "opacity": 0.4, "width": 1 },
+                    "move": { "enable": true, "speed": 1.2, "direction": "none", "random": true, "straight": false, "out_mode": "out", "bounce": false, "attract": { "enable": false, "rotateX": 600, "rotateY": 1200 } }
+                },
+                "interactivity": {
+                    "detect_on": "window",
+                    "events": {
+                        "onhover": { "enable": true, "mode": "grab" },
+                        "onclick": { "enable": true, "mode": "push" },
+                        "resize": true
+                    },
+                    "modes": {
+                        "grab": { "distance": 180, "line_linked": { "opacity": 0.4 } },
+                        "push": { "particles_nb": 3 }
+                    }
+                },
+                "retina_detect": true
+            });
+        }
+
+        // Initialize theme and particles
+        initTheme();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Navbar Scroll Effect
+            const nav = document.getElementById('desktop-nav');
+            let lastScroll = 0;
+            
+            window.addEventListener('scroll', () => {
+                if (!nav) return;
+                const currentScroll = window.pageYOffset;
+                
+                // Add background on scroll
+                if (currentScroll > 50) {
+                    nav.classList.add('bg-white/90', 'dark:bg-black/90', 'py-2');
+                    nav.classList.remove('py-4');
+                } else {
+                    nav.classList.remove('bg-white/90', 'dark:bg-black/90', 'py-2');
+                    nav.classList.add('py-4');
+                }
+                
+                // Hide/show on scroll
+                if (currentScroll > lastScroll && currentScroll > 100) {
+                    // Scroll down
+                    nav.style.transform = 'translateY(-100%)';
+                } else {
+                    // Scroll up
+                    nav.style.transform = 'translateY(0)';
+                }
+                lastScroll = currentScroll <= 0 ? 0 : currentScroll; // For Mobile or negative scrolling
+            });
+
+
+            // Mobile Menu Toggle
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const hamburgerIcon = document.getElementById('hamburger-icon');
+            const closeIcon = document.getElementById('close-icon');
+
+            if (mobileMenuBtn && mobileMenu) {
+                mobileMenuBtn.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('hidden');
+                    hamburgerIcon.classList.toggle('hidden');
+                    closeIcon.classList.toggle('hidden');
+                    document.body.classList.toggle('overflow-hidden'); // Prevent scrolling when menu is open
+                });
+            }
+
+            let lastRevealScrollY = window.scrollY;
+            const observer = new IntersectionObserver((entries) => {
+                const currentScrollY = window.scrollY;
+                const isScrollingDown = currentScrollY > lastRevealScrollY;
+                lastRevealScrollY = currentScrollY;
+
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    } else {
+                        // Reset when out of view
+                        entry.target.classList.remove('visible');
+                        
+                        // Set the start position based on scroll direction for the next reveal
+                        if (isScrollingDown) {
+                            entry.target.classList.remove('reveal-up');
+                        } else {
+                            entry.target.classList.add('reveal-up');
+                        }
+                    }
+                });
+            }, {
+                threshold: 0.15,
+                rootMargin: '0px'
+            });
+
+            document.querySelectorAll('.scroll-reveal').forEach((el) => {
+                observer.observe(el);
+            });
+        });
+
         function copyCommand(btn) {
             const text = 'irm https://raw.githubusercontent.com/CilamAI/CilamAI/refs/heads/main/install.ps1 | iex';
             navigator.clipboard.writeText(text).then(() => {

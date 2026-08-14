@@ -367,9 +367,9 @@ ipcMain.handle("app:platform-info", () => ({
 }));
 ipcMain.handle("app:get-version", () => app.getVersion());
 ipcMain.handle("app:check-updates", async () => {
-  const fallbackVersion = "0.1.2";
-  const fallbackReleaseUrl = "https://github.com/CilamAI/CilamAI/releases/tag/0.1.2";
-  const fallbackDownloadUrl = "https://github.com/CilamAI/CilamAI/releases/download/0.1.2/CilamAI-Setup.exe";
+  const fallbackVersion = app.getVersion();
+  const fallbackReleaseUrl = `https://github.com/CilamAI/CilamAI/releases/tag/v${fallbackVersion}`;
+  const fallbackDownloadUrl = `https://github.com/CilamAI/CilamAI/releases/download/v${fallbackVersion}/CilamAI-Setup.exe`;
   const tagFromUrl = (url) => {
     const match = String(url || "").match(/\/releases\/tag\/([^/?#]+)/i);
     return match ? decodeURIComponent(match[1]) : "";
@@ -396,10 +396,12 @@ ipcMain.handle("app:check-updates", async () => {
     });
     let release;
     try {
-      release = await getRelease("/repos/CilamAI/CilamAI/releases/latest");
+      const releases = await getRelease("/repos/CilamAI/CilamAI/tags");
+      release = Array.isArray(releases) && releases.length > 0 ? releases[0] : null;
+      if (!release) throw new Error("No releases found");
     } catch {
       release = await new Promise((resolve, reject) => {
-        const request = https.get("https://github.com/CilamAI/CilamAI/releases.atom", {
+        const request = https.get("https://github.com/CilamAI/CilamAI/tags.atom", {
           headers: { "User-Agent": "CilamAI" }
         }, (response) => {
           let body = "";
@@ -420,19 +422,66 @@ ipcMain.handle("app:check-updates", async () => {
         request.on("error", reject);
       });
     }
-    const releaseTag = release.tag_name || tagFromUrl(release.html_url) || fallbackVersion;
+    const releaseTag = release.tag_name || (release.commit ? release.name : null) || tagFromUrl(release.html_url) || fallbackVersion;
     const latest = String(releaseTag || release.name || fallbackVersion).replace(/^CilamAI\s+v?/i, "").replace(/^v/i, "").trim() || fallbackVersion;
+    const generatedHtmlUrl = `https://github.com/CilamAI/CilamAI/releases/tag/${encodeURIComponent(releaseTag)}`;
     const downloadUrl = release.assets?.find((asset) => /CilamAI-Setup\.exe$/i.test(asset.name || ""))?.browser_download_url || release.download_url || `https://github.com/CilamAI/CilamAI/releases/download/${encodeURIComponent(releaseTag)}/CilamAI-Setup.exe`;
-    return { ok: true, current: app.getVersion(), latest, url: release.html_url || fallbackReleaseUrl, downloadUrl };
+    return { ok: true, current: app.getVersion(), latest, url: release.html_url || generatedHtmlUrl, downloadUrl };
   } catch (err) {
     return { ok: false, error: err.message || "Update check failed" };
   }
+});
+ipcMain.handle("app:download-and-install", async (_event, downloadUrl) => {
+  return new Promise((resolve, reject) => {
+    const tempDir = app.getPath("temp");
+    const fileName = `CilamAI-Update-${Date.now()}.exe`;
+    const filePath = join(tempDir, fileName);
+    const fs = require2("node:fs");
+    const file = fs.createWriteStream(filePath);
+    const download = (url) => {
+      https.get(url, (response) => {
+        if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+          return download(response.headers.location);
+        }
+        if (response.statusCode !== 200) {
+          file.destroy();
+          fs.unlink(filePath, () => {
+          });
+          return reject(new Error(`Download failed: ${response.statusCode}`));
+        }
+        response.pipe(file);
+        file.on("finish", () => {
+          file.close(() => {
+            try {
+              const child = require2("node:child_process").spawn(filePath, ["/SILENT"], { detached: true, stdio: "ignore" });
+              child.on("error", (err) => reject(err));
+              child.unref();
+              resolve({ ok: true });
+              setTimeout(() => app.quit(), 500);
+            } catch (e) {
+              reject(e);
+            }
+          });
+        });
+      }).on("error", (err) => {
+        file.destroy();
+        fs.unlink(filePath, () => {
+        });
+        reject(err);
+      });
+    };
+    download(downloadUrl);
+  });
 });
 ipcMain.handle("app:set-language", (_event, lang) => {
   if (!SUPPORTED_LANGS.includes(lang)) return { ok: false, error: "Unsupported language" };
   broadcastLanguage(lang);
   return { ok: true, lang };
 });
+ipcMain.on("app:console-log", (_event, msg) => console.log(msg));
+ipcMain.on("app:console-info", (_event, msg) => console.info(msg));
+ipcMain.on("app:console-error", (_event, msg) => console.error(msg));
+ipcMain.on("app:console-warn", (_event, msg) => console.warn(msg));
 ipcMain.handle("app:get-language", () => ({ lang: currentLanguage }));
 ipcMain.handle("app:get-pending-apikey", () => ({ key: consumePendingApiKey() }));
 ipcMain.handle("app:get-env-config", () => envConfig);

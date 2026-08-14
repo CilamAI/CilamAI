@@ -2031,7 +2031,56 @@ body {
   color: var(--text);
 }
 
-.settings-view {
+.model-menu-actions {
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+  padding-top: 4px;
+}
+
+.model-action-btn {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  color: var(--text-dim);
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.model-action-btn:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.api-key-input {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 10px 14px;
+  font-size: 14px;
+  outline: none;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.api-key-input:focus {
+  border-color: var(--border-focus);
+}
+
+.api-key-actions {
+  display: flex;
+  gap: 8px;
+}
+
+
+.settings-view,
+.api-key-view {
   width: 100%;
   max-width: min(720px, 90%);
   display: flex;
@@ -2046,11 +2095,13 @@ body {
   -ms-overflow-style: none;
 }
 
-.settings-view::-webkit-scrollbar {
+.settings-view::-webkit-scrollbar,
+.api-key-view::-webkit-scrollbar {
   display: none;
 }
 
-.settings-view h2 {
+.settings-view h2,
+.api-key-view h2 {
   font-size: 20px;
   font-weight: 600;
   letter-spacing: -0.01em;
