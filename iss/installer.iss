@@ -1,6 +1,6 @@
 [Setup]
 AppName=CilamAI
-AppVersion=1.0.0
+AppVersion=0.1.0.1
 AppPublisher=CilamAI
 DefaultDirName={localappdata}\CilamAI
 DefaultGroupName=CilamAI
@@ -19,11 +19,11 @@ PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-VersionInfoVersion=1.0.0.0
+VersionInfoVersion=0.1.0.1
 VersionInfoCompany=CilamAI
 VersionInfoDescription=CilamAI Setup
 VersionInfoProductName=CilamAI
-VersionInfoProductVersion=1.0.0.0
+VersionInfoProductVersion=0.1.0.1
 WizardImageFile=..\resources\sidebar.bmp
 WizardSmallImageFile=..\resources\installer-small.bmp
 #ifdef SIGNTOOL
