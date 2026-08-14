@@ -1,18 +1,27 @@
+param (
+    [string]$Version = "latest"
+)
+
 Write-Host "Starting CilamAI Desktop Installation..." -ForegroundColor Cyan
 
-Write-Host "Checking for the latest version..."
-$tagsUrl = "https://api.github.com/repos/CilamAI/CilamAI/tags"
-$downloadUrl = "https://github.com/CilamAI/CilamAI/releases/download/v0.1.0.1/CilamAI-Setup.exe"
-try {
-    $tags = Invoke-RestMethod -Uri $tagsUrl -Method Get -Headers @{ "User-Agent" = "CilamAI" } -ErrorAction Stop
-    if ($tags.Count -gt 0) {
-        $latestTag = $tags[0].name
-        $downloadUrl = "https://github.com/CilamAI/CilamAI/releases/download/$latestTag/CilamAI-Setup.exe"
-        Write-Host "Found version: $latestTag"
+if ($Version -eq "latest") {
+    Write-Host "Checking for the latest version..."
+    $tagsUrl = "https://api.github.com/repos/CilamAI/CilamAI/tags"
+    $downloadUrl = "https://github.com/CilamAI/CilamAI/releases/download/v0.1.0.1/CilamAI-Setup.exe"
+    try {
+        $tags = Invoke-RestMethod -Uri $tagsUrl -Method Get -Headers @{ "User-Agent" = "CilamAI" } -ErrorAction Stop
+        if ($tags.Count -gt 0) {
+            $latestTag = $tags[0].name
+            $downloadUrl = "https://github.com/CilamAI/CilamAI/releases/download/$latestTag/CilamAI-Setup.exe"
+            Write-Host "Found version: $latestTag"
+        }
+    }
+    catch {
     }
 }
-catch {
-    Write-Host "Could not fetch latest version (API limit). Falling back to v0.1.0.1" -ForegroundColor Yellow
+else {
+    Write-Host "Using specified version: $Version"
+    $downloadUrl = "https://github.com/CilamAI/CilamAI/releases/download/$Version/CilamAI-Setup.exe"
 }
 
 $installerPath = Join-Path -Path $env:TEMP -ChildPath "CilamAI-Setup.exe"
@@ -54,10 +63,19 @@ Try {
 
     Write-Host "`nDownload successful! Saved to $installerPath" -ForegroundColor Green
 
-    Write-Host "Launching the installer silently..." -ForegroundColor Cyan
+    Write-Host -NoNewline "Launching the installer silently... " -ForegroundColor Cyan
     $proc = Start-Process -FilePath $installerPath `
         -ArgumentList "/SP- /SILENT /NORESTART /SUPPRESSMSGBOXES" `
-        -Wait -PassThru -NoNewWindow
+        -PassThru -NoNewWindow
+
+    $spinner = @('-', '\', '|', '/')
+    $counter = 0
+    while (-not $proc.HasExited) {
+        Write-Host -NoNewline "`b$($spinner[$counter % 4])"
+        $counter++
+        Start-Sleep -Milliseconds 100
+    }
+    Write-Host "`b Done!" -ForegroundColor Green
     Write-Host "Installer exit code: $($proc.ExitCode)" -ForegroundColor Green
 
     Write-Host "Installation process complete." -ForegroundColor Green
