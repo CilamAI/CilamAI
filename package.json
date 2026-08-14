@@ -2,7 +2,7 @@
   "name": "cilamai",
   "productName": "CilamAI",
   "description": "CilamAI Desktop App",
-  "version": "0.1.0",
+  "version": "0.1.0.1",
   "type": "module",
   "main": "out/main/index.js",
   "bin": {
@@ -27,8 +27,7 @@
     "start": "electron-vite preview",
     "predist": "node -e \"try { require('child_process').execSync('taskkill /F /IM electron.exe 2>NUL'); require('child_process').execSync('taskkill /F /IM CilamAI.exe 2>NUL'); } catch(e) {}\"",
     "dist": "electron-vite build && electron-builder --win --x64",
-    "iss": "node scripts/iss.mjs",
-    "console": "electron Console/console.js"
+    "iss": "node scripts/iss.mjs"
   },
   "build": {
     "appId": "com.cilamai.desktop",

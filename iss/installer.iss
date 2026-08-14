@@ -1,6 +1,6 @@
 [Setup]
 AppName=CilamAI
-AppVersion=0.1.0
+AppVersion=0.1.0.1
 AppPublisher=CilamAI
 DefaultDirName={localappdata}\CilamAI
 DefaultGroupName=CilamAI
@@ -11,7 +11,7 @@ SolidCompression=yes
 SetupIconFile=..\resources\icon.ico
 UninstallDisplayName=CilamAI
 UninstallDisplayIcon={app}\CilamAI.exe
-WizardStyle=modern dynamic windows11 includetitlebar
+WizardStyle=classic
 WizardSizePercent=110
 DisableWelcomePage=no
 LicenseFile=..\LICENSE
@@ -19,12 +19,13 @@ PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-VersionInfoVersion=0.1.0.0
+VersionInfoVersion=0.1.0.1
 VersionInfoCompany=CilamAI
 VersionInfoDescription=CilamAI Setup
 VersionInfoProductName=CilamAI
-VersionInfoProductVersion=0.1.0
+VersionInfoProductVersion=0.1.0.1
 WizardImageFile=..\resources\sidebar.bmp
+WizardSmallImageFile=..\resources\installer-small.bmp
 #ifdef SIGNTOOL
 SignTool=mysigntool
 SignedUninstaller=yes
@@ -46,7 +47,7 @@ Name: "{group}\Uninstall CilamAI"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\CilamAI"; Filename: "{app}\CilamAI.exe"; IconFilename: "{app}\CilamAI.exe"; Tasks: desktopicon
 
 [Tasks]
-Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"; Flags: unchecked
+Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"
 
 [Run]
 Filename: "{app}\CilamAI.exe"; Description: "Launch CilamAI"; Flags: nowait postinstall skipifsilent
@@ -75,7 +76,7 @@ begin
   StatusText := UninstallProgressForm.StatusLabel.Caption;
   UninstallProgressForm.StatusLabel.WordWrap := True;
   UninstallProgressForm.StatusLabel.AutoSize := True;
-  fullPath := 'C:\ProgramData\TestPath';
+  fullPath := ExpandConstant('{userappdata}\CilamAI');
   if FindFirst(ExpandConstant(fullPath + '\*'), FindRec) then 
   try
     repeat
@@ -103,5 +104,49 @@ begin
   begin
     Exec('taskkill', '/F /IM CilamAI.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
     DeleteFolder();
+  end;
+end;
+
+var
+  AfterInstallPage: TWizardPage;
+  ProgressListBox: TNewListBox;
+
+procedure AddProgress(S: String);
+begin
+  if ProgressListBox <> nil then
+  begin
+    ProgressListBox.Items.Add(S);
+    ProgressListBox.ItemIndex := ProgressListBox.Items.Count - 1;
+  end;
+end;
+
+procedure InitializeWizard();
+begin
+  AfterInstallPage :=
+    CreateCustomPage(wpInstalling, 'Installation done', 'Installation has completed');
+  
+  ProgressListBox := TNewListBox.Create(WizardForm);
+  ProgressListBox.Parent := WizardForm.InstallingPage;
+  ProgressListBox.Left := 0;
+  ProgressListBox.Top := WizardForm.ProgressGauge.Top + WizardForm.ProgressGauge.Height + 10;
+  ProgressListBox.Width := WizardForm.InstallingPage.ClientWidth;
+  ProgressListBox.Height := WizardForm.InstallingPage.ClientHeight - ProgressListBox.Top;
+end;
+
+procedure CurPageChanged(CurPageID: Integer);
+begin
+  if (CurPageID = AfterInstallPage.ID) and
+     // Prevent re-adding "Done" to the ProgressListBox when revisiting the page
+     (ProgressListBox.Parent <> AfterInstallPage.Surface) then
+  begin
+    WizardForm.ProgressGauge.Parent := AfterInstallPage.Surface;
+    // prevent reanimating the progress
+    WizardForm.ProgressGauge.Position := WizardForm.ProgressGauge.Max - 1;
+    WizardForm.ProgressGauge.Position := WizardForm.ProgressGauge.Max;
+
+    ProgressListBox.Parent := AfterInstallPage.Surface;
+    WizardForm.StatusLabel.Parent := AfterInstallPage.Surface;
+    WizardForm.StatusLabel.Caption := 'Done.';
+    AddProgress('Done');
   end;
 end;
