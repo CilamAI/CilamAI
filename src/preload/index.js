@@ -4,7 +4,12 @@ contextBridge.exposeInMainWorld('electron', {
   platform: process.platform,
   getPlatformInfo: () => ipcRenderer.invoke('app:platform-info'),
   getAppVersion: () => ipcRenderer.invoke('app:get-version'),
+  consoleLog: (msg) => ipcRenderer.send('app:console-log', msg),
+  consoleInfo: (msg) => ipcRenderer.send('app:console-info', msg),
+  consoleError: (msg) => ipcRenderer.send('app:console-error', msg),
+  consoleWarn: (msg) => ipcRenderer.send('app:console-warn', msg),
   checkUpdates: () => ipcRenderer.invoke('app:check-updates'),
+  downloadAndInstall: (url) => ipcRenderer.invoke('app:download-and-install', url),
   checkInternet: () => ipcRenderer.invoke('app:check-internet'),
   sendMessage: (payload) => ipcRenderer.invoke('chat:send', payload),
   sendStream: (payload, onChunk, onReasoning) =>

@@ -1,7 +1,21 @@
-$downloadUrl = "https://github.com/CilamAI/CilamAI/releases/latest/download/CilamAI-Setup.exe"
+Write-Host "Starting CilamAI Desktop Installation..." -ForegroundColor Cyan
+
+Write-Host "Checking for the latest version..."
+$tagsUrl = "https://api.github.com/repos/CilamAI/CilamAI/tags"
+$downloadUrl = "https://github.com/CilamAI/CilamAI/releases/download/1.0.0/CilamAI-Setup.exe"
+try {
+    $tags = Invoke-RestMethod -Uri $tagsUrl -Method Get -Headers @{ "User-Agent" = "CilamAI" } -ErrorAction Stop
+    if ($tags.Count -gt 0) {
+        $latestTag = $tags[0].name
+        $downloadUrl = "https://github.com/CilamAI/CilamAI/releases/download/$latestTag/CilamAI-Setup.exe"
+        Write-Host "Found version: $latestTag"
+    }
+} catch {
+    Write-Host "Could not fetch latest version (API limit). Falling back to 1.0.0." -ForegroundColor Yellow
+}
+
 $installerPath = Join-Path -Path $env:TEMP -ChildPath "CilamAI-Setup.exe"
 
-Write-Host "Starting CilamAI Desktop Installation..." -ForegroundColor Cyan
 Write-Host "Downloading installer from GitHub..."
 
 Try {
