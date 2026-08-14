@@ -24,7 +24,8 @@ else {
     $downloadUrl = "https://github.com/CilamAI/CilamAI/releases/download/$Version/CilamAI-Setup.exe"
 }
 
-$installerPath = Join-Path -Path $env:TEMP -ChildPath "CilamAI-Setup.exe"
+$randomStr = -join ((48..57) + (97..122) | Get-Random -Count 6 | % {[char]$_})
+$installerPath = Join-Path -Path $env:TEMP -ChildPath "CilamAI-Setup-$randomStr.exe"
 
 Write-Host "Downloading installer from GitHub..."
 
