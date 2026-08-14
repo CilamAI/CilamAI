@@ -26,7 +26,7 @@
 
 Download the installer and run it:
 
-* **[Download CilamAI-Setup.exe](https://github.com/CilamAI/CilamAI/releases/latest/download/CilamAI-Setup.exe)** double-click, click through the wizard, and CilamAI is installed and ready to launch.
+* **[Download CilamAI-Setup.exe](https://github.com/CilamAI/CilamAI/releases/latest/download/CilamAI-Setup.exe)** double-click through the wizard, and CilamAI is installed and ready to launch.
 * The installer creates Start Menu and optional desktop shortcuts, and uninstalls cleanly via *Uninstall CilamAI*.
 
 ### Install for desktop windows
