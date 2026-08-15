@@ -1282,6 +1282,7 @@ function openFeedbackWindow() {
     center: true,
     resizable: true,
     maximizable: false,
+    minimizable: false,
     autoHideMenuBar: true,
     backgroundColor: '#0f1015',
     webPreferences: {
