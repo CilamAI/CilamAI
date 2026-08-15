@@ -4142,17 +4142,27 @@ html[data-win11='true'] .onboarding {
 }
 
 /* ---------------------------------------------------- */
-/* Feedback Panel (Centered View)                       */
+/* Feedback Panel (Top-aligned View)                    */
 /* ---------------------------------------------------- */
 .feedback-view {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 100%;
-  height: 100%;
-  padding: 24px;
-  box-sizing: border-box;
+  max-width: min(720px, 90%);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 24px 16px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   animation: fadeIn 0.2s ease;
+  box-sizing: border-box;
+}
+
+.feedback-view::-webkit-scrollbar {
+  display: none;
 }
 
 .feedback-view[hidden] {
@@ -4162,12 +4172,10 @@ html[data-win11='true'] .onboarding {
 .feedback-panel {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 14px;
   width: 100%;
-  max-width: 540px;
-  padding: 28px;
+  padding: 24px;
   box-sizing: border-box;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.28);
 }
 
 .feedback-header {
@@ -4191,8 +4199,9 @@ html[data-win11='true'] .onboarding {
 
 .feedback-header h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--text);
 }
 
@@ -4208,7 +4217,7 @@ html[data-win11='true'] .onboarding {
   border: none;
   color: var(--text-dim);
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -4234,9 +4243,9 @@ html[data-win11='true'] .onboarding {
 }
 
 .feedback-field label {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--text-dim);
+  color: var(--text);
 }
 
 .feedback-categories {
@@ -4246,9 +4255,9 @@ html[data-win11='true'] .onboarding {
 }
 
 .feedback-cat-btn {
-  padding: 6px 12px;
+  padding: 7px 14px;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   background: var(--surface-2);
   border: 1px solid var(--border);
@@ -4275,7 +4284,7 @@ html[data-win11='true'] .onboarding {
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 10px 12px;
+  padding: 10px 14px;
   font-size: 13px;
   color: var(--text);
   font-family: inherit;
@@ -4290,7 +4299,7 @@ html[data-win11='true'] .onboarding {
 
 .feedback-textarea {
   resize: vertical;
-  min-height: 90px;
+  min-height: 100px;
 }
 
 .feedback-actions {
@@ -4313,9 +4322,9 @@ html[data-win11='true'] .onboarding {
   background: transparent;
   border: 1px solid var(--border);
   color: var(--text-dim);
-  padding: 8px 12px;
+  padding: 8px 14px;
   border-radius: 10px;
-  font-size: 12px;
+  font-size: 13px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -4345,7 +4354,7 @@ html[data-win11='true'] .onboarding {
   background: var(--accent);
   color: var(--accent-text);
   border: none;
-  padding: 8px 18px;
+  padding: 8px 20px;
   border-radius: 10px;
   font-size: 13px;
   font-weight: 500;
