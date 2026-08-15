@@ -28,8 +28,7 @@
     "dist": "electron-vite build && electron-builder --win",
     "dist:portable": "electron-vite build && electron-builder --win portable",
     "dist:nsis": "electron-vite build && electron-builder --win nsis",
-    "dist:dir": "electron-vite build && electron-builder --win --dir",
-    "build:linux": "electron-vite build && electron-builder --linux"
+    "dist:dir": "electron-vite build && electron-builder --win --dir"
   },
   "build": {
     "appId": "com.cilamai.desktop",
@@ -61,11 +60,6 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "CilamAI"
-    },
-    "linux": {
-      "target": [
-        "tar.gz"
-      ]
     },
     "directories": {
       "output": "release_build"
