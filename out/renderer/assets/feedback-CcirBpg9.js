@@ -71,7 +71,6 @@ function init() {
   const githubBtn = document.querySelector("#feedback-github-btn");
   const form = document.querySelector("#feedback-form");
   const thanksPanel = document.querySelector("#feedback-thanks");
-  const thanksClose = document.querySelector("#feedback-thanks-close");
   const feedbackTitle = document.querySelector(".feedback-title");
   const titlebar = document.querySelector(".win11-titlebar");
   typeRadios.forEach((radio) => {
@@ -108,11 +107,6 @@ function init() {
   }
   if (cancelBtn) {
     cancelBtn.addEventListener("click", () => {
-      window.electron?.closeWindow?.() || window.close();
-    });
-  }
-  if (thanksClose) {
-    thanksClose.addEventListener("click", () => {
       window.electron?.closeWindow?.() || window.close();
     });
   }
@@ -163,6 +157,7 @@ ${steps}`;
         const titleEl = titlebar.querySelector(".win11-titlebar-title");
         if (titleEl) titleEl.textContent = localeData?.feedbackThanksTitle || "Thank you!";
       }
+      window.electron?.resizeFeedbackWindow?.(500, 320);
     });
   }
 }
