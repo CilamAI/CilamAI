@@ -9,7 +9,9 @@
     <img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/CilamAI/CilamAI/ci.yml?branch=main&label=build&style=flat-square" />
   </a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square" />
-  <img alt="License" src="https://img.shields.io/github/license/CilamAI/CilamAI?style=flat-square" />
+  <a href="LICENSE">
+    <img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-green?style=flat-square" />
+  </a>
 </p>
 
 # Welcome to CilamAI v0.1.0.1
