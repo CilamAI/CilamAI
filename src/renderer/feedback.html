@@ -14,11 +14,8 @@
       background-color: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 34px 28px 16px 28px;
+      display: block;
+      padding: 42px 28px 20px 28px;
       overflow-y: auto;
       user-select: none;
       box-sizing: border-box;
@@ -79,9 +76,10 @@
     .feedback-container {
       width: 100%;
       max-width: 540px;
+      margin: 0 auto;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
       animation: fadeIn 0.2s ease;
       box-sizing: border-box;
     }
@@ -96,6 +94,8 @@
       font-weight: 700;
       letter-spacing: -0.02em;
       color: var(--text);
+      margin-top: 0;
+      padding-top: 0;
     }
 
     .feedback-form {
