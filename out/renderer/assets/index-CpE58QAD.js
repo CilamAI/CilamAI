@@ -1,3 +1,4 @@
+/* empty css               */
 function getDefaultExportFromCjs(x) {
   return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, "default") ? x["default"] : x;
 }
@@ -52823,6 +52824,7 @@ let resolvedTheme = theme;
 const applyTheme = () => {
   resolvedTheme = theme === "system" ? matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light" : theme;
   document.documentElement.dataset.theme = resolvedTheme;
+  window.electron?.setTheme?.(resolvedTheme);
 };
 applyTheme();
 const systemMedia = matchMedia("(prefers-color-scheme: dark)");
@@ -53643,6 +53645,8 @@ async function loadModels() {
   if (compInput) compInput.setAttribute("placeholder", `Message ${defaultItem.displayName}`);
 }
 function showSettings() {
+  const fv = document.querySelector(".feedback-view");
+  if (fv) fv.hidden = true;
   document.querySelector(".settings-view").hidden = false;
   document.querySelector(".help-view").hidden = true;
   document.querySelector(".release-notes-view").hidden = true;
@@ -53666,6 +53670,10 @@ async function loadLocale(lang) {
   document.querySelectorAll("[data-i18n]").forEach((el) => {
     const key = el.getAttribute("data-i18n");
     if (localeData[key]) el.textContent = localeData[key];
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-placeholder");
+    if (localeData[key]) el.setAttribute("placeholder", localeData[key]);
   });
   const langLabel = document.querySelector("#lang-select-label");
   if (langLabel && localeData.languages) langLabel.textContent = localeData.languages[lang] ?? lang;
@@ -53700,6 +53708,8 @@ async function loadLocale(lang) {
   if (window.electron?.setLanguage) window.electron.setLanguage(lang);
 }
 function showChat() {
+  const fv = document.querySelector(".feedback-view");
+  if (fv) fv.hidden = true;
   document.querySelector(".settings-view").hidden = true;
   document.querySelector(".help-view").hidden = true;
   document.querySelector(".release-notes-view").hidden = true;
@@ -53713,6 +53723,8 @@ function showChat() {
   document.querySelector(".welcome-text").hidden = main.classList.contains("has-chat");
 }
 function showHelp() {
+  const fv = document.querySelector(".feedback-view");
+  if (fv) fv.hidden = true;
   document.querySelector(".settings-view").hidden = true;
   document.querySelector(".help-view").hidden = false;
   document.querySelector(".release-notes-view").hidden = true;
@@ -53730,6 +53742,8 @@ function showHelp() {
   }
 }
 function showReleaseNotes() {
+  const fv = document.querySelector(".feedback-view");
+  if (fv) fv.hidden = true;
   document.querySelector(".settings-view").hidden = true;
   document.querySelector(".help-view").hidden = true;
   const rn = document.querySelector(".release-notes-view");
@@ -53759,6 +53773,24 @@ function showReleaseNotes() {
       });
     };
   });
+}
+function showFeedback() {
+  document.querySelector(".settings-view").hidden = true;
+  document.querySelector(".help-view").hidden = true;
+  document.querySelector(".release-notes-view").hidden = true;
+  document.querySelector(".chat").hidden = true;
+  document.querySelector(".composer").hidden = true;
+  document.querySelector(".welcome-text").hidden = true;
+  const sp = document.querySelector(".search-page");
+  if (sp) sp.hidden = true;
+  document.querySelector(".main").classList.add("has-chat");
+  const fv = document.querySelector(".feedback-view");
+  if (fv) {
+    fv.hidden = false;
+    setTimeout(() => {
+      fv.querySelector(".feedback-textarea")?.focus();
+    }, 50);
+  }
 }
 function resetChat() {
   if (messages.length) saveSession();
@@ -53958,6 +53990,12 @@ async function init() {
     btn.addEventListener("click", () => {
       if (btn.dataset.view === "settings") {
         showSettings();
+      } else if (btn.dataset.view === "feedback") {
+        if (window.electron?.openFeedbackWindow) {
+          window.electron.openFeedbackWindow();
+        } else {
+          showFeedback();
+        }
       } else {
         if (btn.dataset.reset === "true") resetChat();
         else showChat();
@@ -54244,6 +54282,13 @@ async function init() {
             }
             showNotification(`You're up to date (v${result.current}).`, "info");
           }).catch((err) => showNotification(err.message || "Unable to check for updates.", "error"));
+        }
+        if (action === "feedback") {
+          if (window.electron?.openFeedbackWindow) {
+            window.electron.openFeedbackWindow();
+          } else {
+            showFeedback();
+          }
         }
         if (action === "search") openSearchPage2();
         if (action === "close") window.electron?.closeWindow?.();
@@ -56319,6 +56364,7 @@ async function init() {
   resetChat();
   ensureSession();
   saveSessions();
+  initFeedback();
   document.addEventListener("click", (e) => {
     const btn = e.target.closest(".reaction-btn");
     if (!btn) return;
@@ -56339,6 +56385,99 @@ async function init() {
       const active = btn.classList.toggle("active");
       console.log(`Reaction: ${reaction} ${active ? "added" : "removed"}`);
     }
+  });
+}
+function initFeedback() {
+  const fv = document.querySelector(".feedback-view");
+  if (!fv) return;
+  const typeRadios = fv.querySelectorAll('input[name="feedback-type"]');
+  const stepsGroup = fv.querySelector("#feedback-steps-group");
+  const msgInput = fv.querySelector("#feedback-message");
+  const attachTrigger = fv.querySelector("#feedback-attach-trigger");
+  const fileInput = fv.querySelector("#feedback-file-input");
+  const filePreview = fv.querySelector("#feedback-file-preview");
+  const removeFileBtn = fv.querySelector("#feedback-file-remove");
+  const previewFilename = fv.querySelector(".preview-filename");
+  typeRadios.forEach((radio) => {
+    radio.addEventListener("change", () => {
+      if (radio.value === "bug") {
+        if (stepsGroup) stepsGroup.hidden = false;
+        if (msgInput) msgInput.placeholder = localeData?.feedbackDescPlaceholder || "Describe the bug you encountered...";
+      } else if (radio.value === "feature") {
+        if (stepsGroup) stepsGroup.hidden = true;
+        if (msgInput) msgInput.placeholder = "Describe the feature you would like to see...";
+      } else if (radio.value === "auth-billing") {
+        if (stepsGroup) stepsGroup.hidden = true;
+        if (msgInput) msgInput.placeholder = "Describe the authentication or billing issue...";
+      } else {
+        if (stepsGroup) stepsGroup.hidden = true;
+        if (msgInput) msgInput.placeholder = "Share your thoughts, suggestions, or experience...";
+      }
+    });
+  });
+  if (attachTrigger && fileInput) {
+    attachTrigger.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files?.[0];
+      if (file && filePreview && previewFilename) {
+        previewFilename.textContent = file.name;
+        filePreview.hidden = false;
+        attachTrigger.hidden = true;
+      }
+    });
+  }
+  if (removeFileBtn && fileInput && filePreview && attachTrigger) {
+    removeFileBtn.addEventListener("click", () => {
+      fileInput.value = "";
+      filePreview.hidden = true;
+      attachTrigger.hidden = false;
+    });
+  }
+  fv.querySelectorAll('[data-action="close-feedback"]').forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (window.location.hash === "#feedback") {
+        window.close();
+      } else {
+        showChat();
+      }
+    });
+  });
+  fv.querySelector('[data-action="open-github-issues"]')?.addEventListener("click", () => {
+    window.electron?.openExternal?.("https://github.com/CilamAI/CilamAI/issues/new/choose");
+  });
+  const form = fv.querySelector("#feedback-form");
+  if (form) {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const msg = msgInput?.value?.trim();
+      if (!msg) return;
+      showNotification(localeData?.feedbackSent || "Thank you for your feedback!", "success");
+      form.reset();
+      if (fileInput) fileInput.value = "";
+      if (filePreview) filePreview.hidden = true;
+      if (attachTrigger) attachTrigger.hidden = false;
+      if (stepsGroup) stepsGroup.hidden = false;
+      if (window.location.hash === "#feedback") {
+        setTimeout(() => window.close(), 1e3);
+      } else {
+        showChat();
+      }
+    });
+  }
+}
+if (window.location.hash === "#feedback") {
+  document.addEventListener("DOMContentLoaded", () => {
+    const tb = document.querySelector(".titlebar");
+    const sb = document.querySelector(".sidebar");
+    const chat = document.querySelector(".chat");
+    const comp = document.querySelector(".composer");
+    const wt = document.querySelector(".welcome-text");
+    if (tb) tb.style.display = "none";
+    if (sb) sb.style.display = "none";
+    if (chat) chat.style.display = "none";
+    if (comp) comp.style.display = "none";
+    if (wt) wt.style.display = "none";
+    showFeedback();
   });
 }
 if (document.readyState === "loading") {

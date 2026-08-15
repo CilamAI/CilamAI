@@ -9,6 +9,8 @@ contextBridge.exposeInMainWorld("electron", {
   consoleWarn: (msg) => ipcRenderer.send("app:console-warn", msg),
   checkUpdates: () => ipcRenderer.invoke("app:check-updates"),
   downloadAndInstall: (url) => ipcRenderer.invoke("app:download-and-install", url),
+  openFeedbackWindow: () => ipcRenderer.invoke("app:open-feedback-window"),
+  closeWindow: () => ipcRenderer.invoke("window:close"),
   checkInternet: () => ipcRenderer.invoke("app:check-internet"),
   sendMessage: (payload) => ipcRenderer.invoke("chat:send", payload),
   sendStream: (payload, onChunk, onReasoning) => new Promise((resolve) => {
@@ -62,6 +64,9 @@ contextBridge.exposeInMainWorld("electron", {
   getStartup: () => ipcRenderer.invoke("startup:get"),
   setLanguage: (lang) => ipcRenderer.invoke("app:set-language", lang),
   getLanguage: () => ipcRenderer.invoke("app:get-language"),
+  setTheme: (theme) => ipcRenderer.invoke("app:set-theme", theme),
+  getTheme: () => ipcRenderer.invoke("app:get-theme"),
+  onThemeChange: (cb) => ipcRenderer.on("app:theme-changed", (_event, theme) => cb(theme)),
   getPendingApiKey: () => ipcRenderer.invoke("app:get-pending-apikey"),
   getEnvConfig: () => ipcRenderer.invoke("app:get-env-config"),
   contextWindowBoost: (enabled) => ipcRenderer.invoke("app:context-window-boost", enabled),

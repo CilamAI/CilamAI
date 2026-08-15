@@ -530,6 +530,20 @@ ipcMain.handle("app:set-language", (_event, lang) => {
   broadcastLanguage(lang);
   return { ok: true, lang };
 });
+let currentTheme = "dark";
+function broadcastTheme(theme) {
+  currentTheme = theme;
+  BrowserWindow.getAllWindows().forEach((w) => {
+    if (!w.isDestroyed()) {
+      w.webContents.send("app:theme-changed", theme);
+    }
+  });
+}
+ipcMain.handle("app:set-theme", (_event, theme) => {
+  broadcastTheme(theme);
+  return { ok: true, theme };
+});
+ipcMain.handle("app:get-theme", () => ({ theme: currentTheme }));
 ipcMain.on("app:console-log", (_event, msg) => console.log(msg));
 ipcMain.on("app:console-info", (_event, msg) => console.info(msg));
 ipcMain.on("app:console-error", (_event, msg) => console.error(msg));
@@ -1349,6 +1363,52 @@ function createWindow() {
     win.loadFile(join(__dirname, "../renderer/index.html"));
   }
 }
+let feedbackWindow = null;
+function openFeedbackWindow() {
+  if (feedbackWindow && !feedbackWindow.isDestroyed()) {
+    feedbackWindow.focus();
+    return;
+  }
+  const mainWin = BrowserWindow.getAllWindows().find((w) => w !== feedbackWindow && !w.isDestroyed());
+  feedbackWindow = new BrowserWindow({
+    title: "Provide Feedback - CilamAI",
+    icon: join(app.getAppPath(), "resources/icon.ico"),
+    width: 580,
+    height: 840,
+    minWidth: 480,
+    minHeight: 600,
+    parent: mainWin || void 0,
+    center: true,
+    resizable: false,
+    maximizable: false,
+    minimizable: false,
+    frame: false,
+    backgroundMaterial: "mica",
+    autoHideMenuBar: true,
+    backgroundColor: "#0f1015",
+    webPreferences: {
+      preload: join(__dirname, "../preload/index.mjs"),
+      sandbox: false
+    }
+  });
+  feedbackWindow.setMenuBarVisibility(false);
+  feedbackWindow.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url);
+    return { action: "deny" };
+  });
+  if (process.env.ELECTRON_RENDERER_URL) {
+    feedbackWindow.loadURL(`${process.env.ELECTRON_RENDERER_URL}/feedback.html`);
+  } else {
+    feedbackWindow.loadFile(join(__dirname, "../renderer/feedback.html"));
+  }
+  feedbackWindow.on("closed", () => {
+    feedbackWindow = null;
+  });
+}
+ipcMain.handle("app:open-feedback-window", () => {
+  openFeedbackWindow();
+  return { ok: true };
+});
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
   app.quit();

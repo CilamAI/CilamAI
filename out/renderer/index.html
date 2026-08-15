@@ -6,8 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CilamAI</title>
   <link rel="icon" href="./assets/favicon-C0RpBe3M.ico" />
-  <script type="module" crossorigin src="./assets/index-BRfq4Ror.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-Ce4mkgp-.css">
+  <script type="module" crossorigin src="./assets/index-CpE58QAD.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/style-BLBsvLj-.css">
 </head>
 
 <body>
@@ -317,12 +317,13 @@
         </div>
       </div>
       <div class="tb-menu-item" data-menu="help">
-        <span>Help</span>
+        <span data-i18n="help">Help</span>
         <div class="tb-menu-dropdown">
-          <button type="button" data-action="welcome">Welcome</button>
-          <button type="button" data-action="help">CilamAI</button>
-          <button type="button" data-action="release-notes">Release Notes</button>
-          <button type="button" data-action="check-updates">Check for Updates</button>
+          <button type="button" data-action="welcome" data-i18n="welcome">Welcome</button>
+          <button type="button" data-action="help" data-i18n="about">CilamAI</button>
+          <button type="button" data-action="release-notes" data-i18n="releaseNotes">Release Notes</button>
+          <button type="button" data-action="check-updates" data-i18n="checkUpdates">Check for Updates</button>
+          <button type="button" data-action="feedback" data-i18n="feedback">Feedback</button>
         </div>
       </div>
     </nav>
@@ -708,6 +709,89 @@
             <span data-i18n="github">GitHub</span>
           </a>
         </div>
+      </div>
+    </section>
+
+    <section class="feedback-view" hidden>
+      <div class="feedback-panel">
+        <div class="feedback-header">
+          <h2 data-i18n="provideFeedback">Provide Feedback</h2>
+        </div>
+
+        <form class="feedback-form" id="feedback-form">
+          <div class="feedback-group">
+            <label class="feedback-group-label" data-i18n="feedbackType">Feedback Type</label>
+            <div class="feedback-radio-list">
+              <label class="feedback-radio-item">
+                <input type="radio" name="feedback-type" value="bug" checked />
+                <span class="feedback-radio-custom"></span>
+                <span data-i18n="bugReport">Bug Report</span>
+              </label>
+              <label class="feedback-radio-item">
+                <input type="radio" name="feedback-type" value="feature" />
+                <span class="feedback-radio-custom"></span>
+                <span data-i18n="featureRequest">Feature Request</span>
+              </label>
+              <label class="feedback-radio-item">
+                <input type="radio" name="feedback-type" value="auth-billing" />
+                <span class="feedback-radio-custom"></span>
+                <span data-i18n="authBilling">Auth and Billing</span>
+              </label>
+              <label class="feedback-radio-item">
+                <input type="radio" name="feedback-type" value="general" />
+                <span class="feedback-radio-custom"></span>
+                <span data-i18n="generalFeedback">General Feedback</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="feedback-group">
+            <label class="feedback-group-label" data-i18n="description">Description</label>
+            <p class="feedback-guide-text" data-i18n="feedbackGuide">
+              Please describe the issue in detail. The more actionable your feedback, the quicker our team can address your request. Some helpful information includes:
+            </p>
+            <ul class="feedback-guide-list">
+              <li data-i18n="guideSteps">Steps to reproduce the issue</li>
+              <li data-i18n="guideExpected">Expected behavior</li>
+              <li data-i18n="guideActual">Actual behavior</li>
+              <li data-i18n="guideErrors">Any error messages</li>
+              <li data-i18n="guideRelevant">Any relevant information</li>
+            </ul>
+            <textarea id="feedback-message" class="feedback-textarea" rows="5" required data-i18n-placeholder="feedbackDescPlaceholder" placeholder="Describe the bug you encountered..."></textarea>
+          </div>
+
+          <div class="feedback-group" id="feedback-steps-group">
+            <label class="feedback-group-label" data-i18n="stepsToReproduce">Steps to Reproduce</label>
+            <textarea id="feedback-steps" class="feedback-textarea" rows="3" data-i18n-placeholder="stepsPlaceholder" placeholder="Please list the steps to reproduce the issue"></textarea>
+          </div>
+
+          <div class="feedback-group">
+            <button type="button" class="feedback-attach-btn" id="feedback-attach-trigger">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+              </svg>
+              <span data-i18n="attachScreenshot">Attach a screenshot (optional)</span>
+            </button>
+            <input type="file" id="feedback-file-input" accept="image/*" hidden />
+            <div id="feedback-file-preview" class="feedback-file-preview" hidden>
+              <span class="preview-filename"></span>
+              <button type="button" class="preview-remove-btn" id="feedback-file-remove">&times;</button>
+            </div>
+          </div>
+
+          <div class="feedback-actions">
+            <button type="button" class="feedback-github-btn" data-action="open-github-issues">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                <use href="#icon-32"></use>
+              </svg>
+              <span data-i18n="githubIssues">GitHub Issues</span>
+            </button>
+            <div class="feedback-actions-right">
+              <button type="button" class="feedback-cancel-btn" data-action="close-feedback" data-i18n="cancel">Cancel</button>
+              <button type="submit" class="feedback-submit-btn primary" data-i18n="sendFeedback">Send Feedback</button>
+            </div>
+          </div>
+        </form>
       </div>
     </section>
 
