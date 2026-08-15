@@ -3,7 +3,7 @@
     "composite": true,
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
     "allowJs": true,
     "checkJs": false,
     "skipLibCheck": true,
@@ -11,7 +11,8 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "types": ["node"]
+    "types": ["node"],
+    "outDir": "./dist-node"
   },
   "include": [
     "electron.vite.config.*",

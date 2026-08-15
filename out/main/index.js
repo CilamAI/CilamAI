@@ -1,4 +1,4 @@
-import { app, ipcMain, BrowserWindow, dialog, shell, Menu } from "electron";
+import { app, ipcMain, shell, BrowserWindow, dialog, Menu } from "electron";
 import { join } from "node:path";
 import { writeFile, readFile } from "node:fs/promises";
 import { existsSync, readFileSync, writeFileSync, unlinkSync } from "node:fs";
@@ -422,23 +422,31 @@ ipcMain.handle("app:platform-info", () => ({
 ipcMain.handle("app:get-version", () => app.getVersion());
 ipcMain.handle("app:check-updates", async () => {
   const fallbackVersion = app.getVersion();
+  const defaultDownloadUrl = "https://github.com/CilamAI/CilamAI/releases/latest/download/CilamAI-Setup.exe";
   const fallbackReleaseUrl = `https://github.com/CilamAI/CilamAI/releases/tag/v${fallbackVersion}`;
-  const fallbackDownloadUrl = `https://github.com/CilamAI/CilamAI/releases/download/v${fallbackVersion}/CilamAI-Setup.exe`;
   const tagFromUrl = (url) => {
     const match = String(url || "").match(/\/releases\/tag\/([^/?#]+)/i);
     return match ? decodeURIComponent(match[1]) : "";
   };
   try {
-    const getRelease = (path) => new Promise((resolve, reject) => {
-      const request = https.get(`https://api.github.com${path}`, {
-        headers: { "User-Agent": "CilamAI", Accept: "application/vnd.github+json" }
+    const getJson = (url) => new Promise((resolve, reject) => {
+      const parsed = new URL(url);
+      const client = parsed.protocol === "http:" ? http : https;
+      const request = client.get(url, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) CilamAI",
+          Accept: "application/vnd.github+json"
+        }
       }, (response) => {
+        if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+          return resolve(getJson(response.headers.location));
+        }
+        if (response.statusCode !== 200) return reject(new Error(`GitHub HTTP ${response.statusCode}`));
         let body = "";
         response.on("data", (chunk) => {
           body += chunk;
         });
         response.on("end", () => {
-          if (response.statusCode !== 200) return reject(new Error(`GitHub HTTP ${response.statusCode}`));
           try {
             resolve(JSON.parse(body));
           } catch {
@@ -448,84 +456,74 @@ ipcMain.handle("app:check-updates", async () => {
       });
       request.on("error", reject);
     });
-    let release;
+    let release = null;
     try {
-      const releases = await getRelease("/repos/CilamAI/CilamAI/tags");
-      release = Array.isArray(releases) && releases.length > 0 ? releases[0] : null;
-      if (!release) throw new Error("No releases found");
+      release = await getJson("https://api.github.com/repos/CilamAI/CilamAI/releases/latest");
     } catch {
-      release = await new Promise((resolve, reject) => {
-        const request = https.get("https://github.com/CilamAI/CilamAI/tags.atom", {
-          headers: { "User-Agent": "CilamAI" }
-        }, (response) => {
-          let body = "";
-          response.on("data", (chunk) => {
-            body += chunk;
-          });
-          response.on("end", () => {
-            if (response.statusCode !== 200) return reject(new Error(`GitHub feed HTTP ${response.statusCode}`));
-            const entry = body.match(/<entry>[\s\S]*?<\/entry>/i)?.[0];
-            const title = entry?.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.trim();
-            const link = entry?.match(/<link[^>]+href=["']([^"']+)["']/i)?.[1];
-            if (!title || !link) {
-              return resolve({ name: fallbackVersion, html_url: fallbackReleaseUrl, download_url: fallbackDownloadUrl });
-            }
-            resolve({ name: title, tag_name: tagFromUrl(link), html_url: link });
-          });
-        });
-        request.on("error", reject);
-      });
+      try {
+        const tags = await getJson("https://api.github.com/repos/CilamAI/CilamAI/tags");
+        if (Array.isArray(tags) && tags.length > 0) {
+          release = { tag_name: tags[0].name, html_url: `https://github.com/CilamAI/CilamAI/releases/tag/${tags[0].name}` };
+        }
+      } catch {
+      }
     }
-    const releaseTag = release.tag_name || (release.commit ? release.name : null) || tagFromUrl(release.html_url) || fallbackVersion;
-    const latest = String(releaseTag || release.name || fallbackVersion).replace(/^CilamAI\s+v?/i, "").replace(/^v/i, "").trim() || fallbackVersion;
-    const generatedHtmlUrl = `https://github.com/CilamAI/CilamAI/releases/tag/${encodeURIComponent(releaseTag)}`;
-    const downloadUrl = release.assets?.find((asset) => /CilamAI-Setup\.exe$/i.test(asset.name || ""))?.browser_download_url || release.download_url || `https://github.com/CilamAI/CilamAI/releases/download/${encodeURIComponent(releaseTag)}/CilamAI-Setup.exe`;
-    return { ok: true, current: app.getVersion(), latest, url: release.html_url || generatedHtmlUrl, downloadUrl };
+    const releaseTag = release?.tag_name || release?.name || tagFromUrl(release?.html_url) || fallbackVersion;
+    const latest = String(releaseTag || fallbackVersion).replace(/^CilamAI\s+v?/i, "").replace(/^v/i, "").trim() || fallbackVersion;
+    const assetUrl = release?.assets?.find((asset) => /CilamAI-Setup\.exe$/i.test(asset.name || ""))?.browser_download_url;
+    const downloadUrl = assetUrl || (release?.tag_name ? `https://github.com/CilamAI/CilamAI/releases/download/${release.tag_name}/CilamAI-Setup.exe` : defaultDownloadUrl);
+    const releasePageUrl = release?.html_url || `https://github.com/CilamAI/CilamAI/releases/tag/v${latest}`;
+    return { ok: true, current: app.getVersion(), latest, url: releasePageUrl, downloadUrl };
   } catch (err) {
-    return { ok: false, error: err.message || "Update check failed" };
+    return {
+      ok: true,
+      current: app.getVersion(),
+      latest: app.getVersion(),
+      url: fallbackReleaseUrl,
+      downloadUrl: defaultDownloadUrl
+    };
   }
 });
 ipcMain.handle("app:download-and-install", async (_event, downloadUrl) => {
-  return new Promise((resolve, reject) => {
-    const tempDir = app.getPath("temp");
-    const fileName = `CilamAI-Update-${Date.now()}.exe`;
-    const filePath = join(tempDir, fileName);
-    const fs = require2("node:fs");
-    const file = fs.createWriteStream(filePath);
-    const download = (url) => {
-      https.get(url, (response) => {
-        if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
-          return download(response.headers.location);
-        }
-        if (response.statusCode !== 200) {
-          file.destroy();
-          fs.unlink(filePath, () => {
-          });
-          return reject(new Error(`Download failed: ${response.statusCode}`));
-        }
-        response.pipe(file);
-        file.on("finish", () => {
-          file.close(() => {
-            try {
-              const child = require2("node:child_process").spawn(filePath, ["/SILENT"], { detached: true, stdio: "ignore" });
-              child.on("error", (err) => reject(err));
-              child.unref();
-              resolve({ ok: true });
-              setTimeout(() => app.quit(), 500);
-            } catch (e) {
-              reject(e);
-            }
-          });
-        });
-      }).on("error", (err) => {
-        file.destroy();
-        fs.unlink(filePath, () => {
-        });
-        reject(err);
+  const fs = require2("node:fs");
+  const { Readable } = require2("node:stream");
+  const { pipeline } = require2("node:stream/promises");
+  const tempDir = app.getPath("temp");
+  const fileName = `CilamAI-Update-${Date.now()}.exe`;
+  const filePath = join(tempDir, fileName);
+  const candidateUrls = [
+    downloadUrl,
+    "https://github.com/CilamAI/CilamAI/releases/latest/download/CilamAI-Setup.exe",
+    "https://github.com/CilamAI/CilamAI/releases/download/v0.1.0.1/CilamAI-Setup.exe"
+  ].filter(Boolean);
+  let downloaded = false;
+  for (const url of candidateUrls) {
+    try {
+      const response = await net.fetch(url, {
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) CilamAI" },
+        redirect: "follow"
       });
-    };
-    download(downloadUrl);
-  });
+      if (response.ok && response.body) {
+        const fileStream = fs.createWriteStream(filePath);
+        await pipeline(Readable.fromWeb(response.body), fileStream);
+        downloaded = true;
+        break;
+      }
+    } catch (e) {
+    }
+  }
+  if (downloaded) {
+    try {
+      const child = require2("node:child_process").spawn(filePath, ["/SILENT"], { detached: true, stdio: "ignore" });
+      child.unref();
+      setTimeout(() => app.quit(), 600);
+      return { ok: true };
+    } catch (e) {
+    }
+  }
+  const targetUrl = downloadUrl || "https://github.com/CilamAI/CilamAI/releases/latest";
+  shell.openExternal(targetUrl);
+  return { ok: true, openedInBrowser: true };
 });
 ipcMain.handle("app:set-language", (_event, lang) => {
   if (!SUPPORTED_LANGS.includes(lang)) return { ok: false, error: "Unsupported language" };
@@ -1016,7 +1014,7 @@ ipcMain.on("auth:get-user-sync", (event) => {
 });
 ipcMain.handle("auth:sign-in", async (_event, provider) => {
   if (provider === "google") {
-    const http = await import("node:http");
+    const http2 = await import("node:http");
     const crypto = await import("node:crypto");
     if (oauthHttpServer) {
       try {
@@ -1031,7 +1029,7 @@ ipcMain.handle("auth:sign-in", async (_event, provider) => {
     const clientId = "397334871290-nmalk9a3erj7qru9v3aic1s1l7lc3c8k.apps.googleusercontent.com";
     return new Promise((resolve) => {
       let oauthPort = 3e3;
-      oauthHttpServer = http.createServer(async (req, res) => {
+      oauthHttpServer = http2.createServer(async (req, res) => {
         const urlObj = new URL(req.url, `http://127.0.0.1:${oauthPort}`);
         const code = urlObj.searchParams.get("code");
         const error = urlObj.searchParams.get("error");
