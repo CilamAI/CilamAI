@@ -1285,6 +1285,7 @@ function openFeedbackWindow() {
     minimizable: false,
     frame: false,
     hasShadow: false,
+    thickFrame: false,
     backgroundMaterial: 'mica',
     autoHideMenuBar: true,
     backgroundColor: '#0f1015',
