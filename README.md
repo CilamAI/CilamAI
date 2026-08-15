@@ -6,7 +6,7 @@
   <a href="https://github.com/CilamAI/CilamAI/issues"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/opencode/publish.yml?label=build&style=flat-square" /></a>
 </p>
 
-# CilamAI Desktop App (BETA) v0.1.0.1
+# CilamAI v0.1.0.1
 
 **Supported Languages (19 Languages):**  
 English, 한국어 (Korean), Türkçe (Turkish), Русский (Russian), 简体中文 (Chinese), 繁體中文 (Traditional Chinese), 日本語 (Japanese), Español (Spanish), Français (French), Deutsch (German), Português (Portuguese), Italiano (Italian), العربية (Arabic), हिन्दी (Hindi), Tiếng Việt (Vietnamese), Bahasa Indonesia (Indonesian), Polski (Polish), Українська (Ukrainian), Nederlands (Dutch)
@@ -24,8 +24,8 @@ English, 한국어 (Korean), Türkçe (Turkish), Русский (Russian), 简�
 ## Installation
 
 ### Windows Installer
-* **[Download CilamAI-Setup.exe](https://github.com/CilamAI/CilamAI/releases/latest/download/CilamAI-Setup.exe)** - Standard setup wizard with desktop and Start Menu shortcuts.
-* **[Download CilamAI-Portable.exe](https://github.com/CilamAI/CilamAI/releases/latest/download/CilamAI-0.1.0.1-Portable.exe)** - Standalone portable executable (no installation required).
+* **[Download CilamAI-Setup.exe](https://github.com/CilamAI/CilamAI/releases/latest/download/CilamAI-Setup.exe)** Standard setup wizard with desktop and Start Menu shortcuts.
+* **[Download CilamAI-Portable.exe](https://github.com/CilamAI/CilamAI/releases/latest/download/CilamAI-0.1.0.1-Portable.exe)** Standalone portable executable (no installation required).
 
 ### Quick Install (PowerShell)
 ```powershell
@@ -43,4 +43,4 @@ irm https://raw.githubusercontent.com/CilamAI/CilamAI/refs/heads/main/install.ps
 
 ## License
 
-This project is licensed under the [Apache-2.0 License](LICENSE) - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the [Apache-2.0 License](LICENSE) see the [LICENSE](LICENSE) file for details.
