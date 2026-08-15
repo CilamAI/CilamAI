@@ -25,21 +25,47 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "start": "electron-vite preview",
-    "test-api": "node C:\\Users\\omg\\.gemini\\antigravity-ide\\brain\\2f742c82-4368-4326-9325-747ce76a220a\\scratch\\test_api.js",
-    "predist": "node -e \"try { require('child_process').execSync('taskkill /F /IM electron.exe 2>NUL'); require('child_process').execSync('taskkill /F /IM CilamAI.exe 2>NUL'); } catch(e) {}\"",
-    "dist": "electron-vite build && node scripts/ebuild.mjs --win --x64",
-    "build:linux": "electron-vite build && node scripts/ebuild.mjs --linux",
-    "iss": "node scripts/iss.mjs"
+    "dist": "electron-vite build && electron-builder --win",
+    "dist:portable": "electron-vite build && electron-builder --win portable",
+    "dist:nsis": "electron-vite build && electron-builder --win nsis",
+    "dist:dir": "electron-vite build && electron-builder --win --dir",
+    "build:linux": "electron-vite build && electron-builder --linux"
   },
   "build": {
     "appId": "com.cilamai.desktop",
     "productName": "CilamAI",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "win": {
-      "target": "dir",
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "resources/icon.ico"
     },
+    "portable": {
+      "artifactName": "${productName}-${version}-Portable.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "CilamAI"
+    },
     "linux": {
-      "target": "tar.gz"
+      "target": [
+        "tar.gz"
+      ]
     },
     "directories": {
       "output": "release_build"
