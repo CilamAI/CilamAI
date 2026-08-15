@@ -1,7 +1,7 @@
 {
   "name": "cilamai",
   "productName": "CilamAI",
-  "description": "CilamAI Desktop App",
+  "description": "CilamAI Desktop App (BETA)",
   "version": "0.1.0",
   "type": "module",
   "main": "out/main/index.js",
