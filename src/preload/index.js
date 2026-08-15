@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('electron', {
   checkUpdates: () => ipcRenderer.invoke('app:check-updates'),
   downloadAndInstall: (url) => ipcRenderer.invoke('app:download-and-install', url),
   openFeedbackWindow: () => ipcRenderer.invoke('app:open-feedback-window'),
+  closeWindow: () => ipcRenderer.invoke('window:close'),
   checkInternet: () => ipcRenderer.invoke('app:check-internet'),
   sendMessage: (payload) => ipcRenderer.invoke('chat:send', payload),
   sendStream: (payload, onChunk, onReasoning) =>

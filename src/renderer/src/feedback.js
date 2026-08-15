@@ -1,4 +1,3 @@
-// Provide Feedback standalone window logic
 let localeData = {}
 let currentTheme = 'dark'
 
@@ -128,7 +127,14 @@ function init() {
 
   if (cancelBtn) {
     cancelBtn.addEventListener('click', () => {
-      window.close()
+      window.electron?.closeWindow?.() || window.close()
+    })
+  }
+
+  const win11Close = document.querySelector('#win11-close-btn')
+  if (win11Close) {
+    win11Close.addEventListener('click', () => {
+      window.electron?.closeWindow?.() || window.close()
     })
   }
 

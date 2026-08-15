@@ -1283,6 +1283,8 @@ function openFeedbackWindow() {
     resizable: true,
     maximizable: false,
     minimizable: false,
+    frame: false,
+    backgroundMaterial: 'mica',
     autoHideMenuBar: true,
     backgroundColor: '#0f1015',
     webPreferences: {

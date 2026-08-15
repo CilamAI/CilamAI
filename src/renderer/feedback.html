@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="./src/style.css" />
   <style>
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'Segoe UI Variable Text', 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
       background-color: var(--bg);
       color: var(--text);
       min-height: 100vh;
@@ -18,10 +18,62 @@
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      padding: 28px 32px;
+      padding: 50px 32px 24px 32px;
       overflow-y: auto;
       user-select: none;
       box-sizing: border-box;
+    }
+
+    .win11-titlebar {
+      height: 34px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+      -webkit-app-region: drag;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .win11-titlebar-drag {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-left: 14px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-dim);
+    }
+
+    .win11-titlebar-controls {
+      display: flex;
+      align-items: center;
+      height: 100%;
+      -webkit-app-region: no-drag;
+    }
+
+    .win11-control-btn {
+      width: 46px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .win11-close-btn:hover {
+      background: #c42b1c;
+      color: #ffffff;
     }
 
     .feedback-container {
@@ -271,6 +323,23 @@
   </style>
 </head>
 <body>
+  <div class="win11-titlebar">
+    <div class="win11-titlebar-drag">
+      <svg class="win11-app-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+      <span class="win11-titlebar-text">Provide Feedback - CilamAI</span>
+    </div>
+    <div class="win11-titlebar-controls">
+      <button class="win11-control-btn win11-close-btn" id="win11-close-btn" title="Close">
+        <svg viewBox="0 0 10 10" width="10" height="10" stroke="currentColor" stroke-width="1.2">
+          <line x1="0" y1="0" x2="10" y2="10" />
+          <line x1="10" y1="0" x2="0" y2="10" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
   <div class="feedback-container">
     <h1 class="feedback-title" data-i18n="provideFeedback">Provide Feedback</h1>
 
