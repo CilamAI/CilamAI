@@ -91,7 +91,6 @@ function init() {
   const githubBtn = document.querySelector('#feedback-github-btn')
   const form = document.querySelector('#feedback-form')
   const thanksPanel = document.querySelector('#feedback-thanks')
-  const thanksClose = document.querySelector('#feedback-thanks-close')
   const feedbackTitle = document.querySelector('.feedback-title')
   const titlebar = document.querySelector('.win11-titlebar')
 
@@ -132,12 +131,6 @@ function init() {
 
   if (cancelBtn) {
     cancelBtn.addEventListener('click', () => {
-      window.electron?.closeWindow?.() || window.close()
-    })
-  }
-
-  if (thanksClose) {
-    thanksClose.addEventListener('click', () => {
       window.electron?.closeWindow?.() || window.close()
     })
   }

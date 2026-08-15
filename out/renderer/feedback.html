@@ -13,8 +13,7 @@
       background-color: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+      display: block;
       padding: 42px 28px 20px 28px;
       overflow-y: auto;
       user-select: none;
@@ -80,7 +79,6 @@
       display: flex;
       flex-direction: column;
       gap: 14px;
-      padding-bottom: 24px;
       animation: fadeIn 0.2s ease;
       box-sizing: border-box;
     }
@@ -322,13 +320,15 @@
     }
 
     .feedback-thanks {
+      position: fixed;
+      inset: 0;
+      top: 32px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       text-align: center;
       gap: 16px;
-      flex: 1;
       padding: 16px;
       animation: fadeIn 0.25s ease;
     }
