@@ -146,5 +146,6 @@
   "arguments": "तर्क (स्पेस द्वारा अलग)",
   "sseUrl": "SSE URL",
   "envVars": "पर्यावरण चर (JSON प्रारूप, वैकल्पिक)",
-  "saveServer": "सर्वर सहेजें"
+  "saveServer": "सर्वर सहेजें",
+  "feedback": "प्रतिक्रिया"
 }

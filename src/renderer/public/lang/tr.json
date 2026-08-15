@@ -146,5 +146,6 @@
   "arguments": "Bağımsız Değişkenler (boşlukla ayrılmış)",
   "sseUrl": "SSE URL",
   "envVars": "Ortam Değişkenleri (JSON formatında, isteğe bağlı)",
-  "saveServer": "Sunucuyu Kaydet"
+  "saveServer": "Sunucuyu Kaydet",
+  "feedback": "Geri Bildirim"
 }

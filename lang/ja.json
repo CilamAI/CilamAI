@@ -146,5 +146,6 @@
   "arguments": "引数（スペース区切り）",
   "sseUrl": "SSE URL",
   "envVars": "環境変数（JSON形式、任意）",
-  "saveServer": "サーバーを保存"
+  "saveServer": "サーバーを保存",
+  "feedback": "フィードバック"
 }

@@ -146,5 +146,6 @@
   "arguments": "인수 (공백으로 구분)",
   "sseUrl": "SSE URL",
   "envVars": "환경 변수 (JSON 형식, 선택 사항)",
-  "saveServer": "서버 저장"
+  "saveServer": "서버 저장",
+  "feedback": "피드백"
 }

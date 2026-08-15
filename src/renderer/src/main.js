@@ -1,4 +1,4 @@
-﻿import './style.css'
+import './style.css'
 import hljs from 'highlight.js'
 
 let settings = {}
@@ -1629,6 +1629,9 @@ async function init() {
             }
             showNotification(`You're up to date (v${result.current}).`, 'info')
           }).catch((err) => showNotification(err.message || 'Unable to check for updates.', 'error'))
+        }
+        if (action === 'feedback') {
+          window.electron?.openExternal?.('https://github.com/CilamAI/CilamAI/issues/new/choose')
         }
         if (action === 'search') openSearchPage()
         if (action === 'close') window.electron?.closeWindow?.()

@@ -146,5 +146,6 @@
   "arguments": "Argumenty (rozdzielone spacją)",
   "sseUrl": "Adres URL SSE",
   "envVars": "Zmienne środowiskowe (format JSON, opcjonalnie)",
-  "saveServer": "Zapisz serwer"
+  "saveServer": "Zapisz serwer",
+  "feedback": "Opinie"
 }

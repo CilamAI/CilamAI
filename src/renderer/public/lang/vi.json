@@ -146,5 +146,6 @@
   "arguments": "Tham số (phân cách bằng dấu cách)",
   "sseUrl": "URL SSE",
   "envVars": "Biến môi trường (định dạng JSON, tùy chọn)",
-  "saveServer": "Lưu máy chủ"
+  "saveServer": "Lưu máy chủ",
+  "feedback": "Phản hồi"
 }

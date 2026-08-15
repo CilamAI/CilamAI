@@ -146,5 +146,6 @@
   "arguments": "Argumen (dipisahkan spasi)",
   "sseUrl": "URL SSE",
   "envVars": "Variabel Lingkungan (format JSON, opsional)",
-  "saveServer": "Simpan Server"
+  "saveServer": "Simpan Server",
+  "feedback": "Umpan Balik"
 }

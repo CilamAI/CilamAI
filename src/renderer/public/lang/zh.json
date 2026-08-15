@@ -146,5 +146,6 @@
   "arguments": "参数（空格分隔）",
   "sseUrl": "SSE URL",
   "envVars": "环境变量（JSON 格式，可选）",
-  "saveServer": "保存服务"
+  "saveServer": "保存服务",
+  "feedback": "反馈"
 }

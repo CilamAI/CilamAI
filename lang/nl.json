@@ -146,5 +146,6 @@
   "arguments": "Argumenten (gescheiden door spaties)",
   "sseUrl": "SSE-URL",
   "envVars": "Omgevingsvariabelen (JSON-formaat, optioneel)",
-  "saveServer": "Server opslaan"
+  "saveServer": "Server opslaan",
+  "feedback": "Feedback"
 }

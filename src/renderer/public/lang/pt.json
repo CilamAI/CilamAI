@@ -146,5 +146,6 @@
   "arguments": "Argumentos (separados por espaço)",
   "sseUrl": "URL do SSE",
   "envVars": "Variáveis de ambiente (formato JSON, opcional)",
-  "saveServer": "Salvar servidor"
+  "saveServer": "Salvar servidor",
+  "feedback": "Feedback"
 }
