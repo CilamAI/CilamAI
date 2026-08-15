@@ -5,8 +5,8 @@
   <a href="https://github.com/CilamAI/CilamAI/releases/latest">
     <img alt="Release" src="https://img.shields.io/github/v/release/CilamAI/CilamAI?style=flat-square" />
   </a>
-  <a href="https://github.com/CilamAI/CilamAI/actions">
-    <img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/CilamAI/CilamAI/publish.yml?label=build&style=flat-square" />
+  <a href="https://github.com/CilamAI/CilamAI/actions/workflows/ci.yml">
+    <img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/CilamAI/CilamAI/ci.yml?branch=main&label=build&style=flat-square" />
   </a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square" />
   <img alt="License" src="https://img.shields.io/github/license/CilamAI/CilamAI?style=flat-square" />
