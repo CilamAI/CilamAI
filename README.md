@@ -24,8 +24,8 @@ English, 한국어 (Korean), Türkçe (Turkish), Русский (Russian), 简�
 ## Installation
 
 ### Windows Installer
-* **[Download CilamAI-Setup.exe](https://github.com/CilamAI/CilamAI/releases/latest/download/CilamAI-Setup.exe)** — Standard setup wizard with desktop and Start Menu shortcuts.
-* **[Download CilamAI-Portable.exe](https://github.com/CilamAI/CilamAI/releases/latest/download/CilamAI-0.1.0.1-Portable.exe)** — Standalone portable executable (no installation required).
+* **[Download CilamAI-Setup.exe](https://github.com/CilamAI/CilamAI/releases/latest/download/CilamAI-Setup.exe)** - Standard setup wizard with desktop and Start Menu shortcuts.
+* **[Download CilamAI-Portable.exe](https://github.com/CilamAI/CilamAI/releases/latest/download/CilamAI-0.1.0.1-Portable.exe)** - Standalone portable executable (no installation required).
 
 ### Quick Install (PowerShell)
 ```powershell
