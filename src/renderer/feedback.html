@@ -80,7 +80,6 @@
       display: flex;
       flex-direction: column;
       gap: 14px;
-      padding-bottom: 24px;
       animation: fadeIn 0.2s ease;
       box-sizing: border-box;
     }
@@ -322,13 +321,15 @@
     }
 
     .feedback-thanks {
+      position: fixed;
+      inset: 0;
+      top: 32px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       text-align: center;
       gap: 16px;
-      min-height: calc(100vh - 100px);
       padding: 16px;
       animation: fadeIn 0.25s ease;
     }

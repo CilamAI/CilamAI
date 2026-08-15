@@ -132,11 +132,37 @@ function init() {
       e.preventDefault();
       const msg = msgInput?.value?.trim();
       if (!msg) return;
+      const typeRadio = [...typeRadios].find((r) => r.checked);
+      const type = typeRadio?.value || "general";
+      const steps = document.querySelector("#feedback-steps")?.value?.trim() || "";
+      const fileName = previewFilename?.textContent?.trim() || "";
+      const hasScreenshot = !filePreview?.hidden && fileName;
+      const typeLabel = {
+        bug: "Bug Report",
+        feature: "Feature Request",
+        general: "General Feedback"
+      }[type] || "Feedback";
+      let body = `**Type:** ${typeLabel}
+
+**Description:**
+${msg}`;
+      if (steps) body += `
+
+**Steps to reproduce:**
+${steps}`;
+      if (hasScreenshot) body += `
+
+**Attachment:** ${fileName}`;
+      const url = `https://github.com/CilamAI/CilamAI/issues/new?title=${encodeURIComponent(typeLabel)}&body=${encodeURIComponent(body)}`;
+      window.electron?.openExternal?.(url);
       form.reset();
       if (form) form.hidden = true;
       if (feedbackTitle) feedbackTitle.hidden = true;
-      if (titlebar) titlebar.hidden = true;
       if (thanksPanel) thanksPanel.hidden = false;
+      if (titlebar) {
+        const titleEl = titlebar.querySelector(".win11-titlebar-title");
+        if (titleEl) titleEl.textContent = localeData?.feedbackThanksTitle || "Thank you!";
+      }
     });
   }
 }
