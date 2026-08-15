@@ -2,7 +2,7 @@
   "name": "cilamai",
   "productName": "CilamAI",
   "description": "CilamAI Desktop App",
-  "version": "0.1.0-1",
+  "version": "0.1.0",
   "type": "module",
   "main": "out/main/index.js",
   "bin": {
@@ -28,12 +28,13 @@
     "dist": "electron-vite build && electron-builder --win",
     "dist:portable": "electron-vite build && electron-builder --win portable",
     "dist:nsis": "electron-vite build && electron-builder --win nsis",
-    "dist:dir": "electron-vite build && electron-builder --win --dir"
+    "dist:dir": "electron-vite build && electron-builder --win --dir",
+    "iss": "node scripts/iss.mjs"
   },
   "build": {
     "appId": "com.cilamai.desktop",
     "productName": "CilamAI",
-    "buildVersion": "0.1.0.1",
+    "buildVersion": "0.1.0-1",
     "artifactName": "${productName}-0.1.0.1-${os}-${arch}.${ext}",
     "win": {
       "target": [

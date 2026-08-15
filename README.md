@@ -36,34 +36,6 @@ Download the installer and run it:
 irm https://raw.githubusercontent.com/CilamAI/CilamAI/refs/heads/main/install.ps1 | iex
 ```
 
-### Prerequisites
-
-* **Node.js** 20+ and npm
-* **Git** (to clone the repository)
-
-### Install & run
-
-```bash
-# from the project root
-npm install
-npm start
-```
-
-For development with hot reload:
-
-```bash
-npm run dev
-```
-
-### Build
-
-To apply source changes in the running app (preview mode), rebuild after each change:
-
-```bash
-npm run build
-npm start
-```
-
 ## Keyboard Shortcuts
 
 | Keys | Action |
