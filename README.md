@@ -8,9 +8,6 @@
 
 # CilamAI v0.1.0.1
 
-**Supported Languages (19 Languages):**  
-English, 한국어 (Korean), Türkçe (Turkish), Русский (Russian), 简体中文 (Chinese), 繁體中文 (Traditional Chinese), 日本語 (Japanese), Español (Spanish), Français (French), Deutsch (German), Português (Portuguese), Italiano (Italian), العربية (Arabic), हिन्दी (Hindi), Tiếng Việt (Vietnamese), Bahasa Indonesia (Indonesian), Polski (Polish), Українська (Ukrainian), Nederlands (Dutch)
-
 </div>
 
 ## Screenshots
