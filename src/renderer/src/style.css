@@ -1585,6 +1585,21 @@ body.shimmer-enabled .theme-card:has(input:checked) > * {
   z-index: 1;
 }
 
+body.shimmer-enabled .theme-card:has(input:checked) .theme-preview {
+  animation: theme-svg-shimmer 2s ease-in-out infinite;
+}
+
+@keyframes theme-svg-shimmer {
+  0%, 100% {
+    filter: drop-shadow(0 0 2px var(--accent));
+    opacity: 0.9;
+  }
+  50% {
+    filter: drop-shadow(0 0 8px var(--accent)) brightness(1.15);
+    opacity: 1;
+  }
+}
+
 @keyframes theme-shimmer-spin {
   from { --shimmer-angle: 0deg; }
   to { --shimmer-angle: 360deg; }
