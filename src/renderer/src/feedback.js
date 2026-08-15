@@ -99,9 +99,6 @@ function init() {
       } else if (radio.value === 'feature') {
         if (stepsGroup) stepsGroup.hidden = true
         if (msgInput) msgInput.placeholder = 'Describe the feature you would like to see...'
-      } else if (radio.value === 'auth-billing') {
-        if (stepsGroup) stepsGroup.hidden = true
-        if (msgInput) msgInput.placeholder = 'Describe the authentication or billing issue...'
       } else {
         if (stepsGroup) stepsGroup.hidden = true
         if (msgInput) msgInput.placeholder = 'Share your thoughts, suggestions, or experience...'
