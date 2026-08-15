@@ -1281,6 +1281,7 @@ function openFeedbackWindow() {
     parent: mainWin || undefined,
     center: true,
     resizable: true,
+    maximizable: false,
     autoHideMenuBar: true,
     backgroundColor: '#0f1015',
     webPreferences: {
