@@ -43,4 +43,4 @@ irm https://raw.githubusercontent.com/CilamAI/CilamAI/refs/heads/main/install.ps
 
 ## License
 
-Apache-2.0. See [LICENSE](LICENSE).
+This project is licensed under the [Apache-2.0 License](LICENSE) - see the [LICENSE](LICENSE) file for details.
