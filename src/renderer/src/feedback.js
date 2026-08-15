@@ -183,8 +183,11 @@ function init() {
       form.reset()
       if (form) form.hidden = true
       if (feedbackTitle) feedbackTitle.hidden = true
-      if (titlebar) titlebar.hidden = true
       if (thanksPanel) thanksPanel.hidden = false
+      if (titlebar) {
+        const titleEl = titlebar.querySelector('.win11-titlebar-title')
+        if (titleEl) titleEl.textContent = localeData?.feedbackThanksTitle || 'Thank you!'
+      }
     })
   }
 }
