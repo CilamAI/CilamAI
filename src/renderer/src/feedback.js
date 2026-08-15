@@ -188,6 +188,7 @@ function init() {
         const titleEl = titlebar.querySelector('.win11-titlebar-title')
         if (titleEl) titleEl.textContent = localeData?.feedbackThanksTitle || 'Thank you!'
       }
+      window.electron?.resizeFeedbackWindow?.(500, 320)
     })
   }
 }

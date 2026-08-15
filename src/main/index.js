@@ -1321,6 +1321,17 @@ ipcMain.handle('app:open-feedback-window', () => {
   return { ok: true }
 })
 
+ipcMain.handle('app:resize-feedback-window', (_event, { width, height } = {}) => {
+  if (feedbackWindow && !feedbackWindow.isDestroyed()) {
+    const w = Number(width) || 520
+    const h = Number(height) || 340
+    feedbackWindow.setMinimumSize(320, 200)
+    feedbackWindow.setSize(w, h, true)
+    feedbackWindow.center()
+  }
+  return { ok: true }
+})
+
 
 const gotLock = app.requestSingleInstanceLock()
 
