@@ -1269,6 +1269,8 @@ function openFeedbackWindow() {
     return
   }
 
+  const mainWin = BrowserWindow.getAllWindows().find(w => w !== feedbackWindow && !w.isDestroyed())
+
   feedbackWindow = new BrowserWindow({
     title: 'Provide Feedback - CilamAI',
     icon: join(app.getAppPath(), 'resources/icon.ico'),
@@ -1276,6 +1278,7 @@ function openFeedbackWindow() {
     height: 870,
     minWidth: 500,
     minHeight: 700,
+    parent: mainWin || undefined,
     center: true,
     resizable: true,
     autoHideMenuBar: true,
