@@ -2,11 +2,18 @@
 
 <img src="https://file.garden/aPSLaf7myCkWreuK/Untitled_design__9_-removebg-preview.png" width="170" alt="CilamAI Logo" />
 <p align="center">
-  <a href=""><img alt="npm" src="https://img.shields.io/npm/v/opencode-ai?style=flat-square" /></a>
-  <a href="https://github.com/CilamAI/CilamAI/issues"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/opencode/publish.yml?label=build&style=flat-square" /></a>
+  <a href="https://github.com/CilamAI/CilamAI/releases/latest">
+    <img alt="Release" src="https://img.shields.io/github/v/release/CilamAI/CilamAI?style=flat-square" />
+  </a>
+  <a href="https://github.com/CilamAI/CilamAI/actions">
+    <img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/CilamAI/CilamAI/publish.yml?label=build&style=flat-square" />
+  </a>
+  <img alt="Platform" src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square" />
+  <img alt="License" src="https://img.shields.io/github/license/CilamAI/CilamAI?style=flat-square" />
 </p>
 
 # Welcome to CilamAI v0.1.0.1
+
 
 </div>
 
@@ -32,8 +39,7 @@
 
 ### Quick Install (PowerShell)
 ```powershell
-irm https://raw.githubusercontent.com/CilamAI/CilamAI/refs/heads/main/install.ps1 | iex
-```
+irm https://raw.githubusercontent.com/CilamAI/CilamAI/refs/heads/main/install.ps1 | iex```
 
 ## Keyboard Shortcuts
 
