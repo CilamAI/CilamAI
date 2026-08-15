@@ -1274,9 +1274,9 @@ function openFeedbackWindow() {
   })
 
   if (process.env.ELECTRON_RENDERER_URL) {
-    feedbackWindow.loadURL(`${process.env.ELECTRON_RENDERER_URL}#feedback`)
+    feedbackWindow.loadURL(`${process.env.ELECTRON_RENDERER_URL}/feedback.html`)
   } else {
-    feedbackWindow.loadFile(join(__dirname, '../renderer/index.html'), { hash: 'feedback' })
+    feedbackWindow.loadFile(join(__dirname, '../renderer/feedback.html'))
   }
 
   feedbackWindow.on('closed', () => {
