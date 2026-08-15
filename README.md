@@ -6,7 +6,7 @@
   <a href="https://github.com/CilamAI/CilamAI/issues"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/opencode/publish.yml?label=build&style=flat-square" /></a>
 </p>
 
-# CilamAI v0.1.0.1
+# Welcome to CilamAI v0.1.0.1
 
 **The modern, elegant desktop AI chat application with multi-model streaming, Model Context Protocol (MCP) tools, and 19 languages.**
 
