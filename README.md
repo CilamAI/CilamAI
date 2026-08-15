@@ -8,8 +8,7 @@
 
 # CilamAI v0.1.0.1
 
-**Supported Languages (19 Languages):**  
-English, 한국어 (Korean), Türkçe (Turkish), Русский (Russian), 简体中文 (Chinese), 繁體中文 (Traditional Chinese), 日本語 (Japanese), Español (Spanish), Français (French), Deutsch (German), Português (Portuguese), Italiano (Italian), العربية (Arabic), हिन्दी (Hindi), Tiếng Việt (Vietnamese), Bahasa Indonesia (Indonesian), Polski (Polish), Українська (Ukrainian), Nederlands (Dutch)
+**The modern, elegant desktop AI chat application with multi-model streaming, Model Context Protocol (MCP) tools, and 19 languages.**
 
 </div>
 
@@ -25,7 +24,6 @@ English, 한국어 (Korean), Türkçe (Turkish), Русский (Russian), 简�
 
 * **Supported OS**: Windows 11 / Windows 10 (x64)
 * **Supported Languages (19)**: English, 한국어 (Korean), Türkçe (Turkish), Русский (Russian), 简体中文 (Chinese), 繁體中文 (Traditional Chinese), 日本語 (Japanese), Español (Spanish), Français (French), Deutsch (German), Português (Portuguese), Italiano (Italian), العربية (Arabic), हिन्दी (Hindi), Tiếng Việt (Vietnamese), Bahasa Indonesia (Indonesian), Polski (Polish), Українська (Ukrainian), Nederlands (Dutch)
-* **Supported AI Providers**: OpenAI, OpenCode, Anthropic Claude, xAI Grok, Google Gemini, Zhipu AI (GLM)
 * **Supported Protocols**: Model Context Protocol (MCP) `stdio` & `sse` tools
 
 ## Installation
