@@ -117,3 +117,57 @@ begin
     DeleteFolder();
   end;
 end;
+
+var
+  ConfigPage: TWizardPage;
+  ServiceLabel: TNewStaticText;
+  UserLabel: TNewStaticText;
+  UserEdit: TNewEdit;
+  PasswordLabel: TNewStaticText;
+  PasswordEdit: TNewEdit;
+  ServicePermissionCheckBox: TNewCheckBox;
+
+procedure InitializeWizard();
+begin
+  ConfigPage := CreateCustomPage(wpSelectDir, 'Configuration', 'Dashboard service');
+
+  ServiceLabel := TNewStaticText.Create(ConfigPage);
+  ServiceLabel.Parent := ConfigPage.Surface;
+  ServiceLabel.Caption := 'Dashboard service';
+  ServiceLabel.Font.Style := [fsBold];
+  ServiceLabel.Left := ScaleX(0);
+  ServiceLabel.Top := ScaleY(10);
+
+  UserLabel := TNewStaticText.Create(ConfigPage);
+  UserLabel.Parent := ConfigPage.Surface;
+  UserLabel.Caption := 'Windows account username (Domain\Username):';
+  UserLabel.Left := ScaleX(0);
+  UserLabel.Top := ScaleY(40);
+
+  UserEdit := TNewEdit.Create(ConfigPage);
+  UserEdit.Parent := ConfigPage.Surface;
+  UserEdit.Left := ScaleX(0);
+  UserEdit.Top := ScaleY(60);
+  UserEdit.Width := ConfigPage.SurfaceWidth;
+
+  PasswordLabel := TNewStaticText.Create(ConfigPage);
+  PasswordLabel.Parent := ConfigPage.Surface;
+  PasswordLabel.Caption := 'Windows account password:';
+  PasswordLabel.Left := ScaleX(0);
+  PasswordLabel.Top := ScaleY(95);
+
+  PasswordEdit := TNewEdit.Create(ConfigPage);
+  PasswordEdit.Parent := ConfigPage.Surface;
+  PasswordEdit.PasswordChar := '*';
+  PasswordEdit.Left := ScaleX(0);
+  PasswordEdit.Top := ScaleY(115);
+  PasswordEdit.Width := ConfigPage.SurfaceWidth;
+
+  ServicePermissionCheckBox := TNewCheckBox.Create(ConfigPage);
+  ServicePermissionCheckBox.Parent := ConfigPage.Surface;
+  ServicePermissionCheckBox.Caption := 'Add "Log on as a service" permission';
+  ServicePermissionCheckBox.Checked := True;
+  ServicePermissionCheckBox.Left := ScaleX(0);
+  ServicePermissionCheckBox.Top := ScaleY(160);
+  ServicePermissionCheckBox.Width := ConfigPage.SurfaceWidth;
+end;

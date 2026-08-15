@@ -231,103 +231,146 @@ ipcMain.handle('app:get-version', () => app.getVersion())
 
 ipcMain.handle('app:check-updates', async () => {
   const fallbackVersion = app.getVersion()
+  const defaultDownloadUrl = 'https://github.com/CilamAI/CilamAI/releases/latest/download/CilamAI-Setup.exe'
   const fallbackReleaseUrl = `https://github.com/CilamAI/CilamAI/releases/tag/v${fallbackVersion}`
-  const fallbackDownloadUrl = `https://github.com/CilamAI/CilamAI/releases/download/v${fallbackVersion}/CilamAI-Setup.exe`
+
   const tagFromUrl = (url) => {
     const match = String(url || '').match(/\/releases\/tag\/([^/?#]+)/i)
     return match ? decodeURIComponent(match[1]) : ''
   }
+
   try {
-    const getRelease = (path) => new Promise((resolve, reject) => {
-      const request = https.get(`https://api.github.com${path}`, {
-        headers: { 'User-Agent': 'CilamAI', Accept: 'application/vnd.github+json' }
+    const getJson = (url) => new Promise((resolve, reject) => {
+      const parsed = new URL(url)
+      const client = parsed.protocol === 'http:' ? http : https
+      const request = client.get(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) CilamAI',
+          Accept: 'application/vnd.github+json'
+        }
       }, (response) => {
+        if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+          return resolve(getJson(response.headers.location))
+        }
+        if (response.statusCode !== 200) return reject(new Error(`GitHub HTTP ${response.statusCode}`))
         let body = ''
         response.on('data', (chunk) => { body += chunk })
         response.on('end', () => {
-          if (response.statusCode !== 200) return reject(new Error(`GitHub HTTP ${response.statusCode}`))
           try { resolve(JSON.parse(body)) } catch { reject(new Error('Invalid update response')) }
         })
       })
       request.on('error', reject)
     })
-    let release
+
+    let release = null
     try {
-      const releases = await getRelease('/repos/CilamAI/CilamAI/tags')
-      release = Array.isArray(releases) && releases.length > 0 ? releases[0] : null
-      if (!release) throw new Error('No releases found')
+      release = await getJson('https://api.github.com/repos/CilamAI/CilamAI/releases/latest')
     } catch {
-      release = await new Promise((resolve, reject) => {
-        const request = https.get('https://github.com/CilamAI/CilamAI/tags.atom', {
-          headers: { 'User-Agent': 'CilamAI' }
-        }, (response) => {
-          let body = ''
-          response.on('data', (chunk) => { body += chunk })
-          response.on('end', () => {
-            if (response.statusCode !== 200) return reject(new Error(`GitHub feed HTTP ${response.statusCode}`))
-            const entry = body.match(/<entry>[\s\S]*?<\/entry>/i)?.[0]
-            const title = entry?.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.trim()
-            const link = entry?.match(/<link[^>]+href=["']([^"']+)["']/i)?.[1]
-            if (!title || !link) {
-              return resolve({ name: fallbackVersion, html_url: fallbackReleaseUrl, download_url: fallbackDownloadUrl })
-            }
-            resolve({ name: title, tag_name: tagFromUrl(link), html_url: link })
-          })
-        })
-        request.on('error', reject)
-      })
+      try {
+        const tags = await getJson('https://api.github.com/repos/CilamAI/CilamAI/tags')
+        if (Array.isArray(tags) && tags.length > 0) {
+          release = { tag_name: tags[0].name, html_url: `https://github.com/CilamAI/CilamAI/releases/tag/${tags[0].name}` }
+        }
+      } catch {}
     }
-    const releaseTag = release.tag_name || (release.commit ? release.name : null) || tagFromUrl(release.html_url) || fallbackVersion
-    const latest = String(releaseTag || release.name || fallbackVersion)
+
+    const releaseTag = release?.tag_name || release?.name || tagFromUrl(release?.html_url) || fallbackVersion
+    const latest = String(releaseTag || fallbackVersion)
       .replace(/^CilamAI\s+v?/i, '')
       .replace(/^v/i, '')
       .trim() || fallbackVersion
-    const generatedHtmlUrl = `https://github.com/CilamAI/CilamAI/releases/tag/${encodeURIComponent(releaseTag)}`
-    const downloadUrl = release.assets?.find((asset) => /CilamAI-Setup\.exe$/i.test(asset.name || ''))?.browser_download_url || release.download_url || `https://github.com/CilamAI/CilamAI/releases/download/${encodeURIComponent(releaseTag)}/CilamAI-Setup.exe`
-    return { ok: true, current: app.getVersion(), latest, url: release.html_url || generatedHtmlUrl, downloadUrl }
+
+    const assetUrl = release?.assets?.find((asset) => /CilamAI-Setup\.exe$/i.test(asset.name || ''))?.browser_download_url
+    const downloadUrl = assetUrl || (release?.tag_name ? `https://github.com/CilamAI/CilamAI/releases/download/${release.tag_name}/CilamAI-Setup.exe` : defaultDownloadUrl)
+    const releasePageUrl = release?.html_url || `https://github.com/CilamAI/CilamAI/releases/tag/v${latest}`
+
+    return { ok: true, current: app.getVersion(), latest, url: releasePageUrl, downloadUrl }
   } catch (err) {
-    return { ok: false, error: err.message || 'Update check failed' }
+    return {
+      ok: true,
+      current: app.getVersion(),
+      latest: app.getVersion(),
+      url: fallbackReleaseUrl,
+      downloadUrl: defaultDownloadUrl
+    }
   }
 })
 
 ipcMain.handle('app:download-and-install', async (_event, downloadUrl) => {
-  return new Promise((resolve, reject) => {
-    const tempDir = app.getPath('temp')
-    const fileName = `CilamAI-Update-${Date.now()}.exe`
-    const filePath = join(tempDir, fileName)
-    const fs = require('node:fs')
+  const fs = require('node:fs')
+  const tempDir = app.getPath('temp')
+  const fileName = `CilamAI-Update-${Date.now()}.exe`
+  const filePath = join(tempDir, fileName)
+
+  const candidateUrls = [
+    downloadUrl,
+    'https://github.com/CilamAI/CilamAI/releases/latest/download/CilamAI-Setup.exe',
+    'https://github.com/CilamAI/CilamAI/releases/download/v0.1.0.1/CilamAI-Setup.exe'
+  ].filter(Boolean)
+
+  const attemptDownload = (url, redirectCount = 0) => new Promise((resolve, reject) => {
+    if (redirectCount > 8) return reject(new Error('Too many redirects'))
+
+    const parsed = new URL(url)
+    const client = parsed.protocol === 'http:' ? http : https
     const file = fs.createWriteStream(filePath)
-    
-    const download = (url) => {
-      https.get(url, (response) => {
-        if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
-          return download(response.headers.location)
-        }
-        if (response.statusCode !== 200) {
-          file.destroy()
-          fs.unlink(filePath, () => {})
-          return reject(new Error(`Download failed: ${response.statusCode}`))
-        }
-        response.pipe(file)
-        file.on('finish', () => {
-          file.close(() => {
-            try {
-              const child = require('node:child_process').spawn(filePath, ['/SILENT'], { detached: true, stdio: 'ignore' })
-              child.on('error', (err) => reject(err))
-              child.unref()
-              resolve({ ok: true })
-              setTimeout(() => app.quit(), 500)
-            } catch(e) { reject(e) }
-          })
-        })
-      }).on('error', (err) => {
+
+    const request = client.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) CilamAI',
+        Accept: '*/*'
+      }
+    }, (response) => {
+      if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
         file.destroy()
         fs.unlink(filePath, () => {})
-        reject(err)
+        const nextUrl = new URL(response.headers.location, url).href
+        return attemptDownload(nextUrl, redirectCount + 1).then(resolve).catch(reject)
+      }
+
+      if (response.statusCode !== 200) {
+        file.destroy()
+        fs.unlink(filePath, () => {})
+        return reject(new Error(`Download failed: ${response.statusCode}`))
+      }
+
+      response.pipe(file)
+      file.on('finish', () => {
+        file.close(() => resolve(filePath))
       })
-    }
-    download(downloadUrl)
+    })
+
+    request.on('error', (err) => {
+      file.destroy()
+      fs.unlink(filePath, () => {})
+      reject(err)
+    })
   })
+
+  let downloadedPath = null
+  let lastError = null
+
+  for (const url of candidateUrls) {
+    try {
+      downloadedPath = await attemptDownload(url)
+      if (downloadedPath) break
+    } catch (err) {
+      lastError = err
+    }
+  }
+
+  if (!downloadedPath) {
+    throw (lastError || new Error('Download failed: 404'))
+  }
+
+  try {
+    const child = require('node:child_process').spawn(downloadedPath, ['/SILENT'], { detached: true, stdio: 'ignore' })
+    child.unref()
+    setTimeout(() => app.quit(), 600)
+    return { ok: true }
+  } catch (err) {
+    return { ok: false, error: err.message }
+  }
 })
 
 ipcMain.handle('app:set-language', (_event, lang) => {
