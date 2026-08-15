@@ -63,7 +63,9 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "CilamAI"
+      "shortcutName": "CilamAI",
+      "displayLanguageSelector": true,
+      "include": "build/installer.nsh"
     },
     "directories": {
       "output": "release_build"
