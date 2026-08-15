@@ -160,5 +160,22 @@
   "emailPlaceholder": "your-email@example.com (optional)",
   "githubIssues": "GitHub Issues",
   "sendFeedback": "Send Feedback",
-  "feedbackSent": "Thank you for your feedback!"
+  "feedbackSent": "Thank you for your feedback!",
+  "provideFeedback": "Provide Feedback",
+  "feedbackType": "Feedback Type",
+  "bugReport": "Bug Report",
+  "featureRequest": "Feature Request",
+  "authBilling": "Auth and Billing",
+  "generalFeedback": "General Feedback",
+  "description": "Description",
+  "feedbackGuide": "Please describe the issue in detail. The more actionable your feedback, the quicker our team can address your request. Some helpful information includes:",
+  "guideSteps": "Steps to reproduce the issue",
+  "guideExpected": "Expected behavior",
+  "guideActual": "Actual behavior",
+  "guideErrors": "Any error messages",
+  "guideRelevant": "Any relevant information",
+  "feedbackDescPlaceholder": "Describe the bug you encountered...",
+  "stepsToReproduce": "Steps to Reproduce",
+  "stepsPlaceholder": "Please list the steps to reproduce the issue",
+  "attachScreenshot": "Attach a screenshot (optional)"
 }

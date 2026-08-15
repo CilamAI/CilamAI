@@ -3977,12 +3977,52 @@ function initFeedback() {
   const fv = document.querySelector('.feedback-view')
   if (!fv) return
 
-  fv.querySelectorAll('.feedback-cat-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      fv.querySelectorAll('.feedback-cat-btn').forEach((b) => b.classList.remove('active'))
-      btn.classList.add('active')
+  const typeRadios = fv.querySelectorAll('input[name="feedback-type"]')
+  const stepsGroup = fv.querySelector('#feedback-steps-group')
+  const msgInput = fv.querySelector('#feedback-message')
+  const attachTrigger = fv.querySelector('#feedback-attach-trigger')
+  const fileInput = fv.querySelector('#feedback-file-input')
+  const filePreview = fv.querySelector('#feedback-file-preview')
+  const removeFileBtn = fv.querySelector('#feedback-file-remove')
+  const previewFilename = fv.querySelector('.preview-filename')
+
+  typeRadios.forEach((radio) => {
+    radio.addEventListener('change', () => {
+      if (radio.value === 'bug') {
+        if (stepsGroup) stepsGroup.hidden = false
+        if (msgInput) msgInput.placeholder = localeData?.feedbackDescPlaceholder || 'Describe the bug you encountered...'
+      } else if (radio.value === 'feature') {
+        if (stepsGroup) stepsGroup.hidden = true
+        if (msgInput) msgInput.placeholder = 'Describe the feature you would like to see...'
+      } else if (radio.value === 'auth-billing') {
+        if (stepsGroup) stepsGroup.hidden = true
+        if (msgInput) msgInput.placeholder = 'Describe the authentication or billing issue...'
+      } else {
+        if (stepsGroup) stepsGroup.hidden = true
+        if (msgInput) msgInput.placeholder = 'Share your thoughts, suggestions, or experience...'
+      }
     })
   })
+
+  if (attachTrigger && fileInput) {
+    attachTrigger.addEventListener('click', () => fileInput.click())
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files?.[0]
+      if (file && filePreview && previewFilename) {
+        previewFilename.textContent = file.name
+        filePreview.hidden = false
+        attachTrigger.hidden = true
+      }
+    })
+  }
+
+  if (removeFileBtn && fileInput && filePreview && attachTrigger) {
+    removeFileBtn.addEventListener('click', () => {
+      fileInput.value = ''
+      filePreview.hidden = true
+      attachTrigger.hidden = false
+    })
+  }
 
   fv.querySelectorAll('[data-action="close-feedback"]').forEach((btn) => {
     btn.addEventListener('click', () => showChat())
@@ -3996,13 +4036,14 @@ function initFeedback() {
   if (form) {
     form.addEventListener('submit', (e) => {
       e.preventDefault()
-      const msg = fv.querySelector('#feedback-message')?.value?.trim()
+      const msg = msgInput?.value?.trim()
       if (!msg) return
       showNotification(localeData?.feedbackSent || 'Thank you for your feedback!', 'success')
       form.reset()
-      fv.querySelectorAll('.feedback-cat-btn').forEach((b, i) => {
-        b.classList.toggle('active', i === 0)
-      })
+      if (fileInput) fileInput.value = ''
+      if (filePreview) filePreview.hidden = true
+      if (attachTrigger) attachTrigger.hidden = false
+      if (stepsGroup) stepsGroup.hidden = false
       showChat()
     })
   }
