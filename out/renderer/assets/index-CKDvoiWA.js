@@ -55095,6 +55095,7 @@ async function init() {
     }
   };
   const creditMenu = document.querySelector(".credit-menu");
+  let userMenuCloseTimer = null;
   let creditMenuCloseTimer = null;
   const closeCreditMenu = () => {
     if (!creditMenu || creditMenu.hidden) return;
@@ -55104,6 +55105,15 @@ async function init() {
       creditMenu.hidden = true;
       creditMenu.classList.remove("closing");
     }, 140);
+  };
+  const closeUserMenu = () => {
+    if (!userMenu || userMenu.hidden) return;
+    clearTimeout(userMenuCloseTimer);
+    userMenu.classList.add("closing");
+    userMenuCloseTimer = setTimeout(() => {
+      userMenu.hidden = true;
+      userMenu.classList.remove("closing");
+    }, 150);
   };
   document.querySelector("[data-credit-toggle]")?.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -55249,16 +55259,22 @@ async function init() {
   userRailBtn?.addEventListener("click", (e) => {
     e.stopPropagation();
     if (!userMenu) return;
-    userMenu.hidden = !userMenu.hidden;
+    if (userMenu.classList.contains("closing")) {
+      clearTimeout(userMenuCloseTimer);
+      userMenu.classList.remove("closing");
+      userMenu.hidden = false;
+    } else {
+      userMenu.hidden = !userMenu.hidden;
+    }
     if (!userMenu.hidden && creditMenu) closeCreditMenu();
   });
   document.addEventListener("click", (e) => {
     if (userMenu && !userMenu.hidden && !userMenu.contains(e.target) && !e.target.closest("[data-user-menu-toggle]")) {
-      userMenu.hidden = true;
+      closeUserMenu();
     }
   });
   document.querySelector('[data-action="oauth-signin"]')?.addEventListener("click", () => {
-    if (userMenu) userMenu.hidden = true;
+    closeUserMenu();
     if (authDialog) authDialog.hidden = false;
   });
   document.querySelector("[data-auth-close]")?.addEventListener("click", () => {
@@ -55408,7 +55424,7 @@ async function init() {
       creditResetAt = Date.now() + RESET_INTERVAL;
       creditSpent = 0;
       await loadCredits();
-      if (userMenu) userMenu.hidden = true;
+      closeUserMenu();
       if (creditMenu) creditMenu.hidden = true;
       showNotification("Signed out successfully", "info");
     }, {

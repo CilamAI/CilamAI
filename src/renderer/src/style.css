@@ -4403,6 +4403,25 @@ html[data-win11='true'] .onboarding {
   background: var(--hover);
 }
 
+[data-screenshot] svg.shimmer {
+  animation: svg-shimmer 0.5s ease-out;
+}
+
+@keyframes svg-shimmer {
+  0% {
+    filter: drop-shadow(0 0 0px var(--accent));
+    transform: scale(1);
+  }
+  30% {
+    filter: drop-shadow(0 0 6px var(--accent)) brightness(1.3);
+    transform: scale(1.15);
+  }
+  100% {
+    filter: drop-shadow(0 0 0px var(--accent));
+    transform: scale(1);
+  }
+}
+
 .feedback-submit-btn {
   background: var(--accent);
   color: var(--accent-text);
