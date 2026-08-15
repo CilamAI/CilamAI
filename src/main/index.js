@@ -1273,7 +1273,7 @@ function openFeedbackWindow() {
     title: 'Provide Feedback - CilamAI',
     icon: join(app.getAppPath(), 'resources/icon.ico'),
     width: 580,
-    height: 720,
+    height: 780,
     minWidth: 480,
     minHeight: 560,
     center: true,

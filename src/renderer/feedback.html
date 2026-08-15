@@ -16,7 +16,7 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      padding: 24px 22px;
+      padding: 20px 22px;
       overflow-y: auto;
       user-select: none;
     }
@@ -27,7 +27,7 @@
       margin: 0 auto;
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 14px;
       animation: fadeIn 0.2s ease;
     }
 
@@ -37,7 +37,7 @@
     }
 
     .feedback-title {
-      font-size: 21px;
+      font-size: 20px;
       font-weight: 700;
       letter-spacing: -0.02em;
       color: var(--text);
@@ -46,33 +46,33 @@
     .feedback-form {
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 14px;
     }
 
     .feedback-group {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 6px;
     }
 
     .feedback-group-label {
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 600;
       color: var(--text);
     }
 
     .feedback-radio-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 12px;
       margin-top: 2px;
     }
 
     .feedback-radio-item {
       display: flex;
       align-items: center;
-      gap: 12px;
-      font-size: 14px;
+      gap: 8px;
+      font-size: 13px;
       color: var(--text);
       cursor: pointer;
     }
@@ -82,8 +82,8 @@
     }
 
     .feedback-radio-custom {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       border-radius: 50%;
       border: 1.5px solid var(--text-dim);
       display: flex;
@@ -107,21 +107,21 @@
     }
 
     .feedback-guide-text {
-      font-size: 13.5px;
+      font-size: 12.5px;
+      color: var(--text-dim);
+      line-height: 1.45;
+    }
+
+    .feedback-guide-list {
+      margin: 0 0 2px 16px;
+      padding: 0;
+      font-size: 12px;
       color: var(--text-dim);
       line-height: 1.5;
     }
 
-    .feedback-guide-list {
-      margin: 0 0 4px 18px;
-      padding: 0;
-      font-size: 13px;
-      color: var(--text-dim);
-      line-height: 1.6;
-    }
-
     .feedback-guide-list li {
-      margin-bottom: 2px;
+      margin-bottom: 1px;
     }
 
     .feedback-textarea {
@@ -129,14 +129,14 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 12px 14px;
-      font-size: 13.5px;
+      padding: 10px 12px;
+      font-size: 13px;
       color: var(--text);
       font-family: inherit;
       outline: none;
       transition: border-color 0.15s ease;
       resize: vertical;
-      line-height: 1.45;
+      line-height: 1.4;
     }
 
     .feedback-textarea:focus {
@@ -310,12 +310,12 @@
           <li data-i18n="guideErrors">Any error messages</li>
           <li data-i18n="guideRelevant">Any relevant information</li>
         </ul>
-        <textarea id="feedback-message" class="feedback-textarea" rows="5" required data-i18n-placeholder="feedbackDescPlaceholder" placeholder="Describe the bug you encountered..."></textarea>
+        <textarea id="feedback-message" class="feedback-textarea" rows="3" required data-i18n-placeholder="feedbackDescPlaceholder" placeholder="Describe the bug you encountered..."></textarea>
       </div>
 
       <div class="feedback-group" id="feedback-steps-group">
         <label class="feedback-group-label" data-i18n="stepsToReproduce">Steps to Reproduce</label>
-        <textarea id="feedback-steps" class="feedback-textarea" rows="3" data-i18n-placeholder="stepsPlaceholder" placeholder="Please list the steps to reproduce the issue"></textarea>
+        <textarea id="feedback-steps" class="feedback-textarea" rows="2" data-i18n-placeholder="stepsPlaceholder" placeholder="Please list the steps to reproduce the issue"></textarea>
       </div>
 
       <div class="feedback-group">
