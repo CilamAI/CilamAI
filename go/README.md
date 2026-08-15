@@ -18,13 +18,13 @@ A lightweight, standalone Go daemon for IT Service Management (ITSM), diagnostic
 
 ### Run Locally
 ```bash
-cd itsm/go
+cd go
 go run main.go
 ```
 
 ### Build Executable
 ```bash
-go build -o itsm-daemon.exe main.go
+go build -o cilamai-go.exe main.go
 ```
 
 ---
