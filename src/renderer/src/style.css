@@ -3529,42 +3529,15 @@ pre:hover .copy-code-btn {
   pointer-events: none;
 }
 
-.md3-poly-indicator {
-  color: var(--text-dim);
-}
-
-.md3-poly-track {
-  opacity: 0.15;
-}
-
-.md3-poly-group {
+.md3-morph-indicator {
+  color: var(--accent);
+  animation: md3-morph-spin 3.6s linear infinite;
   transform-origin: center;
-  animation: md3-poly-spin 4s linear infinite;
 }
 
-.md3-poly-dot {
-  opacity: 0;
-  animation: md3-poly-pulse 4s ease-in-out infinite;
-}
-
-.md3-poly-dot-1 { animation-delay: 0s; }
-.md3-poly-dot-2 { animation-delay: 0.5s; }
-.md3-poly-dot-3 { animation-delay: 1s; }
-.md3-poly-dot-4 { animation-delay: 1.5s; }
-.md3-poly-dot-5 { animation-delay: 2s; }
-.md3-poly-dot-6 { animation-delay: 2.5s; }
-.md3-poly-dot-7 { animation-delay: 3s; }
-.md3-poly-dot-8 { animation-delay: 3.5s; }
-
-@keyframes md3-poly-spin {
+@keyframes md3-morph-spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
-}
-
-@keyframes md3-poly-pulse {
-  0%, 100% { opacity: 0.1; r: 2; }
-  6.25% { opacity: 1; r: 3.5; }
-  12.5% { opacity: 0.8; r: 3; }
 }
 
 .startup-model {
