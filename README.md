@@ -38,8 +38,7 @@
 * **[Download CilamAI-Portable.exe](https://github.com/CilamAI/CilamAI/releases/latest/download/CilamAI-0.1.0.1-Portable.exe)** Standalone portable executable (no installation required).
 
 ### Quick Install (PowerShell)
-```powershell
-irm https://raw.githubusercontent.com/CilamAI/CilamAI/refs/heads/main/install.ps1 | iex```
+```irm https://raw.githubusercontent.com/CilamAI/CilamAI/refs/heads/main/install.ps1 | iex```
 
 ## Keyboard Shortcuts
 
