@@ -3974,7 +3974,14 @@ async function init() {
   await loadSessionsFromDisk()
   loadModels()
   const remaining = Math.max(0, 5000 - (Date.now() - started))
-  setTimeout(hideStartup, remaining)
+  setTimeout(() => {
+    hideStartup()
+    if (!currentUser) {
+      setTimeout(() => {
+        if (authDialog) authDialog.hidden = false
+      }, 300)
+    }
+  }, remaining)
 
   const MAX_STARTUP_TIMEOUT = 8000
   setTimeout(hideStartup, MAX_STARTUP_TIMEOUT)
