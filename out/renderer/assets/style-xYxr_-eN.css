@@ -4407,26 +4407,6 @@ html[data-win11='true'] .onboarding {
   animation: svg-shimmer 0.5s ease-out;
 }
 
-.shimmer-icon {
-  color: var(--accent);
-  flex-shrink: 0;
-}
-
-body.shimmer-enabled .shimmer-icon {
-  animation: icon-shimmer-pulse 2s ease-in-out infinite;
-}
-
-@keyframes icon-shimmer-pulse {
-  0%, 100% {
-    filter: drop-shadow(0 0 2px var(--accent));
-    opacity: 1;
-  }
-  50% {
-    filter: drop-shadow(0 0 6px var(--accent)) brightness(1.2);
-    opacity: 0.8;
-  }
-}
-
 @keyframes svg-shimmer {
   0% {
     filter: drop-shadow(0 0 0px var(--accent));

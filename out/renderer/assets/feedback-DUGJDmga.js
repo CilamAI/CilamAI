@@ -65,6 +65,7 @@ function showToast(msg) {
 function init() {
   loadTheme();
   loadLocale();
+  document.documentElement.dataset.theme = currentTheme === "system" ? window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light" : currentTheme;
   const typeRadios = document.querySelectorAll('input[name="feedback-type"]');
   const stepsGroup = document.querySelector("#feedback-steps-group");
   const msgInput = document.querySelector("#feedback-message");

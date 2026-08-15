@@ -1401,6 +1401,9 @@ function openFeedbackWindow() {
   } else {
     feedbackWindow.loadFile(join(__dirname, "../renderer/feedback.html"));
   }
+  feedbackWindow.webContents.on("did-finish-load", () => {
+    feedbackWindow.webContents.send("app:theme-changed", currentTheme);
+  });
   feedbackWindow.on("closed", () => {
     feedbackWindow = null;
   });
