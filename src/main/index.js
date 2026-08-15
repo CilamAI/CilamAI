@@ -1270,12 +1270,14 @@ function openFeedbackWindow() {
   }
 
   feedbackWindow = new BrowserWindow({
-    title: 'Provide Feedback',
+    title: 'Provide Feedback - CilamAI',
     icon: join(app.getAppPath(), 'resources/icon.ico'),
-    width: 720,
-    height: 780,
-    minWidth: 540,
-    minHeight: 600,
+    width: 580,
+    height: 720,
+    minWidth: 480,
+    minHeight: 560,
+    center: true,
+    resizable: true,
     autoHideMenuBar: true,
     backgroundColor: '#0f1015',
     webPreferences: {
