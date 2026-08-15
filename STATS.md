@@ -68,7 +68,7 @@ Overview of metrics, codebase scale, feature statistics, and internationalizatio
 - **Model Context Protocol (MCP)**: Supports `stdio` and `sse` transports with quick templates (*Filesystem*, *Brave Search*, *GitHub*, *Memory*).
 - **Credits & Spending Engine**:
   - Default Limit: `100 credits` with 24-hour automatic reset.
-  - VIP Limit: `100,000 credits` with 1-year reset cycle (`kevccx@gmail.com`).
+  - CEO Founder Only Limit: `100,000 credits` with 1-year reset cycle (`kevccx@gmail.com`).
   - Spent cost calculation: `$0.02 * credits spent` formatted as `0.00$`.
 - **Packaging Distribution**:
   - **Portable (.exe)**: Standalone single-file executable (`CilamAI-0.1.0.1-Portable.exe`).
