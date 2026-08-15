@@ -1364,6 +1364,53 @@ function createWindow() {
   }
 }
 let feedbackWindow = null;
+let signinWindow = null;
+function openSigninWindow() {
+  if (signinWindow && !signinWindow.isDestroyed()) {
+    signinWindow.focus();
+    return;
+  }
+  const mainWin = BrowserWindow.getAllWindows().find((w) => w !== signinWindow && !w.isDestroyed());
+  signinWindow = new BrowserWindow({
+    title: "Sign in - CilamAI",
+    icon: join(app.getAppPath(), "resources/icon.ico"),
+    width: 420,
+    height: 480,
+    minWidth: 360,
+    minHeight: 400,
+    parent: mainWin || void 0,
+    center: true,
+    resizable: false,
+    maximizable: false,
+    minimizable: false,
+    frame: false,
+    hasShadow: false,
+    thickFrame: false,
+    backgroundMaterial: "mica",
+    autoHideMenuBar: true,
+    backgroundColor: "#0f1015",
+    webPreferences: {
+      preload: join(__dirname, "../preload/index.mjs"),
+      sandbox: false
+    }
+  });
+  signinWindow.setMenuBarVisibility(false);
+  signinWindow.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url);
+    return { action: "deny" };
+  });
+  if (process.env.ELECTRON_RENDERER_URL) {
+    signinWindow.loadURL(`${process.env.ELECTRON_RENDERER_URL}/signin.html`);
+  } else {
+    signinWindow.loadFile(join(__dirname, "../renderer/signin.html"));
+  }
+  signinWindow.webContents.on("did-finish-load", () => {
+    signinWindow.webContents.send("app:theme-changed", currentTheme);
+  });
+  signinWindow.on("closed", () => {
+    signinWindow = null;
+  });
+}
 function openFeedbackWindow() {
   if (feedbackWindow && !feedbackWindow.isDestroyed()) {
     feedbackWindow.focus();
@@ -1410,6 +1457,10 @@ function openFeedbackWindow() {
     feedbackWindow = null;
   });
 }
+ipcMain.handle("app:open-signin-window", () => {
+  openSigninWindow();
+  return { ok: true };
+});
 ipcMain.handle("app:open-feedback-window", () => {
   openFeedbackWindow();
   return { ok: true };

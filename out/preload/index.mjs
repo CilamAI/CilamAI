@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld("electron", {
   checkUpdates: () => ipcRenderer.invoke("app:check-updates"),
   downloadAndInstall: (url) => ipcRenderer.invoke("app:download-and-install", url),
   openFeedbackWindow: () => ipcRenderer.invoke("app:open-feedback-window"),
+  openSigninWindow: () => ipcRenderer.invoke("app:open-signin-window"),
   resizeFeedbackWindow: (width, height) => ipcRenderer.invoke("app:resize-feedback-window", { width, height }),
   closeWindow: () => ipcRenderer.invoke("window:close"),
   checkInternet: () => ipcRenderer.invoke("app:check-internet"),

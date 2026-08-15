@@ -2705,7 +2705,7 @@ async function init() {
 
   document.querySelector('[data-action="oauth-signin"]')?.addEventListener('click', () => {
     closeUserMenu()
-    if (authDialog) authDialog.hidden = false
+    window.electron?.openSigninWindow?.()
   })
 
   document.querySelector('[data-auth-close]')?.addEventListener('click', () => {
@@ -3978,7 +3978,7 @@ async function init() {
     hideStartup()
     if (!currentUser) {
       setTimeout(() => {
-        if (authDialog) authDialog.hidden = false
+        window.electron?.openSigninWindow?.()
       }, 300)
     }
   }, remaining)

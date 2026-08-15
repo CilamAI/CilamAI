@@ -55275,7 +55275,7 @@ async function init() {
   });
   document.querySelector('[data-action="oauth-signin"]')?.addEventListener("click", () => {
     closeUserMenu();
-    if (authDialog) authDialog.hidden = false;
+    window.electron?.openSigninWindow?.();
   });
   document.querySelector("[data-auth-close]")?.addEventListener("click", () => {
     if (authDialog) authDialog.hidden = true;
@@ -56377,7 +56377,14 @@ async function init() {
   await loadSessionsFromDisk();
   loadModels();
   const remaining = Math.max(0, 5e3 - (Date.now() - started));
-  setTimeout(hideStartup, remaining);
+  setTimeout(() => {
+    hideStartup();
+    if (!currentUser) {
+      setTimeout(() => {
+        window.electron?.openSigninWindow?.();
+      }, 300);
+    }
+  }, remaining);
   const MAX_STARTUP_TIMEOUT = 8e3;
   setTimeout(hideStartup, MAX_STARTUP_TIMEOUT);
   resetChat();
