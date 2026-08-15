@@ -988,6 +988,8 @@ async function loadModels() {
 }
 
 function showSettings() {
+  const fv = document.querySelector('.feedback-view')
+  if (fv) fv.hidden = true
   document.querySelector('.settings-view').hidden = false
   document.querySelector('.help-view').hidden = true
   document.querySelector('.release-notes-view').hidden = true
@@ -1012,6 +1014,10 @@ async function loadLocale(lang) {
   document.querySelectorAll('[data-i18n]').forEach((el) => {
     const key = el.getAttribute('data-i18n')
     if (localeData[key]) el.textContent = localeData[key]
+  })
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+    const key = el.getAttribute('data-i18n-placeholder')
+    if (localeData[key]) el.setAttribute('placeholder', localeData[key])
   })
   const langLabel = document.querySelector('#lang-select-label')
   if (langLabel && localeData.languages) langLabel.textContent = localeData.languages[lang] ?? lang
@@ -1047,6 +1053,8 @@ async function loadLocale(lang) {
 }
 
 function showChat() {
+  const fv = document.querySelector('.feedback-view')
+  if (fv) fv.hidden = true
   document.querySelector('.settings-view').hidden = true
   document.querySelector('.help-view').hidden = true
   document.querySelector('.release-notes-view').hidden = true
@@ -1060,9 +1068,9 @@ function showChat() {
   document.querySelector('.welcome-text').hidden = main.classList.contains('has-chat')
 }
 
-
-
 function showHelp() {
+  const fv = document.querySelector('.feedback-view')
+  if (fv) fv.hidden = true
   document.querySelector('.settings-view').hidden = true
   document.querySelector('.help-view').hidden = false
   document.querySelector('.release-notes-view').hidden = true
@@ -1081,6 +1089,8 @@ function showHelp() {
 }
 
 function showReleaseNotes() {
+  const fv = document.querySelector('.feedback-view')
+  if (fv) fv.hidden = true
   document.querySelector('.settings-view').hidden = true
   document.querySelector('.help-view').hidden = true
   const rn = document.querySelector('.release-notes-view')
@@ -1112,6 +1122,25 @@ function showReleaseNotes() {
       })
     }
   })
+}
+
+function showFeedback() {
+  document.querySelector('.settings-view').hidden = true
+  document.querySelector('.help-view').hidden = true
+  document.querySelector('.release-notes-view').hidden = true
+  document.querySelector('.chat').hidden = true
+  document.querySelector('.composer').hidden = true
+  document.querySelector('.welcome-text').hidden = true
+  const sp = document.querySelector('.search-page')
+  if (sp) sp.hidden = true
+  document.querySelector('.main').classList.add('has-chat')
+  const fv = document.querySelector('.feedback-view')
+  if (fv) {
+    fv.hidden = false
+    setTimeout(() => {
+      fv.querySelector('.feedback-textarea')?.focus()
+    }, 50)
+  }
 }
 
 function resetChat() {
@@ -1630,9 +1659,7 @@ async function init() {
             showNotification(`You're up to date (v${result.current}).`, 'info')
           }).catch((err) => showNotification(err.message || 'Unable to check for updates.', 'error'))
         }
-        if (action === 'feedback') {
-          window.electron?.openExternal?.('https://github.com/CilamAI/CilamAI/issues/new/choose')
-        }
+        if (action === 'feedback') showFeedback()
         if (action === 'search') openSearchPage()
         if (action === 'close') window.electron?.closeWindow?.()
         if (action === 'refresh-models') loadModels()
@@ -3923,6 +3950,8 @@ async function init() {
   ensureSession()
   saveSessions()
 
+  initFeedback()
+
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('.reaction-btn')
     if (!btn) return
@@ -3942,6 +3971,41 @@ async function init() {
       console.log(`Reaction: ${reaction} ${active ? 'added' : 'removed'}`)
     }
   })
+}
+
+function initFeedback() {
+  const fv = document.querySelector('.feedback-view')
+  if (!fv) return
+
+  fv.querySelectorAll('.feedback-cat-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      fv.querySelectorAll('.feedback-cat-btn').forEach((b) => b.classList.remove('active'))
+      btn.classList.add('active')
+    })
+  })
+
+  fv.querySelectorAll('[data-action="close-feedback"]').forEach((btn) => {
+    btn.addEventListener('click', () => showChat())
+  })
+
+  fv.querySelector('[data-action="open-github-issues"]')?.addEventListener('click', () => {
+    window.electron?.openExternal?.('https://github.com/CilamAI/CilamAI/issues/new/choose')
+  })
+
+  const form = fv.querySelector('#feedback-form')
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault()
+      const msg = fv.querySelector('#feedback-message')?.value?.trim()
+      if (!msg) return
+      showNotification(localeData?.feedbackSent || 'Thank you for your feedback!', 'success')
+      form.reset()
+      fv.querySelectorAll('.feedback-cat-btn').forEach((b, i) => {
+        b.classList.toggle('active', i === 0)
+      })
+      showChat()
+    })
+  }
 }
 
 if (document.readyState === 'loading') {

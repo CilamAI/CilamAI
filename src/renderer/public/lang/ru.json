@@ -147,5 +147,18 @@
   "sseUrl": "URL-адрес SSE",
   "envVars": "Переменные среды (в формате JSON, необязательно)",
   "saveServer": "Сохранить сервер",
-  "feedback": "Обратная связь"
+  "feedback": "Обратная связь",
+  "feedbackSubtitle": "Помогите нам улучшить CilamAI. Поделитесь своим мнением или идеями.",
+  "feedbackCategory": "Категория",
+  "feedbackGeneral": "Общее",
+  "feedbackBug": "Отчет об ошибке",
+  "feedbackFeature": "Идея функции",
+  "feedbackUI": "Интерфейс и тема",
+  "feedbackMessage": "Ваше сообщение",
+  "feedbackPlaceholder": "Расскажите, что вам нравится или что можно улучшить...",
+  "feedbackEmail": "Email (необязательно)",
+  "emailPlaceholder": "vash-email@example.com (необязательно)",
+  "githubIssues": "GitHub Issues",
+  "sendFeedback": "Отправить отзыв",
+  "feedbackSent": "Спасибо за ваш отзыв!"
 }

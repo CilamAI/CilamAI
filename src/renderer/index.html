@@ -711,6 +711,62 @@
       </div>
     </section>
 
+    <section class="feedback-view" hidden>
+      <div class="feedback-panel">
+        <div class="feedback-header">
+          <div class="feedback-header-left">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <div>
+              <h2 data-i18n="feedback">Feedback</h2>
+              <p class="feedback-subtitle" data-i18n="feedbackSubtitle">Help us improve CilamAI. Share your experience or ideas.</p>
+            </div>
+          </div>
+          <button type="button" class="feedback-close-btn" data-action="close-feedback" aria-label="Close">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <use href="#icon-11"></use>
+            </svg>
+          </button>
+        </div>
+
+        <form class="feedback-form" id="feedback-form">
+          <div class="feedback-field">
+            <label data-i18n="feedbackCategory">Category</label>
+            <div class="feedback-categories">
+              <button type="button" class="feedback-cat-btn active" data-cat="general" data-i18n="feedbackGeneral">General</button>
+              <button type="button" class="feedback-cat-btn" data-cat="bug" data-i18n="feedbackBug">Bug Report</button>
+              <button type="button" class="feedback-cat-btn" data-cat="feature" data-i18n="feedbackFeature">Feature Idea</button>
+              <button type="button" class="feedback-cat-btn" data-cat="ui" data-i18n="feedbackUI">UI & Theme</button>
+            </div>
+          </div>
+
+          <div class="feedback-field">
+            <label for="feedback-message" data-i18n="feedbackMessage">Your Message</label>
+            <textarea id="feedback-message" class="feedback-textarea" rows="4" required data-i18n-placeholder="feedbackPlaceholder" placeholder="Tell us what you like or what could be improved..."></textarea>
+          </div>
+
+          <div class="feedback-field">
+            <label for="feedback-email" data-i18n="feedbackEmail">Email (Optional)</label>
+            <input type="email" id="feedback-email" class="feedback-input" data-i18n-placeholder="emailPlaceholder" placeholder="your-email@example.com (optional)" />
+          </div>
+
+          <div class="feedback-actions">
+            <button type="button" class="feedback-github-btn" data-action="open-github-issues">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                <use href="#icon-32"></use>
+              </svg>
+              <span data-i18n="githubIssues">GitHub Issues</span>
+            </button>
+            <div class="feedback-actions-right">
+              <button type="button" class="feedback-cancel-btn" data-action="close-feedback" data-i18n="cancel">Cancel</button>
+              <button type="submit" class="feedback-submit-btn primary" data-i18n="sendFeedback">Send Feedback</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+
     <section class="release-notes-view" hidden>
       <div class="release-loading" hidden>
         <svg class="md3-loader" viewBox="0 0 50 50">
