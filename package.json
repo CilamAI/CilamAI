@@ -27,7 +27,8 @@
     "start": "electron-vite preview",
     "test-api": "node C:\\Users\\omg\\.gemini\\antigravity-ide\\brain\\2f742c82-4368-4326-9325-747ce76a220a\\scratch\\test_api.js",
     "predist": "node -e \"try { require('child_process').execSync('taskkill /F /IM electron.exe 2>NUL'); require('child_process').execSync('taskkill /F /IM CilamAI.exe 2>NUL'); } catch(e) {}\"",
-    "dist": "electron-vite build && electron-builder --win --x64",
+    "dist": "electron-vite build && node scripts/ebuild.mjs --win --x64",
+    "build:linux": "electron-vite build && node scripts/ebuild.mjs --linux",
     "iss": "node scripts/iss.mjs"
   },
   "build": {
@@ -36,6 +37,9 @@
     "win": {
       "target": "dir",
       "icon": "resources/icon.ico"
+    },
+    "linux": {
+      "target": "tar.gz"
     },
     "directories": {
       "output": "release_build"

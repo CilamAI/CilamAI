@@ -8,3 +8,7 @@ release_build
 Output
 *.log
 .env
+*kevccx*
+*.kevccx.json
+kevccx.json
+scratch

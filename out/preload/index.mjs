@@ -70,8 +70,16 @@ contextBridge.exposeInMainWorld("electron", {
   loadSessions: () => ipcRenderer.invoke("sessions:load"),
   saveSessionsFile: (sessions) => ipcRenderer.invoke("sessions:save", sessions),
   saveSessionsImmediate: (sessions) => ipcRenderer.invoke("sessions:save-immediate", sessions),
+  getCredits: () => ipcRenderer.invoke("credits:get"),
+  saveCredits: (credits) => ipcRenderer.invoke("credits:set", credits),
+  flushCredits: (credits) => ipcRenderer.sendSync("credits:set-sync", credits),
+  getUser: () => ipcRenderer.invoke("auth:get-user"),
   signIn: (provider) => ipcRenderer.invoke("auth:sign-in", provider),
   signOut: () => ipcRenderer.invoke("auth:sign-out"),
-  setUser: (name) => ipcRenderer.send("auth:set-user", name),
+  setUser: (user) => ipcRenderer.send("auth:set-user", user),
+  setAvatar: (picture) => ipcRenderer.invoke("auth:set-avatar", picture),
+  uploadAvatar: () => ipcRenderer.invoke("auth:upload-avatar"),
+  onAvatar: (cb) => ipcRenderer.on("auth:avatar", (_event, picture) => cb(picture)),
+  onUser: (cb) => ipcRenderer.on("auth:user", (_event, user) => cb(user)),
   on: (channel, cb) => ipcRenderer.on(channel, (_event, ...args) => cb(...args))
 });

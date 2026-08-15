@@ -1,12 +1,22 @@
 import { app, BrowserWindow, Menu, shell, ipcMain, dialog } from 'electron'
 import { join } from 'node:path'
 import { readFile, writeFile } from 'node:fs/promises'
-import { readFileSync } from 'node:fs'
+import { readFileSync, writeFileSync, existsSync, unlinkSync } from 'node:fs'
 import os from 'node:os'
 import { chatSend, chatSendStream, webFetchStream } from '../api/client.js'
 import https from 'node:https'
 
 const isWindows11 = process.platform === 'win32' && Number((os.release().split('.')[2] || 0)) >= 22000
+
+try {
+  const envPath = join(app.getAppPath(), '.env')
+  if (existsSync(envPath)) {
+    for (const line of readFileSync(envPath, 'utf8').split('\n')) {
+      const m = line.match(/^\s*([\w.-]+)\s*=\s*(.*)\s*$/)
+      if (m && !(m[1] in process.env)) process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, '')
+    }
+  }
+} catch {}
 
 const streamControllers = new Map()
 const TRANSIENT_STATUSES_MAIN = new Set([408, 425, 429, 502, 503, 504])
@@ -123,20 +133,65 @@ function loadEnvConfig() {
 loadEnvConfig()
 
 function extractApiKey(argv) {
-  const idx = argv.indexOf('--set-apikey')
-  if (idx === -1) return null
-  const rest = argv.slice(idx)
-  const direct = rest[1]
-  if (direct && !direct.startsWith('--') && direct.includes('sk-')) return direct
-  return rest.find((a) => a.startsWith('sk-') && a.length > 3) || null
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i]
+    if (arg.startsWith('--set-apikey=')) return arg.slice(13)
+    if (arg.startsWith('--api-key=')) return arg.slice(10)
+    if (arg.startsWith('--apikey=')) return arg.slice(9)
+    if (arg === '--set-apikey' || arg === '--api-key' || arg === '--apikey') {
+      const next = argv[i + 1]
+      if (next && !next.startsWith('--')) return next
+    }
+  }
+  return null
 }
 
 function extractIpcCommand(argv) {
-  const idx = argv.indexOf('--ipc')
-  if (idx === -1) return null
-  const rest = argv.slice(idx)
-  const direct = rest[1]
-  if (direct && !direct.startsWith('--')) return direct
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i]
+    if (arg.startsWith('--ipc=')) return arg.slice(6)
+    if (arg === '--ipc') {
+      const next = argv[i + 1]
+      if (next && !next.startsWith('--')) return next
+    }
+  }
+  return null
+}
+
+function extractAvatar(argv) {
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i]
+    if (arg.startsWith('--avatar=')) return arg.slice(9)
+    if (arg.startsWith('--user-avatar=')) return arg.slice(14)
+    if (arg === '--avatar' || arg === '--user-avatar') {
+      const next = argv[i + 1]
+      if (next && !next.startsWith('--')) return next
+    }
+  }
+  return null
+}
+
+function extractUser(argv) {
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i]
+    if (arg.startsWith('--user=')) return arg.slice(7)
+    if (arg === '--user') {
+      const next = argv[i + 1]
+      if (next && !next.startsWith('--')) return next
+    }
+  }
+  return null
+}
+
+function extractModelArg(argv) {
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i]
+    if (arg.startsWith('--model=')) return arg.slice(8)
+    if (arg === '--model') {
+      const next = argv[i + 1]
+      if (next && !next.startsWith('--')) return next
+    }
+  }
   return null
 }
 
@@ -401,6 +456,141 @@ ipcMain.handle('sessions:save-immediate', async (_event, sessions) => {
   }
 })
 
+const creditsFile = () => join(app.getPath('userData'), 'credits.json')
+
+function loadCreditsStore() {
+  try {
+    if (existsSync(creditsFile())) {
+      return JSON.parse(readFileSync(creditsFile(), 'utf8'))
+    }
+  } catch {}
+  return {}
+}
+
+function saveCreditsStore(store) {
+  try {
+    writeFileSync(creditsFile(), JSON.stringify(store, null, 2), 'utf8')
+  } catch {}
+}
+
+function currentUserKey() {
+  const user = currentAuthUser || loadStoredAuthUser()
+  return (user?.email || user?.name || 'default').toLowerCase().trim()
+}
+
+const SPECIAL_USER_CREDITS = {
+  'kevccx@gmail.com': { limit: 100000, resetInterval: 365 * 24 * 60 * 60 * 1000 }
+}
+
+function getUserCreditConfig(userOrKey) {
+  if (!userOrKey) return { limit: 100, resetInterval: 24 * 60 * 60 * 1000 }
+  let k = typeof userOrKey === 'string' ? userOrKey : (userOrKey.email || userOrKey.name || '')
+  k = k.toLowerCase().trim()
+  return SPECIAL_USER_CREDITS[k] || { limit: 100, resetInterval: 24 * 60 * 60 * 1000 }
+}
+
+ipcMain.handle('credits:get', () => {
+  const key = currentUserKey()
+  const user = currentAuthUser || loadStoredAuthUser()
+  const store = loadCreditsStore()
+  const saved = store[key] || {}
+  const now = Date.now()
+  const config = getUserCreditConfig(user || key)
+  let limit = Math.max(1, Number(saved.limit ?? config.limit))
+  if (config.limit > 100 && limit < config.limit) limit = config.limit
+  if (limit >= 1000000) limit = config.limit
+  let resetAt = Number(saved.resetAt || (now + config.resetInterval))
+  if (resetAt <= now || (config.limit <= 100 && resetAt > now + 25 * 60 * 60 * 1000) || (config.resetInterval > 24 * 60 * 60 * 1000 && resetAt < now + 300 * 24 * 60 * 60 * 1000)) {
+    resetAt = now + config.resetInterval
+  }
+
+  return {
+    ok: true,
+    credits: {
+      used: Math.max(0, Number(saved.used ?? 0)),
+      limit: limit,
+      resetAt: resetAt,
+      spent: Math.max(0, Number(saved.spent ?? 0))
+    }
+  }
+})
+
+ipcMain.on('credits:get-sync', (event) => {
+  const key = currentUserKey()
+  const user = currentAuthUser || loadStoredAuthUser()
+  const store = loadCreditsStore()
+  const saved = store[key] || {}
+  const now = Date.now()
+  const config = getUserCreditConfig(user || key)
+  let limit = Math.max(1, Number(saved.limit ?? config.limit))
+  if (config.limit > 100 && limit < config.limit) limit = config.limit
+  if (limit >= 1000000) limit = config.limit
+  let resetAt = Number(saved.resetAt || (now + config.resetInterval))
+  if (resetAt <= now || (config.limit <= 100 && resetAt > now + 25 * 60 * 60 * 1000) || (config.resetInterval > 24 * 60 * 60 * 1000 && resetAt < now + 300 * 24 * 60 * 60 * 1000)) {
+    resetAt = now + config.resetInterval
+  }
+
+  event.returnValue = {
+    ok: true,
+    credits: {
+      used: Math.max(0, Number(saved.used ?? 0)),
+      limit: limit,
+      resetAt: resetAt,
+      spent: Math.max(0, Number(saved.spent ?? 0))
+    }
+  }
+})
+
+ipcMain.handle('credits:set', (_event, credits) => {
+  const key = currentUserKey()
+  const user = currentAuthUser || loadStoredAuthUser()
+  const store = loadCreditsStore()
+  const cur = store[key] || {}
+  const now = Date.now()
+  const config = getUserCreditConfig(user || key)
+  let limit = Math.max(1, Number(credits?.limit ?? cur.limit ?? config.limit))
+  if (config.limit > 100 && limit < config.limit) limit = config.limit
+  if (limit >= 1000000) limit = config.limit
+  let resetAt = Number(credits?.resetAt ?? cur.resetAt ?? (now + config.resetInterval))
+  if (resetAt <= now || (config.limit <= 100 && resetAt > now + 25 * 60 * 60 * 1000) || (config.resetInterval > 24 * 60 * 60 * 1000 && resetAt < now + 300 * 24 * 60 * 60 * 1000)) {
+    resetAt = now + config.resetInterval
+  }
+
+  store[key] = {
+    used: Math.max(0, Number(credits?.used ?? cur.used ?? 0)),
+    limit: limit,
+    resetAt: resetAt,
+    spent: Math.max(0, Number(credits?.spent ?? cur.spent ?? 0))
+  }
+  saveCreditsStore(store)
+  return { ok: true }
+})
+
+ipcMain.on('credits:set-sync', (event, credits) => {
+  const key = currentUserKey()
+  const user = currentAuthUser || loadStoredAuthUser()
+  const store = loadCreditsStore()
+  const cur = store[key] || {}
+  const now = Date.now()
+  const config = getUserCreditConfig(user || key)
+  let limit = Math.max(1, Number(credits?.limit ?? cur.limit ?? config.limit))
+  if (config.limit > 100 && limit < config.limit) limit = config.limit
+  if (limit >= 1000000) limit = config.limit
+  let resetAt = Number(credits?.resetAt ?? cur.resetAt ?? (now + config.resetInterval))
+  if (resetAt <= now || (config.limit <= 100 && resetAt > now + 25 * 60 * 60 * 1000) || (config.resetInterval > 24 * 60 * 60 * 1000 && resetAt < now + 300 * 24 * 60 * 60 * 1000)) {
+    resetAt = now + config.resetInterval
+  }
+
+  store[key] = {
+    used: Math.max(0, Number(credits?.used ?? cur.used ?? 0)),
+    limit: limit,
+    resetAt: resetAt,
+    spent: Math.max(0, Number(credits?.spent ?? cur.spent ?? 0))
+  }
+  saveCreditsStore(store)
+  event.returnValue = { ok: true }
+})
+
 ipcMain.handle('file:upload', async (event) => {
   const win = BrowserWindow.fromWebContents(event.sender)
   if (!win) return { ok: false, error: 'No window' }
@@ -590,109 +780,386 @@ ipcMain.handle('app:open-external', (_event, url) => {
   if (url && typeof url === 'string') shell.openExternal(url)
 })
 
+let oauthHttpServer = null
+let currentAuthUser = null
+
+function parseUserString(str) {
+  if (!str || typeof str !== 'string') return null
+  const trimmed = str.trim()
+  if (!trimmed) return null
+  if (trimmed.includes(':')) {
+    const parts = trimmed.split(':')
+    return {
+      name: parts[0] || '',
+      email: parts[1] || '',
+      picture: parts.slice(2).join(':') || null,
+      provider: 'ipc'
+    }
+  }
+  if (trimmed.includes('@')) {
+    return {
+      name: trimmed.split('@')[0],
+      email: trimmed,
+      picture: null,
+      provider: 'ipc'
+    }
+  }
+  return {
+    name: trimmed,
+    email: '',
+    picture: null,
+    provider: 'ipc'
+  }
+}
+
+function loadStoredAuthUser() {
+  try {
+    const authPath = join(app.getPath('userData'), 'auth_user.json')
+    if (existsSync(authPath)) {
+      return JSON.parse(readFileSync(authPath, 'utf8'))
+    }
+  } catch {}
+  return null
+}
+
+function saveStoredAuthUser(user) {
+  try {
+    const authPath = join(app.getPath('userData'), 'auth_user.json')
+    if (user) {
+      writeFileSync(authPath, JSON.stringify(user, null, 2), 'utf8')
+    } else if (existsSync(authPath)) {
+      unlinkSync(authPath)
+    }
+  } catch {}
+}
+
+function applyAndSaveUser(user) {
+  let userObj = null
+  if (user && typeof user === 'string') {
+    userObj = parseUserString(user)
+  } else if (user && typeof user === 'object') {
+    userObj = {
+      name: user.name || '',
+      email: user.email || '',
+      picture: user.picture || null,
+      provider: user.provider || 'google'
+    }
+  }
+  currentAuthUser = userObj
+  saveStoredAuthUser(userObj)
+  BrowserWindow.getAllWindows().forEach((win) => {
+    win.webContents.send('auth:user', userObj)
+  })
+  return userObj
+}
+
+ipcMain.handle('auth:get-user', async () => {
+  if (!currentAuthUser) {
+    currentAuthUser = loadStoredAuthUser()
+  }
+  return currentAuthUser
+})
+
+ipcMain.on('auth:get-user-sync', (event) => {
+  if (!currentAuthUser) {
+    currentAuthUser = loadStoredAuthUser()
+  }
+  event.returnValue = currentAuthUser
+})
+
 ipcMain.handle('auth:sign-in', async (_event, provider) => {
   if (provider === 'google') {
     const http = await import('node:http')
-    const https = await import('node:https')
-    
-    const server = http.createServer(async (req, res) => {
-      const parsedUrl = new URL(req.url, `http://${req.headers.host}`)
-      const code = parsedUrl.searchParams.get('code')
-      
-      if (code) {
-        res.writeHead(200, { 'Content-Type': 'text/html' })
-        res.end(`<!DOCTYPE html>
-<html lang="en">
+    const crypto = await import('node:crypto')
+
+    // Close any previous pending auth server
+    if (oauthHttpServer) {
+      try { oauthHttpServer.close() } catch {}
+      oauthHttpServer = null
+    }
+
+    const base64Url = (buf) => buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+    const codeVerifier = base64Url(crypto.randomBytes(32))
+    const codeChallenge = base64Url(crypto.createHash('sha256').update(codeVerifier).digest())
+
+    const clientId = '397334871290-nmalk9a3erj7qru9v3aic1s1l7lc3c8k.apps.googleusercontent.com'
+
+    return new Promise((resolve) => {
+      let oauthPort = 3000
+      oauthHttpServer = http.createServer(async (req, res) => {
+        const urlObj = new URL(req.url, `http://127.0.0.1:${oauthPort}`)
+        const code = urlObj.searchParams.get('code')
+        const error = urlObj.searchParams.get('error')
+
+        if (error) {
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+          res.end(`<!DOCTYPE html><html><body style="background:#0f0f13;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;"><div style="text-align:center;"><h2>Sign-In Cancelled</h2><p style="color:#888;">You can close this window and return to CilamAI.</p></div><script>setTimeout(()=>window.close(),1500)</script></body></html>`)
+          try { oauthHttpServer.close() } catch {}
+          oauthHttpServer = null
+          resolve({ ok: false, error })
+          return
+        }
+
+        if (code) {
+          try {
+            console.log('[OAuth] Exchanging code for tokens...')
+            const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+              },
+              body: new URLSearchParams({
+                client_id: clientId,
+                client_secret: process.env.GOOGLE_CLIENT_SECRET || '',
+                code: code,
+                code_verifier: codeVerifier,
+                grant_type: 'authorization_code',
+                redirect_uri: `http://127.0.0.1:${oauthPort}`
+              })
+            })
+
+            const tokenData = await tokenRes.json()
+            console.log('[OAuth] Token data received:', tokenData.error || 'SUCCESS')
+
+            let userName = ''
+            let userEmail = ''
+            let userPicture = null
+
+            if (tokenData.id_token) {
+              try {
+                const base64Payload = tokenData.id_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+                const payload = JSON.parse(Buffer.from(base64Payload, 'base64').toString('utf8'))
+                userName = payload.name || (payload.given_name ? `${payload.given_name} ${payload.family_name || ''}`.trim() : '') || payload.preferred_username || ''
+                userEmail = payload.email || ''
+                userPicture = payload.picture || null
+              } catch (e) {
+                console.error('[OAuth] ID token decode error:', e)
+              }
+            }
+
+            if (tokenData.access_token) {
+              try {
+                const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                  headers: {
+                    Authorization: `Bearer ${tokenData.access_token}`,
+                    'User-Agent': 'CilamAI/1.0'
+                  }
+                })
+                if (userRes.ok) {
+                  const profile = await userRes.json()
+                  if (profile.name) userName = profile.name
+                  else if (profile.given_name) userName = `${profile.given_name} ${profile.family_name || ''}`.trim()
+                  if (profile.email) userEmail = profile.email
+                  if (profile.picture) userPicture = profile.picture
+                }
+              } catch (e) {
+                console.error('[OAuth] Userinfo fetch error:', e)
+              }
+            }
+
+            if (!userName && userEmail) {
+              userName = userEmail.split('@')[0]
+            }
+
+            const userObj = {
+              name: userName || userEmail.split('@')[0],
+              email: userEmail,
+              picture: userPicture,
+              provider: 'google'
+            }
+
+            currentAuthUser = userObj
+            saveStoredAuthUser(userObj)
+
+            // Send authenticated user info to all CilamAI windows
+            BrowserWindow.getAllWindows().forEach((win) => {
+              win.webContents.send('auth:user', userObj)
+            })
+
+            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+            res.end(`<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CilamAI - Sign In</title>
+  <meta charset="utf-8">
+  <title>CilamAI - Sign In Successful</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
+      background: transparent;
+      color: #fff;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #0f0f23;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: transparent;
+      border: none;
+      border-radius: 16px;
+      padding: 32px 40px;
+      text-align: center;
+      max-width: 400px;
+    }
+    .check {
+      width: 48px;
+      height: 48px;
+      background: #10b981;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
+      margin: 0 auto 16px auto;
     }
-    .card { text-align: center; }
-    h1 { font-size: 18px; font-weight: 600; margin-bottom: 8px; color: #fff; }
-    p { color: #8892a4; font-size: 14px; line-height: 1.6; }
+    .check svg { width: 28px; height: 28px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    h2 { font-weight: 600; margin: 0 0 8px 0; color: #fff; font-size: 20px; }
+    p { color: #888899; margin: 0; font-size: 14px; }
+    .user { color: #6366f1; font-weight: 600; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>Sign in successful!</h1>
-    <p>You can close this window and return to CilamAI.</p>
+    <div class="check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+    <h2>Sign in successful!</h2>
+    <p>You can now close this tab and return to CilamAI.</p>
   </div>
+  <script>setTimeout(() => window.close(), 1500);</script>
 </body>
 </html>`)
-        server.close()
-
-        try {
-          const postData = new URLSearchParams({
-            code,
-            client_id: '397334871290-nmalk9a3erj7qru9v3aic1s1l7lc3c8k.apps.googleusercontent.com',
-            client_secret: 'GOCSPX-placeholder',
-            redirect_uri: 'http://127.0.0.1:3000',
-            grant_type: 'authorization_code'
-          }).toString()
-
-          const tokenRes = await new Promise((resolve, reject) => {
-            const r = https.request('https://oauth2.googleapis.com/token', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(postData) }
-            }, (res) => {
-              let body = ''
-              res.on('data', d => body += d)
-              res.on('end', () => { try { resolve(JSON.parse(body)) } catch { reject(new Error('Invalid token response')) } })
-            })
-            r.on('error', reject)
-            r.write(postData)
-            r.end()
-          })
-
-          if (tokenRes.access_token) {
-            const userRes = await new Promise((resolve, reject) => {
-              https.get('https://www.googleapis.com/oauth2/v2/userinfo', {
-                headers: { Authorization: `Bearer ${tokenRes.access_token}` }
-              }, (res) => {
-                let body = ''
-                res.on('data', d => body += d)
-                res.on('end', () => { try { resolve(JSON.parse(body)) } catch { reject(new Error('Invalid user response')) } })
-              }).on('error', reject)
-            })
-
-            if (userRes.name && mainWindow) {
-              mainWindow.webContents.send('auth:user', userRes.name)
-            }
+            resolve({ ok: true, user: userObj })
+          } catch (err) {
+            console.error('[OAuth] Token exchange error:', err)
+            res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' })
+            res.end(`<!DOCTYPE html><html><body style="background:#0f0f13;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;"><div style="text-align:center;"><h2>Authentication Error</h2><p style="color:#888;">Failed to complete sign-in. Please return to CilamAI and try again.</p></div></body></html>`)
+            resolve({ ok: false, error: err.message })
+          } finally {
+            setTimeout(() => {
+              try { oauthHttpServer?.close() } catch {}
+              oauthHttpServer = null
+            }, 2000)
           }
-        } catch {}
+          return
+        }
 
-        return { ok: true, code }
+        res.writeHead(404)
+        res.end()
+      })
+
+      const listenWithRetry = () => {
+        const ports = Array.from({ length: 11 }, (_, i) => 3000 + i)
+        let portIndex = 0
+        const tryNextPort = () => {
+          if (portIndex >= ports.length) {
+            console.error('[OAuth] No free port found (3000-3010 all in use)')
+            resolve({ ok: false, error: 'No free port available for OAuth callback' })
+            return
+          }
+          const port = ports[portIndex++]
+          oauthPort = port
+          const redirectUri = `http://127.0.0.1:${port}`
+          oauthHttpServer.once('error', (err) => {
+            if (err.code === 'EADDRINUSE' && portIndex < ports.length) {
+              console.warn(`[OAuth] Port ${port} busy, trying next...`)
+              try { oauthHttpServer.close() } catch {}
+              tryNextPort()
+            } else {
+              console.error('[OAuth] Server error:', err)
+              resolve({ ok: false, error: err.message })
+            }
+          })
+          oauthHttpServer.listen(port, '127.0.0.1', () => {
+            const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent('openid email profile')}&code_challenge=${encodeURIComponent(codeChallenge)}&code_challenge_method=S256&prompt=select_account%20consent`
+            shell.openExternal(authUrl)
+          })
+        }
+        tryNextPort()
       }
-      
-      res.writeHead(400, { 'Content-Type': 'text/html' })
-      res.end('<h1>No code received</h1>')
-    })
-    
-    server.listen(3000, () => {
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=397334871290-nmalk9a3erj7qru9v3aic1s1l7lc3c8k.apps.googleusercontent.com&redirect_uri=http://127.0.0.1:3000&response_type=code&scope=openid%20email%20profile&access_type=offline`
-      shell.openExternal(authUrl)
+      listenWithRetry()
     })
   }
   return { ok: true }
 })
 
 ipcMain.handle('auth:sign-out', async () => {
-  if (mainWindow) mainWindow.webContents.send('auth:user', '')
+  currentAuthUser = null
+  saveStoredAuthUser(null)
+  BrowserWindow.getAllWindows().forEach((win) => {
+    win.webContents.send('auth:user', null)
+  })
   return { ok: true }
 })
 
-ipcMain.on('auth:set-user', (_event, name) => {
-  if (mainWindow) mainWindow.webContents.send('auth:user', name)
+ipcMain.handle('auth:set-user', async (_event, user) => {
+  const saved = applyAndSaveUser(user)
+  return { ok: true, user: saved }
+})
+
+ipcMain.on('auth:set-user', (_event, user) => {
+  applyAndSaveUser(user)
+})
+
+ipcMain.on('auth:set-user-sync', (event, user) => {
+  const saved = applyAndSaveUser(user)
+  event.returnValue = { ok: true, user: saved }
+})
+
+ipcMain.on('auth:set-avatar', (_event, picture) => {
+  if (currentAuthUser) {
+    currentAuthUser.picture = picture
+    saveStoredAuthUser(currentAuthUser)
+  }
+  BrowserWindow.getAllWindows().forEach((win) => {
+    win.webContents.send('auth:avatar', picture)
+  })
+})
+
+ipcMain.handle('auth:set-avatar', async (_event, picture) => {
+  if (currentAuthUser) {
+    currentAuthUser.picture = picture
+    saveStoredAuthUser(currentAuthUser)
+  }
+  BrowserWindow.getAllWindows().forEach((win) => {
+    win.webContents.send('auth:avatar', picture)
+  })
+  return { ok: true, picture }
+})
+
+ipcMain.handle('auth:upload-avatar', async (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  if (!win) return { ok: false, error: 'No window' }
+  const result = await dialog.showOpenDialog(win, {
+    title: 'Select Avatar Image',
+    filters: [
+      { name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'] }
+    ],
+    properties: ['openFile']
+  })
+  if (result.canceled || result.filePaths.length === 0) return { ok: false, canceled: true }
+  const filePath = result.filePaths[0]
+  try {
+    const data = await readFile(filePath)
+    const ext = filePath.split('.').pop().toLowerCase()
+    const mime = ext === 'svg' ? 'image/svg+xml' : ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : ext === 'gif' ? 'image/gif' : 'image/jpeg'
+    const dataUrl = `data:${mime};base64,${data.toString('base64')}`
+    
+    if (currentAuthUser) {
+      currentAuthUser.picture = dataUrl
+      saveStoredAuthUser(currentAuthUser)
+    }
+
+    BrowserWindow.getAllWindows().forEach((w) => {
+      w.webContents.send('auth:avatar', dataUrl)
+      if (currentAuthUser) {
+        w.webContents.send('auth:user', currentAuthUser)
+      }
+    })
+
+    return { ok: true, picture: dataUrl }
+  } catch (err) {
+    return { ok: false, error: err.message }
+  }
 })
 
 function createWindow() {
@@ -715,6 +1182,9 @@ function createWindow() {
       sandbox: false
     }
   })
+
+  win.removeMenu()
+  win.setMenuBarVisibility(false)
 
   win.on('ready-to-show', () => {
     win.show()
@@ -778,15 +1248,38 @@ if (!gotLock) {
       pendingApiKey = apiKey
       win?.webContents.send('task:set-apikey', apiKey)
     }
+    const avatarArg = extractAvatar(argv)
+    const userArg = extractUser(argv)
     const ipcCommand = extractIpcCommand(argv)
+
+    if (userArg) {
+      const parsed = parseUserString(userArg)
+      if (parsed) {
+        if (avatarArg) parsed.picture = avatarArg
+        applyAndSaveUser(parsed)
+      }
+      win?.webContents.send('task:ipc', `user:${userArg}`)
+    } else if (avatarArg) {
+      if (currentAuthUser) {
+        currentAuthUser.picture = avatarArg
+        saveStoredAuthUser(currentAuthUser)
+        win?.webContents.send('auth:user', currentAuthUser)
+      }
+      win?.webContents.send('auth:avatar', avatarArg)
+    }
+
     if (ipcCommand) {
+      if (ipcCommand.startsWith('user:')) {
+        const parsed = parseUserString(ipcCommand.slice(5))
+        if (parsed) applyAndSaveUser(parsed)
+      }
       win?.webContents.send('task:ipc', ipcCommand)
     }
     if (argv.includes('--settings')) {
       win?.webContents.send('task:show-settings')
     }
-    const modelArg = argv.includes('--model') ? argv[argv.indexOf('--model') + 1] : null
-    if (modelArg && !modelArg.startsWith('--')) {
+    const modelArg = extractModelArg(argv)
+    if (modelArg) {
       win?.webContents.send('task:ipc', `model:${modelArg}`)
     } else if (argv.includes('--model')) {
       win?.webContents.send('task:show-model-menu')
@@ -816,13 +1309,10 @@ if (!gotLock) {
     const win = BrowserWindow.getAllWindows()[0]
     if (win) {
       win.webContents.once('did-finish-load', () => {
-        // Check for --whats-new flag first
         if (process.argv.includes('--whats-new')) {
           win.webContents.send('task:show-release-notes')
           return
         }
-        
-        // Check and show release notes for new version
         const releaseNotes = loadReleaseNotes()
         const currentVersion = app.getVersion()
         if (releaseNotes.lastShownVersion !== currentVersion) {
@@ -836,12 +1326,49 @@ if (!gotLock) {
           pendingApiKey = apiKey
           win.webContents.send('task:set-apikey', apiKey)
         }
+        const avatarArg = extractAvatar(process.argv)
+        const userArg = extractUser(process.argv)
         const ipcCommand = extractIpcCommand(process.argv)
+
+        let initialUser = loadStoredAuthUser()
+        if (userArg) {
+          const parsed = parseUserString(userArg)
+          if (parsed) {
+            if (avatarArg) parsed.picture = avatarArg
+            initialUser = parsed
+            currentAuthUser = initialUser
+            saveStoredAuthUser(initialUser)
+          }
+        } else if (ipcCommand && ipcCommand.startsWith('user:')) {
+          const parsed = parseUserString(ipcCommand.slice(5))
+          if (parsed) {
+            if (avatarArg) parsed.picture = avatarArg
+            initialUser = parsed
+            currentAuthUser = initialUser
+            saveStoredAuthUser(initialUser)
+          }
+        } else if (avatarArg && initialUser) {
+          initialUser.picture = avatarArg
+          currentAuthUser = initialUser
+          saveStoredAuthUser(initialUser)
+        } else if (initialUser) {
+          currentAuthUser = initialUser
+        }
+
+        if (initialUser) {
+          win.webContents.send('auth:user', initialUser)
+        }
+        if (avatarArg) {
+          win.webContents.send('auth:avatar', avatarArg)
+        }
+        if (userArg) {
+          win.webContents.send('task:ipc', `user:${userArg}`)
+        }
         if (ipcCommand) {
           win.webContents.send('task:ipc', ipcCommand)
         }
-        const modelArg = process.argv.includes('--model') ? process.argv[process.argv.indexOf('--model') + 1] : null
-        if (modelArg && !modelArg.startsWith('--')) {
+        const modelArg = extractModelArg(process.argv)
+        if (modelArg) {
           win.webContents.send('task:ipc', `model:${modelArg}`)
         } else if (process.argv.includes('--model')) {
           win.webContents.send('task:show-model-menu')

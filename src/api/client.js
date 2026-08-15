@@ -6,9 +6,11 @@ const isOpenAiCompat = (provider) => provider === 'openai' || provider === 'open
 
 export function buildHeaders({ model, apiKey, envConfig, org }) {
   const headers = { 'Content-Type': 'application/json' }
-  const key = isFreeModel(model) ? '' : apiKey || envConfig.opencodeApiKey
-  if (key) headers.Authorization = `Bearer ${key}`
-  const orgId = org || envConfig.opencodeOrgId
+  const key = isFreeModel(model) ? '' : (apiKey || envConfig?.opencodeApiKey || '').trim()
+  if (key) {
+    headers.Authorization = `Bearer ${key}`
+  }
+  const orgId = org || envConfig?.opencodeOrgId
   if (orgId) headers['x-org-id'] = orgId
   return headers
 }

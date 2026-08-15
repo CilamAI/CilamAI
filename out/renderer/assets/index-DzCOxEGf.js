@@ -52079,7 +52079,6 @@ let apiKey = settings.apiKey || "";
 let opencodeApiKey = settings.opencodeApiKey || "";
 let claudeApiKey = settings.claudeApiKey || "";
 let grokApiKey = settings.grokApiKey || "";
-let geminiApiKey = settings.geminiApiKey || "";
 let zaiApiKey = settings.zaiApiKey || "";
 let showThinking = settings.showThinking !== false;
 let theme = settings.theme || "dark";
@@ -52093,31 +52092,55 @@ const systemMedia = matchMedia("(prefers-color-scheme: dark)");
 systemMedia.addEventListener("change", () => {
   if (theme === "system") applyTheme();
 });
-const isOpenAI = () => provider === "openai";
+const isOpenAI = () => provider === "openai" || provider === "opencode";
 const OPENCODE_URL = "https://console.opencode.ai/inference/openai/v1";
+const GROK_URL = "https://api.x.ai/v1";
 const CUSTOM_MODEL_ROUTES = {
   "mimo-v2.5-free": { url: OPENCODE_URL, org: "Xiaomi LLM Core Team" }
 };
 const getProviderApiKey = (model) => {
   const m = (model || "").toLowerCase();
-  if (m.includes("claude")) return claudeApiKey;
-  if (m.includes("grok")) return grokApiKey;
-  if (m.includes("gemini")) return geminiApiKey;
-  if (m.includes("z.ai") || m.includes("zai")) return zaiApiKey;
-  if (m.includes("opencode") || m.includes("mimo") || m === "auto") return opencodeApiKey;
-  return apiKey;
+  if (m.includes("claude")) return claudeApiKey || opencodeApiKey || apiKey;
+  if (m.includes("grok")) return grokApiKey || opencodeApiKey || apiKey;
+  if (m.includes("z.ai") || m.includes("zai")) return zaiApiKey || opencodeApiKey || apiKey;
+  return opencodeApiKey || apiKey;
 };
+const GROK_FALLBACKS = {
+  "grok-4.3": "grok-2",
+  "grok": "grok-2"
+};
+const OPENCODE_MODELS = /* @__PURE__ */ new Set([
+  "deepseek-v3",
+  "deepseek-r1",
+  "qwen-2.5-72b",
+  "llama-3.3-70b",
+  "claude-3-7-sonnet",
+  "claude-3-5-sonnet",
+  "claude-3-5-haiku",
+  "claude-3-opus",
+  "claude",
+  "zai-glm-4",
+  "zai-glm-4-flash"
+]);
 const routeForModel = (model) => {
   const currentKey = getProviderApiKey(model);
+  const m = model.toLowerCase();
   if (model === "auto") return { url: `${OPENCODE_URL}/chat/completions`, model: "mimo-v2.5-free", provider: "opencode", apiKey: currentKey, org: "Xiaomi LLM Core Team" };
+  if (m.includes("grok")) {
+    const targetModel = GROK_FALLBACKS[model] || model;
+    return { url: `${GROK_URL}/chat/completions`, model: targetModel, provider: "openai", apiKey: currentKey };
+  }
+  if (OPENCODE_MODELS.has(model) || m.includes("claude") || m.includes("deepseek") || m.includes("qwen") || m.includes("llama") || m.includes("zai") || m.includes("glm")) {
+    return { url: `${OPENCODE_URL}/chat/completions`, model, provider: "opencode", apiKey: currentKey };
+  }
   const custom = CUSTOM_MODEL_ROUTES[model];
   if (custom) return { url: `${custom.url}/chat/completions`, model, provider: "opencode", apiKey: currentKey, org: custom.org || "" };
-  return { url: chatUrl(), model, provider, apiKey: currentKey };
+  return { url: chatUrl(), model, provider: isOpenAI() ? "opencode" : provider, apiKey: currentKey };
 };
 const chatUrl = () => isOpenAI() ? `${openaiUrl}/chat/completions` : `${baseUrl}/api/chat`;
 const tagsUrl = () => isOpenAI() ? `${openaiUrl}/models` : `${baseUrl}/api/tags`;
 const apiHeaders = () => {
-  const currentKey = getProviderApiKey(settings.model || "");
+  const currentKey = getProviderApiKey(settings.model || "") || opencodeApiKey || apiKey;
   return currentKey ? { "Content-Type": "application/json", Authorization: `Bearer ${currentKey}` } : { "Content-Type": "application/json" };
 };
 const messages = [];
@@ -52687,7 +52710,35 @@ function compressImage(ext, data, maxDim = 1024, quality = 0.82) {
 }
 const displayNames = {
   "mimo-v2.5-free": "MiMo V2.5",
-  "auto": "Auto"
+  "auto": "Auto",
+  "deepseek-v3": "DeepSeek V3",
+  "deepseek-r1": "DeepSeek R1",
+  "qwen-2.5-72b": "Qwen 2.5 72B",
+  "glm-4-9b": "GLM-4 9B",
+  "llama-3.3-70b": "Llama 3.3 70B",
+  "claude-3-7-sonnet": "Claude 3.7 Sonnet",
+  "claude-3-5-sonnet": "Claude 3.5 Sonnet",
+  "claude-3-5-haiku": "Claude 3.5 Haiku",
+  "claude-3-opus": "Claude 3 Opus",
+  "claude-fable-5": "Claude Fable 5",
+  "claude-opus-4-8": "Claude Opus 4.8",
+  "claude-sonnet-5": "Claude Sonnet 5",
+  "claude-haiku-4-5": "Claude Haiku 4.5",
+  "claude": "Claude",
+  "grok-2": "Grok 2",
+  "grok-2-mini": "Grok 2 Mini",
+  "grok-4.5": "Grok 4.5",
+  "grok-4.3": "Grok 4.3",
+  "grok": "Grok",
+  "gemini-2.0-flash": "Gemini 2.0 Flash",
+  "gemini-2.0-flash-thinking": "Gemini 2.0 Flash Thinking",
+  "gemini-1.5-pro": "Gemini 1.5 Pro",
+  "gemini-1.5-flash": "Gemini 1.5 Flash",
+  "gemini-3.5-flash": "Gemini 3.5 Flash",
+  "gemini-3.1-pro": "Gemini 3.1 Pro",
+  "gemini-3-flash": "Gemini 3 Flash",
+  "zai-glm-4": "ZAI GLM-4",
+  "zai-glm-4-flash": "ZAI GLM-4 Flash"
 };
 const getDisplayName = (fullName) => displayNames[fullName] || fullName;
 async function loadModels() {
@@ -52697,16 +52748,22 @@ async function loadModels() {
   if (!menu || !options || !name) return;
   const BLOCKED_MODELS = [
     "north-mini-code-free",
-    "claude-sonnet-5",
+    "nemotron-3-ultra-free",
+    "mimo-v2.5-free",
     "kimi-k2.7-code",
     "minimax-m3",
-    "grok-4.5",
     "gpt-5.6-sol",
     "gpt-5.6-terra",
     "gpt-5.6-luna",
     "muse-spark-1.1",
     "gemini-3.6-flash",
     "gemini-3.5-flash-lite",
+    "gemini-3.5-flash",
+    "gemini-3.1-pro",
+    "gemini-3-flash",
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-thinking",
+    "gemini-1.5-pro",
     "laguna-s-2.1-free",
     "ling-3.0-flash-free",
     "claude-opus-5",
@@ -52717,12 +52774,11 @@ async function loadModels() {
     "claude-opus-4-6",
     "claude-opus-4-5",
     "claude-opus-4-1",
+    "claude-sonnet-5",
     "claude-sonnet-4-6",
     "claude-sonnet-4-5",
     "claude-haiku-4-5",
-    "gemini-3.5-flash",
-    "gemini-3.1-pro",
-    "gemini-3-flash",
+    "grok-4.5",
     "gpt-5.5",
     "gpt-5.5-pro",
     "gpt-5.4",
@@ -52758,71 +52814,78 @@ async function loadModels() {
     "ornith:latest"
   ];
   const customModels = [
-    { fullName: "auto", displayName: "Auto" },
-    { fullName: "mimo-v2.5-free", displayName: "MiMo V2.5" }
+    { fullName: "auto", displayName: "Auto" }
   ];
-  if (claudeApiKey) {
+  if (opencodeApiKey || apiKey) {
     customModels.push(
-      { fullName: "claude-fable-5", displayName: "Claude Fable 5" },
-      { fullName: "claude-opus-4-8", displayName: "Claude Opus 4.8" },
-      { fullName: "claude-sonnet-5", displayName: "Claude Sonnet 5" },
-      { fullName: "claude-haiku-4-5", displayName: "Claude Haiku 4.5" },
-      { fullName: "claude", displayName: "Claude" }
+      { fullName: "deepseek-v3", displayName: "DeepSeek V3" },
+      { fullName: "deepseek-r1", displayName: "DeepSeek R1" },
+      { fullName: "qwen-2.5-72b", displayName: "Qwen 2.5 72B" },
+      { fullName: "llama-3.3-70b", displayName: "Llama 3.3 70B" }
     );
   }
-  if (geminiApiKey) {
+  if (claudeApiKey) {
     customModels.push(
-      { fullName: "gemini-3.6-flash", displayName: "Gemini 3.6 Flash" },
-      { fullName: "gemini-3.5-flash-lite", displayName: "Gemini 3.5 Flash Lite" },
-      { fullName: "gemini", displayName: "Gemini" }
+      { fullName: "claude-3-7-sonnet", displayName: "Claude 3.7 Sonnet" },
+      { fullName: "claude-3-5-sonnet", displayName: "Claude 3.5 Sonnet" },
+      { fullName: "claude-3-5-haiku", displayName: "Claude 3.5 Haiku" },
+      { fullName: "claude-3-opus", displayName: "Claude 3 Opus" },
+      { fullName: "claude", displayName: "Claude" }
     );
   }
   if (grokApiKey) {
     customModels.push(
-      { fullName: "grok-4.5", displayName: "Grok 4.5" },
+      { fullName: "grok-2", displayName: "Grok 2" },
+      { fullName: "grok-2-mini", displayName: "Grok 2 Mini" },
       { fullName: "grok-4.3", displayName: "Grok 4.3" },
       { fullName: "grok", displayName: "Grok" }
     );
   }
+  if (zaiApiKey) {
+    customModels.push(
+      { fullName: "zai-glm-4", displayName: "ZAI GLM-4" },
+      { fullName: "zai-glm-4-flash", displayName: "ZAI GLM-4 Flash" }
+    );
+  }
   let items = [];
   try {
-    const data = await fetchJson(tagsUrl(), { headers: apiHeaders() });
-    if (isOpenAI()) {
-      items = (data.data || []).map((m) => {
-        const fullName = m.id;
-        return { fullName, displayName: fullName, isCloud: false };
-      });
-    } else {
-      items = (data.models || []).map((m) => {
-        const isCloud = /:cloud$/.test(m.name);
-        const fullName = m.name.replace(/:cloud$/, "");
-        return { fullName, displayName: fullName, isCloud };
-      });
+    const url = tagsUrl();
+    if (url) {
+      const data = await fetchJson(url, { headers: apiHeaders() });
+      if (isOpenAI()) {
+        items = (data.data || []).map((m) => {
+          const fullName = m.id;
+          return { fullName, displayName: fullName };
+        });
+      } else {
+        items = (data.models || []).map((m) => {
+          const fullName = m.name.replace(/:cloud$/, "");
+          return { fullName, displayName: fullName };
+        });
+      }
+      items = items.filter((i) => !BLOCKED_MODELS.includes(i.fullName) && !BLOCKED_MODELS.includes(i.displayName));
     }
-    items = items.filter((i) => !BLOCKED_MODELS.includes(i.fullName) && !BLOCKED_MODELS.includes(i.displayName));
   } catch (err) {
   }
-  for (const cm of customModels) {
-    items = items.filter((i) => i.fullName !== cm.fullName && i.displayName !== cm.displayName);
-    items.unshift(cm);
-  }
+  items = [
+    ...customModels,
+    ...items.filter((i) => !customModels.some((cm) => cm.fullName === i.fullName || cm.displayName === i.displayName))
+  ];
   items = items.map((i) => ({
     ...i,
     displayName: displayNames[i.fullName] || displayNames[i.displayName] || i.displayName
   }));
   if (items.length === 0) return;
   const autoItems = items.filter((i) => i.fullName === "auto");
-  const customItems = items.filter((i) => customModels.some((cm) => cm.fullName === i.fullName) && i.fullName !== "auto");
-  const cloudItems = items.filter((i) => !customModels.some((cm) => cm.fullName === i.fullName) && /:cloud$/.test(i.fullName));
-  const localItems = items.filter((i) => !customModels.some((cm) => cm.fullName === i.fullName) && !/:cloud$/.test(i.fullName));
+  const modelItems = items.filter((i) => i.fullName !== "auto");
   const renderFolder = (label, list) => {
     if (!list.length) return "";
     return `<div class="model-folder">
-      <div class="model-folder-header">${label}</div>
+      ${`<div class="model-folder-header">${label}</div>`}
       ${list.map((item) => `<button type="button" class="model-option" data-model="${item.fullName}">${item.displayName}</button>`).join("")}
     </div>`;
   };
-  options.innerHTML = renderFolder("Auto", autoItems) + renderFolder("Custom", customItems) + renderFolder("Cloud", cloudItems) + renderFolder("Local", localItems);
+  options.innerHTML = renderFolder("Auto", autoItems) + modelItems.map((item) => `<button type="button" class="model-option" data-model="${item.fullName}">${item.displayName}</button>`).join("");
   options.querySelectorAll("[data-model]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const fullName = btn.dataset.model;
@@ -52844,8 +52907,6 @@ async function loadModels() {
 }
 function showSettings() {
   document.querySelector(".settings-view").hidden = false;
-  const akv = document.querySelector(".api-key-view");
-  if (akv) akv.hidden = true;
   document.querySelector(".help-view").hidden = true;
   document.querySelector(".release-notes-view").hidden = true;
   document.querySelector(".welcome-text").hidden = true;
@@ -52903,8 +52964,6 @@ async function loadLocale(lang) {
 }
 function showChat() {
   document.querySelector(".settings-view").hidden = true;
-  const akv = document.querySelector(".api-key-view");
-  if (akv) akv.hidden = true;
   document.querySelector(".help-view").hidden = true;
   document.querySelector(".release-notes-view").hidden = true;
   document.querySelector(".chat").hidden = false;
@@ -52916,33 +52975,8 @@ function showChat() {
   const main = document.querySelector(".main");
   document.querySelector(".welcome-text").hidden = main.classList.contains("has-chat");
 }
-function showApiKeyConfig() {
-  document.querySelector(".settings-view").hidden = true;
-  document.querySelector(".help-view").hidden = true;
-  document.querySelector(".release-notes-view").hidden = true;
-  document.querySelector(".chat").hidden = true;
-  document.querySelector(".composer").hidden = true;
-  document.querySelector(".welcome-text").hidden = true;
-  const sp = document.querySelector(".search-page");
-  if (sp) sp.hidden = true;
-  const akv = document.querySelector(".api-key-view");
-  if (akv) akv.hidden = false;
-  document.querySelector(".main").classList.add("has-chat");
-  const opencodeInput = document.getElementById("opencode-api-key");
-  if (opencodeInput) opencodeInput.value = opencodeApiKey || "";
-  const claudeInput = document.getElementById("claude-api-key");
-  if (claudeInput) claudeInput.value = claudeApiKey || "";
-  const grokInput = document.getElementById("grok-api-key");
-  if (grokInput) grokInput.value = grokApiKey || "";
-  const geminiInput = document.getElementById("gemini-api-key");
-  if (geminiInput) geminiInput.value = geminiApiKey || "";
-  const zaiInput = document.getElementById("zai-api-key");
-  if (zaiInput) zaiInput.value = zaiApiKey || "";
-}
 function showHelp() {
   document.querySelector(".settings-view").hidden = true;
-  const akv = document.querySelector(".api-key-view");
-  if (akv) akv.hidden = true;
   document.querySelector(".help-view").hidden = false;
   document.querySelector(".release-notes-view").hidden = true;
   document.querySelector(".chat").hidden = true;
@@ -52960,8 +52994,6 @@ function showHelp() {
 }
 function showReleaseNotes() {
   document.querySelector(".settings-view").hidden = true;
-  const akv = document.querySelector(".api-key-view");
-  if (akv) akv.hidden = true;
   document.querySelector(".help-view").hidden = true;
   const rn = document.querySelector(".release-notes-view");
   if (!rn) return;
@@ -53039,82 +53071,101 @@ function hideStartup() {
     el.hidden = true;
   }, 300);
 }
+function startOnboarding() {
+  const onboarding = document.querySelector("[data-onboarding]");
+  if (!onboarding) return;
+  document.documentElement.classList.add("onboarding-active");
+  const title = onboarding.querySelector("[data-onboarding-title]");
+  const subtitle = onboarding.querySelector("[data-onboarding-subtitle]");
+  const illustration = onboarding.querySelector("[data-onboarding-illustration]");
+  const content = onboarding.querySelector(".onboarding-content");
+  const next = onboarding.querySelector("[data-onboarding-next]");
+  const back = onboarding.querySelector("[data-onboarding-back]");
+  const dots = onboarding.querySelector("[data-onboarding-dots]");
+  const steps = [
+    ["Welcome to CilamAI", "A focused desktop workspace for chatting with AI. Let's get you set up in a few quick steps.", '<img src="https://file.garden/aPSLaf7myCkWreuK/Untitled_design__9_-removebg-preview.png" alt="CilamAI" />'],
+    ["Choose your language", "Select the language you want to use throughout the CilamAI interface. You can change this later from Settings.", '<svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="27"/><path d="M21 48h54M48 21c8 8 12 17 12 27s-4 19-12 27c-8-8-12-17-12-27s4-19 12-27ZM27 31c12 6 30 6 42 0M27 65c12-6 30-6 42 0"/></svg>'],
+    ["Pick a model", "Choose the model that best fits your task. You can switch models at any time while working in a conversation.", '<svg viewBox="0 0 96 96"><path d="m48 19 27 15v28L48 77 21 62V34l27-15Z"/><path d="m21 34 27 15 27-15M48 49v28M36 27l27 15"/></svg>'],
+    ["Customize your experience", "Personalize CilamAI with your preferred theme, language, font size, startup behavior, and chat display options.", '<svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="12"/><path d="M48 19v10M48 67v10M19 48h10M67 48h10M28 28l7 7M61 61l7 7M68 28l-7 7M35 61l-7 7"/><circle cx="48" cy="48" r="27"/></svg>'],
+    ["You are ready", "Start a new conversation, attach files or screenshots, search your sessions, and use the tools whenever you need them.", '<svg viewBox="0 0 96 96"><path d="M24 25h48v35H42L29 72V60h-5V25Z"/><path d="M35 42h26M35 50h17"/></svg>'],
+    ["Enjoy CilamAI", "Everything is ready. Click Finish to open your workspace and start getting useful answers from CilamAI.", '<svg viewBox="0 0 96 96"><path d="m48 18 7 20 21 1-16 13 5 21-17-12-17 12 5-21-16-13 21-1 7-20Z"/></svg>']
+  ];
+  let step = 0;
+  let changing = false;
+  const arrow = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>';
+  const renderStep = () => {
+    if (title) title.textContent = steps[step][0];
+    if (subtitle) subtitle.textContent = steps[step][1];
+    if (illustration) illustration.innerHTML = steps[step][2];
+    if (back) back.hidden = step === 0;
+    if (next) next.innerHTML = step === steps.length - 1 ? `Finish ${arrow}` : step === 0 ? `Get Started ${arrow}` : `Next ${arrow}`;
+    dots?.querySelectorAll(".onboarding-dot").forEach((dot, index) => dot.classList.toggle("active", index === step));
+  };
+  if (illustration) illustration.innerHTML = steps[0][2];
+  if (dots) {
+    dots.innerHTML = steps.map((_, index) => `<span class="onboarding-dot${index === 0 ? " active" : ""}"></span>`).join("");
+  }
+  renderStep();
+  onboarding.hidden = false;
+  const onBackClick = () => {
+    if (changing || step === 0) return;
+    changing = true;
+    step -= 1;
+    content?.classList.remove("step-changing");
+    void content?.offsetWidth;
+    renderStep();
+    content?.classList.add("step-changing");
+    window.setTimeout(() => {
+      changing = false;
+    }, 360);
+  };
+  const onNextClick = () => {
+    if (changing) return;
+    step += 1;
+    if (step >= steps.length) {
+      localStorage.setItem("cilamai-onboarding-complete", "true");
+      document.documentElement.classList.remove("onboarding-active");
+      onboarding.hidden = true;
+      return;
+    }
+    changing = true;
+    content?.classList.remove("step-changing");
+    void content?.offsetWidth;
+    renderStep();
+    content?.classList.add("step-changing");
+    window.setTimeout(() => {
+      changing = false;
+    }, 360);
+  };
+  const onKeyDown = (event) => {
+    if (event.key === "ArrowLeft" && !back?.hidden) {
+      event.preventDefault();
+      onBackClick();
+    } else if (event.key === "ArrowRight") {
+      event.preventDefault();
+      onNextClick();
+    }
+  };
+  back?.replaceWith(back.cloneNode(true));
+  next?.replaceWith(next.cloneNode(true));
+  const newBack = onboarding.querySelector("[data-onboarding-back]");
+  const newNext = onboarding.querySelector("[data-onboarding-next]");
+  const closeBtn = onboarding.querySelector("[data-onboarding-close]");
+  newBack?.addEventListener("click", onBackClick);
+  newNext?.addEventListener("click", onNextClick);
+  closeBtn?.addEventListener("click", () => {
+    localStorage.setItem("cilamai-onboarding-complete", "true");
+    document.documentElement.classList.remove("onboarding-active");
+    onboarding.hidden = true;
+  });
+  onboarding.onkeydown = onKeyDown;
+  onboarding.tabIndex = -1;
+  onboarding.focus();
+}
 async function init() {
   const onboarding = document.querySelector("[data-onboarding]");
   if (onboarding && localStorage.getItem("cilamai-onboarding-complete") !== "true") {
-    document.documentElement.classList.add("onboarding-active");
-    const title = onboarding.querySelector("[data-onboarding-title]");
-    const subtitle = onboarding.querySelector("[data-onboarding-subtitle]");
-    const illustration = onboarding.querySelector("[data-onboarding-illustration]");
-    const content = onboarding.querySelector(".onboarding-content");
-    const next = onboarding.querySelector("[data-onboarding-next]");
-    const back = onboarding.querySelector("[data-onboarding-back]");
-    const dots = onboarding.querySelector("[data-onboarding-dots]");
-    const steps = [
-      ["Welcome to CilamAI", "A focused desktop workspace for chatting with AI. Let's get you set up in a few quick steps.", '<img src="https://file.garden/aPSLaf7myCkWreuK/Untitled_design__9_-removebg-preview.png" alt="CilamAI" />'],
-      ["Choose your language", "Select the language you want to use throughout the CilamAI interface. You can change this later from Settings.", '<svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="27"/><path d="M21 48h54M48 21c8 8 12 17 12 27s-4 19-12 27c-8-8-12-17-12-27s4-19 12-27ZM27 31c12 6 30 6 42 0M27 65c12-6 30-6 42 0"/></svg>'],
-      ["Pick a model", "Choose the model that best fits your task. You can switch models at any time while working in a conversation.", '<svg viewBox="0 0 96 96"><path d="m48 19 27 15v28L48 77 21 62V34l27-15Z"/><path d="m21 34 27 15 27-15M48 49v28M36 27l27 15"/></svg>'],
-      ["Customize your experience", "Personalize CilamAI with your preferred theme, language, font size, startup behavior, and chat display options.", '<svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="12"/><path d="M48 19v10M48 67v10M19 48h10M67 48h10M28 28l7 7M61 61l7 7M68 28l-7 7M35 61l-7 7"/><circle cx="48" cy="48" r="27"/></svg>'],
-      ["You are ready", "Start a new conversation, attach files or screenshots, search your sessions, and use the tools whenever you need them.", '<svg viewBox="0 0 96 96"><path d="M24 25h48v35H42L29 72V60h-5V25Z"/><path d="M35 42h26M35 50h17"/></svg>'],
-      ["Enjoy CilamAI", "Everything is ready. Click Finish to open your workspace and start getting useful answers from CilamAI.", '<svg viewBox="0 0 96 96"><path d="m48 18 7 20 21 1-16 13 5 21-17-12-17 12 5-21-16-13 21-1 7-20Z"/></svg>']
-    ];
-    let step = 0;
-    let changing = false;
-    const arrow = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8 4l4 4-4 4" /></svg>';
-    const renderStep = () => {
-      if (title) title.textContent = steps[step][0];
-      if (subtitle) subtitle.textContent = steps[step][1];
-      if (illustration) illustration.innerHTML = steps[step][2];
-      if (back) back.hidden = step === 0;
-      if (next) next.innerHTML = step === steps.length - 1 ? `Finish ${arrow}` : step === 0 ? `Get Started ${arrow}` : `Next ${arrow}`;
-      dots?.querySelectorAll(".onboarding-dot").forEach((dot, index) => dot.classList.toggle("active", index === step));
-    };
-    if (illustration) illustration.innerHTML = steps[0][2];
-    if (dots) {
-      dots.innerHTML = steps.map((_, index) => `<span class="onboarding-dot${index === 0 ? " active" : ""}"></span>`).join("");
-    }
-    onboarding.hidden = false;
-    back?.addEventListener("click", () => {
-      if (changing || step === 0) return;
-      changing = true;
-      step -= 1;
-      content?.classList.remove("step-changing");
-      void content?.offsetWidth;
-      renderStep();
-      content?.classList.add("step-changing");
-      window.setTimeout(() => {
-        changing = false;
-      }, 360);
-    });
-    next?.addEventListener("click", () => {
-      if (changing) return;
-      step += 1;
-      if (step >= steps.length) {
-        localStorage.setItem("cilamai-onboarding-complete", "true");
-        document.documentElement.classList.remove("onboarding-active");
-        onboarding.hidden = true;
-        return;
-      }
-      changing = true;
-      content?.classList.remove("step-changing");
-      void content?.offsetWidth;
-      renderStep();
-      content?.classList.add("step-changing");
-      window.setTimeout(() => {
-        changing = false;
-      }, 360);
-    });
-    onboarding.addEventListener("keydown", (event) => {
-      if (event.key === "ArrowLeft" && !back?.hidden) {
-        event.preventDefault();
-        back.click();
-      } else if (event.key === "ArrowRight") {
-        event.preventDefault();
-        next?.click();
-      }
-    });
-    onboarding.tabIndex = -1;
-    onboarding.focus();
+    startOnboarding();
   }
   const input = document.querySelector(".composer-input");
   const form = document.querySelector(".composer");
@@ -53152,6 +53203,8 @@ async function init() {
   if (sPage) sPage.hidden = true;
   window.addEventListener("beforeunload", () => {
     if (messages.length) saveSession();
+    window.electron?.flushCredits?.({ used: creditUsed, limit: creditLimit, resetAt: creditResetAt, spent: creditSpent });
+    if (currentUser) window.electron?.setUserSync?.(currentUser);
   });
   const chat = document.querySelector(".chat");
   const scrollBtn = document.querySelector(".scroll-bottom-btn");
@@ -53372,6 +53425,19 @@ async function init() {
       if (r && !r.ok) showError(`Startup failed: ${r.error}`);
     });
   }
+  const shimmerCheck = document.querySelector("#shimmer-effect");
+  if (shimmerCheck) {
+    if (settings.shimmerEffect === void 0) settings.shimmerEffect = true;
+    shimmerCheck.checked = settings.shimmerEffect;
+    if (settings.shimmerEffect) document.body.classList.add("shimmer-enabled");
+    else document.body.classList.remove("shimmer-enabled");
+    shimmerCheck.addEventListener("change", () => {
+      settings.shimmerEffect = shimmerCheck.checked;
+      localStorage.setItem("ollama-settings", JSON.stringify(settings));
+      if (settings.shimmerEffect) document.body.classList.add("shimmer-enabled");
+      else document.body.classList.remove("shimmer-enabled");
+    });
+  }
   const selectModel = (fullName) => {
     const name = document.querySelector(".model-name");
     if (!name) return;
@@ -53382,6 +53448,7 @@ async function init() {
     localStorage.setItem("ollama-settings", JSON.stringify(settings));
     const compInput = document.querySelector(".composer-input");
     if (compInput) compInput.setAttribute("placeholder", `Message ${displayName}`);
+    showNotification(`Model set to ${displayName}`, "info");
   };
   const syncModelSubmenu = () => {
     const sub = document.querySelector(".tb-submenu-menu");
@@ -53420,6 +53487,7 @@ async function init() {
     item.querySelectorAll("[data-action]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const action = btn.dataset.action;
+        if (action === "welcome") startOnboarding();
         if (action === "new-chat") resetChat();
         if (action === "settings") showSettings();
         if (action === "help") showHelp();
@@ -53467,40 +53535,101 @@ async function init() {
     document.querySelector("[data-model-toggle]")?.click();
   });
   window.electron?.onShowReleaseNotesTask?.(showReleaseNotes);
-  const saveApiKey = (key) => {
-    apiKey = (key || "").trim();
-    settings.apiKey = apiKey;
+  const saveApiKey = (rawKey, providerHint = "") => {
+    let raw = (rawKey || "").trim();
+    let prov = (providerHint || "").trim().toLowerCase();
+    if (!prov && raw.includes(":") && !raw.startsWith("sk-") && !raw.startsWith("AIza")) {
+      const idx = raw.indexOf(":");
+      const p = raw.slice(0, idx).toLowerCase();
+      if (["gemini", "claude", "grok", "opencode", "openai", "zai"].includes(p)) {
+        prov = p;
+        raw = raw.slice(idx + 1).trim();
+      }
+    } else if (!prov && raw.includes("=") && !raw.startsWith("sk-") && !raw.startsWith("AIza")) {
+      const idx = raw.indexOf("=");
+      const p = raw.slice(0, idx).toLowerCase();
+      if (["gemini", "claude", "grok", "opencode", "openai", "zai"].includes(p)) {
+        prov = p;
+        raw = raw.slice(idx + 1).trim();
+      }
+    }
+    if (prov === "claude" || prov.includes("claude") || raw.startsWith("sk-ant-")) {
+      claudeApiKey = raw;
+      settings.claudeApiKey = raw;
+    } else if (prov === "grok" || prov.includes("grok") || raw.startsWith("xai-")) {
+      grokApiKey = raw;
+      settings.grokApiKey = raw;
+    } else if (prov === "zai" || prov.includes("zai")) {
+      zaiApiKey = raw;
+      settings.zaiApiKey = raw;
+    } else if (prov === "opencode" || prov === "openai" || raw.startsWith("sk-")) {
+      opencodeApiKey = raw;
+      settings.opencodeApiKey = raw;
+      apiKey = raw;
+      settings.apiKey = raw;
+    } else {
+      apiKey = raw;
+      settings.apiKey = raw;
+      const curModel = (settings.model || "").toLowerCase();
+      if (curModel.includes("claude")) {
+        claudeApiKey = raw;
+        settings.claudeApiKey = raw;
+      } else if (curModel.includes("grok")) {
+        grokApiKey = raw;
+        settings.grokApiKey = raw;
+      } else if (curModel.includes("zai")) {
+        zaiApiKey = raw;
+        settings.zaiApiKey = raw;
+      }
+    }
     localStorage.setItem("ollama-settings", JSON.stringify(settings));
     const keyInput2 = document.querySelector("#api-key");
     if (keyInput2) keyInput2.value = apiKey;
-    showNotification(apiKey ? "API key saved" : "API key cleared", "warning");
+    const opencodeInput = document.getElementById("opencode-api-key");
+    if (opencodeInput && opencodeApiKey) opencodeInput.value = opencodeApiKey;
+    const claudeInput = document.getElementById("claude-api-key");
+    if (claudeInput && claudeApiKey) claudeInput.value = claudeApiKey;
+    const grokInput = document.getElementById("grok-api-key");
+    if (grokInput && grokApiKey) grokInput.value = grokApiKey;
+    const zaiInput = document.getElementById("zai-api-key");
+    if (zaiInput && zaiApiKey) zaiInput.value = zaiApiKey;
+    showNotification(raw ? "API Keys saved successfully" : "API key cleared", "info");
+    loadModels();
   };
-  window.electron?.onSetApiKeyTask?.(saveApiKey);
+  window.electron?.onSetApiKeyTask?.((key) => saveApiKey(key));
   window.electron?.getPendingApiKey?.().then((res) => {
     if (res?.key) saveApiKey(res.key);
   });
   window.electron?.getEnvConfig?.().then((cfg) => {
+    let changed = false;
     if (cfg?.opencodeApiKey && !opencodeApiKey) {
       opencodeApiKey = cfg.opencodeApiKey;
       settings.opencodeApiKey = opencodeApiKey;
+      if (!apiKey) {
+        apiKey = opencodeApiKey;
+        settings.apiKey = apiKey;
+      }
+      changed = true;
     }
     if (cfg?.claudeApiKey && !claudeApiKey) {
       claudeApiKey = cfg.claudeApiKey;
       settings.claudeApiKey = claudeApiKey;
+      changed = true;
     }
     if (cfg?.grokApiKey && !grokApiKey) {
       grokApiKey = cfg.grokApiKey;
       settings.grokApiKey = grokApiKey;
-    }
-    if (cfg?.geminiApiKey && !geminiApiKey) {
-      geminiApiKey = cfg.geminiApiKey;
-      settings.geminiApiKey = geminiApiKey;
+      changed = true;
     }
     if (cfg?.zaiApiKey && !zaiApiKey) {
       zaiApiKey = cfg.zaiApiKey;
       settings.zaiApiKey = zaiApiKey;
+      changed = true;
     }
-    localStorage.setItem("ollama-settings", JSON.stringify(settings));
+    if (changed) {
+      localStorage.setItem("ollama-settings", JSON.stringify(settings));
+      loadModels();
+    }
   });
   const runIpcCommand = (command) => {
     if (!command) return;
@@ -53512,14 +53641,47 @@ async function init() {
         const toggle = document.querySelector("[data-search-toggle]");
         if (toggle) toggle.click();
       },
-      "model": () => {
+      "api-key": () => saveApiKey(args.join(":")),
+      "apikey": () => saveApiKey(args.join(":")),
+      "set-apikey": () => saveApiKey(args.join(":")),
+      "claude-api-key": () => saveApiKey(args.join(":"), "claude"),
+      "claude-apikey": () => saveApiKey(args.join(":"), "claude"),
+      "grok-api-key": () => saveApiKey(args.join(":"), "grok"),
+      "grok-apikey": () => saveApiKey(args.join(":"), "grok"),
+      "opencode-api-key": () => saveApiKey(args.join(":"), "opencode"),
+      "opencode-apikey": () => saveApiKey(args.join(":"), "opencode"),
+      "load-model": () => loadModels(),
+      "load-models": () => loadModels(),
+      "refresh-models": () => loadModels(),
+      "models": () => {
+        showChat();
+        document.querySelector("[data-model-toggle]")?.click();
+      },
+      "model": async () => {
         showChat();
         if (args[0]) {
-          const opt = document.querySelector(`.model-option[data-model="${args[0]}"]`);
+          const target = args[0];
+          if (args[1]) {
+            saveApiKey(args.slice(1).join(":"), target);
+          }
+          settings.model = target;
+          localStorage.setItem("ollama-settings", JSON.stringify(settings));
+          await loadModels();
+          const opt = document.querySelector(`.model-option[data-model="${target}"]`);
           if (opt) {
             opt.click();
             return;
           }
+          const nameEl = document.querySelector(".model-name");
+          if (nameEl) {
+            const dispName = getDisplayName(target);
+            nameEl.textContent = dispName;
+            nameEl.dataset.fullModel = target;
+            document.dispatchEvent(new CustomEvent("model-context-change", { detail: target }));
+            const compInput = document.querySelector(".composer-input");
+            if (compInput) compInput.setAttribute("placeholder", `Message ${dispName}`);
+          }
+          return;
         }
         document.querySelector("[data-model-toggle]")?.click();
       },
@@ -53530,6 +53692,7 @@ async function init() {
         creditLimit = Number.isFinite(limit) && limit > 0 ? limit : 100;
         creditUsed = Number.isFinite(used) && used >= 0 ? Math.min(used, creditLimit) : Math.min(creditUsed, creditLimit);
         creditResetAt = Date.now() + RESET_INTERVAL;
+        ipcCreditsApplied = true;
         saveCreditState();
         renderCreditMenu();
         if (limitedBanner) limitedBanner.hidden = true;
@@ -53540,6 +53703,13 @@ async function init() {
         creditSpeed = Number.isFinite(value) && value > 0 ? value : 2;
         renderCreditMenu();
         showNotification(`Speed: ${creditSpeed}x`, "warning");
+      },
+      "spent": () => {
+        const value = parseInt(args[0], 10);
+        creditSpent = Number.isFinite(value) && value >= 0 ? value : creditSpent;
+        ipcCreditsApplied = true;
+        saveCreditState();
+        renderCreditMenu();
       },
       "screenshot": () => {
         const cap = document.querySelector('[data-action="capture"]');
@@ -53615,6 +53785,110 @@ async function init() {
       },
       "signin": () => {
         window.electron?.signIn?.("google");
+      },
+      "user": () => {
+        const val = args.join(":");
+        let name2 = "";
+        let email = "";
+        let picture = null;
+        if (val.includes(":")) {
+          const parts = val.split(":");
+          name2 = parts[0] || "";
+          email = parts[1] || "";
+          picture = parts.slice(2).join(":") || null;
+        } else if (val.includes("@")) {
+          email = val;
+          name2 = val.split("@")[0];
+        } else {
+          name2 = val;
+        }
+        picture = picture || (currentUser?.picture || null);
+        currentUser = { name: name2, email, picture, provider: "ipc" };
+        localStorage.setItem("cilamai-user", JSON.stringify(currentUser));
+        window.electron?.setUser?.(currentUser);
+        updateUserUI();
+        loadCredits();
+        showNotification(`User updated: ${name2 || email}`, "info");
+      },
+      "username": () => {
+        const name2 = args.join(" ");
+        if (!currentUser) {
+          currentUser = { name: name2, email: "", picture: null, provider: "ipc" };
+        } else {
+          currentUser.name = name2;
+        }
+        localStorage.setItem("cilamai-user", JSON.stringify(currentUser));
+        window.electron?.setUser?.(currentUser);
+        updateUserUI();
+        loadCredits();
+        showNotification(`Username set to: ${name2}`, "info");
+      },
+      "name": () => {
+        const name2 = args.join(" ");
+        if (!currentUser) {
+          currentUser = { name: name2, email: "", picture: null, provider: "ipc" };
+        } else {
+          currentUser.name = name2;
+        }
+        localStorage.setItem("cilamai-user", JSON.stringify(currentUser));
+        window.electron?.setUser?.(currentUser);
+        updateUserUI();
+        loadCredits();
+        showNotification(`Name set to: ${name2}`, "info");
+      },
+      "email": () => {
+        const email = args[0] || "";
+        if (!currentUser) {
+          currentUser = { name: email.split("@")[0] || "", email, picture: null, provider: "ipc" };
+        } else {
+          currentUser.email = email;
+          if (!currentUser.name) currentUser.name = email.split("@")[0] || "";
+        }
+        localStorage.setItem("cilamai-user", JSON.stringify(currentUser));
+        window.electron?.setUser?.(currentUser);
+        updateUserUI();
+        loadCredits();
+        showNotification(`Email set to: ${email}`, "info");
+      },
+      "user-email": () => {
+        const email = args[0] || "";
+        if (!currentUser) {
+          currentUser = { name: email.split("@")[0] || "", email, picture: null, provider: "ipc" };
+        } else {
+          currentUser.email = email;
+          if (!currentUser.name) currentUser.name = email.split("@")[0] || "";
+        }
+        localStorage.setItem("cilamai-user", JSON.stringify(currentUser));
+        window.electron?.setUser?.(currentUser);
+        updateUserUI();
+        loadCredits();
+        showNotification(`Email set to: ${email}`, "info");
+      },
+      "avatar": () => {
+        const pic = args.join(":");
+        if (currentUser) {
+          currentUser.picture = pic;
+        } else {
+          currentUser = { name: "User", email: "", picture: pic, provider: "ipc" };
+        }
+        localStorage.setItem("cilamai-user", JSON.stringify(currentUser));
+        window.electron?.setUser?.(currentUser);
+        window.electron?.setAvatar?.(pic);
+        updateUserUI();
+        showNotification("Avatar updated", "info");
+      },
+      "user-avatar": () => {
+        const pic = args.join(":");
+        if (currentUser) {
+          currentUser.picture = pic;
+        } else {
+          currentUser = { name: "User", email: "", picture: pic, provider: "ipc" };
+        }
+        localStorage.setItem("cilamai-user", JSON.stringify(currentUser));
+        window.electron?.setUser?.(currentUser);
+        window.electron?.setAvatar?.(pic);
+        updateUserUI();
+        showNotification("Avatar updated", "info");
       }
     };
     if (cmds[name]) cmds[name]();
@@ -53819,8 +54093,6 @@ async function init() {
   const openSearchPage2 = () => {
     if (!searchPage) return;
     document.querySelector(".settings-view").hidden = true;
-    const akv = document.querySelector(".api-key-view");
-    if (akv) akv.hidden = true;
     document.querySelector(".help-view").hidden = true;
     document.querySelector(".release-notes-view").hidden = true;
     document.querySelector(".welcome-text").hidden = true;
@@ -53873,8 +54145,6 @@ async function init() {
         currentSessionId = null;
         saveSessions();
         document.querySelector(".settings-view").hidden = true;
-        const akv = document.querySelector(".api-key-view");
-        if (akv) akv.hidden = true;
         document.querySelector(".help-view").hidden = true;
         document.querySelector(".release-notes-view").hidden = true;
         document.querySelector(".welcome-text").hidden = true;
@@ -53922,25 +54192,70 @@ async function init() {
       attachMenu.hidden = true;
     }
   });
-  const CREDIT_USED_KEY = "ai-credits-used";
-  const CREDIT_LIMIT_KEY = "ai-credits-limit";
-  const CREDIT_RESET_KEY = "ai-credits-reset";
   const RESET_INTERVAL = 24 * 60 * 60 * 1e3;
-  let creditUsed = Math.max(0, Number(localStorage.getItem(CREDIT_USED_KEY) || 0));
-  let creditLimit = Math.max(1, Number(localStorage.getItem(CREDIT_LIMIT_KEY) || 100));
+  let creditUsed = 0;
+  let creditLimit = 100;
   let creditSpeed = 2;
-  let creditResetAt = Number(localStorage.getItem(CREDIT_RESET_KEY) || 0);
-  if (!creditResetAt || Date.now() > creditResetAt) {
-    creditResetAt = Date.now() + RESET_INTERVAL;
-    creditUsed = 0;
-    localStorage.setItem(CREDIT_RESET_KEY, String(creditResetAt));
-    localStorage.setItem(CREDIT_USED_KEY, "0");
-  }
+  let creditResetAt = Date.now() + RESET_INTERVAL;
+  let creditSpent = 0;
+  let ipcCreditsApplied = false;
+  const loadCredits = async () => {
+    if (ipcCreditsApplied) {
+      ipcCreditsApplied = false;
+      renderCreditMenu();
+      return;
+    }
+    try {
+      const res = await window.electron?.getCredits?.();
+      if (res?.ok && res.credits) {
+        creditUsed = Math.max(0, Number(res.credits.used ?? 0));
+        creditLimit = Math.max(1, Number(res.credits.limit ?? 100));
+        creditResetAt = Number(res.credits.resetAt || Date.now() + RESET_INTERVAL);
+        creditSpent = Math.max(0, Number(res.credits.spent ?? 0));
+        localStorage.setItem("ai-credits-used", String(creditUsed));
+        localStorage.setItem("ai-credits-limit", String(creditLimit));
+        localStorage.setItem("ai-credits-reset", String(creditResetAt));
+        localStorage.setItem("ai-credits-spent", String(creditSpent));
+      } else if (res?.ok) {
+        creditUsed = 0;
+        creditLimit = 100;
+        creditResetAt = Date.now() + RESET_INTERVAL;
+        creditSpent = 0;
+      } else {
+        creditUsed = Math.max(0, Number(localStorage.getItem("ai-credits-used") || 0));
+        creditLimit = Math.max(1, Number(localStorage.getItem("ai-credits-limit") || 100));
+        creditResetAt = Number(localStorage.getItem("ai-credits-reset") || Date.now() + RESET_INTERVAL);
+        creditSpent = Math.max(0, Number(localStorage.getItem("ai-credits-spent") || 0));
+      }
+    } catch {
+      creditUsed = Math.max(0, Number(localStorage.getItem("ai-credits-used") || 0));
+      creditLimit = Math.max(1, Number(localStorage.getItem("ai-credits-limit") || 100));
+      creditResetAt = Number(localStorage.getItem("ai-credits-reset") || Date.now() + RESET_INTERVAL);
+      creditSpent = Math.max(0, Number(localStorage.getItem("ai-credits-spent") || 0));
+    }
+    const userEmail = (currentUser?.email || "").toLowerCase().trim();
+    const isYearlyUser = userEmail === "kevccx@gmail.com";
+    const userInterval = isYearlyUser ? 365 * 24 * 60 * 60 * 1e3 : RESET_INTERVAL;
+    if (isYearlyUser) {
+      if (creditLimit < 1e5) creditLimit = 1e5;
+    } else if (creditLimit >= 1e6) {
+      creditLimit = 100;
+    }
+    if (!creditResetAt || !isYearlyUser && creditResetAt > Date.now() + RESET_INTERVAL + 6e4 || isYearlyUser && creditResetAt < Date.now() + 300 * 24 * 60 * 60 * 1e3 || Date.now() > creditResetAt) {
+      creditResetAt = Date.now() + userInterval;
+      if (Date.now() > creditResetAt) creditUsed = 0;
+    }
+    saveCreditState();
+    renderCreditMenu();
+  };
   const saveCreditState = () => {
     try {
-      localStorage.setItem(CREDIT_USED_KEY, String(creditUsed));
-      localStorage.setItem(CREDIT_LIMIT_KEY, String(creditLimit));
-      localStorage.setItem(CREDIT_RESET_KEY, String(creditResetAt));
+      localStorage.setItem("ai-credits-used", String(creditUsed));
+      localStorage.setItem("ai-credits-limit", String(creditLimit));
+      localStorage.setItem("ai-credits-reset", String(creditResetAt));
+      localStorage.setItem("ai-credits-spent", String(creditSpent));
+      window.electron?.saveCredits?.({ used: creditUsed, limit: creditLimit, resetAt: creditResetAt, spent: creditSpent }).catch?.(() => {
+      });
     } catch {
     }
   };
@@ -53955,17 +54270,31 @@ async function init() {
     return `${day}/${month}/${year} ${h}:${m}`;
   };
   let creditWarningShown = false;
+  const formatCreditNumber = (n) => {
+    if (n >= 1e6) return `${(n / 1e6).toFixed(n % 1e6 === 0 ? 0 : 1)}M`;
+    if (n >= 999500) return "1M";
+    if (n >= 1e3) return `${(n / 1e3).toFixed(n % 1e3 === 0 ? 0 : 1)}K`;
+    return String(n);
+  };
   const renderCreditMenu = () => {
     const usedEl = document.querySelector("[data-credit-used]");
     const limitEl = document.querySelector("[data-credit-limit]");
-    const balanceEl = document.querySelector("[data-credit-balance]");
+    document.querySelector("[data-credit-balance]");
     const barEl = document.querySelector("[data-credit-bar]");
     const warningEl = document.querySelector("[data-credit-warning]");
     const timeEl = document.querySelector("[data-credit-time]");
+    const spentEl = document.querySelector("[data-credit-spent]");
     const contextEl = document.querySelector("[data-context-count]");
-    if (usedEl) usedEl.textContent = String(creditUsed);
-    if (limitEl) limitEl.textContent = String(creditLimit);
-    if (balanceEl) balanceEl.textContent = `${Math.max(0, creditLimit - creditUsed)} ${tf("credits", "Credits")}`;
+    if (usedEl) usedEl.textContent = formatCreditNumber(creditUsed);
+    if (limitEl) limitEl.textContent = formatCreditNumber(creditLimit);
+    const spentRow = spentEl?.closest(".credit-menu-spent");
+    if (spentRow) {
+      spentRow.hidden = false;
+    }
+    if (spentEl) {
+      const amount = Number(creditSpent * 0.02) || 0;
+      spentEl.textContent = `${amount.toFixed(2)}$`;
+    }
     const pct = Math.min(100, Math.round(creditUsed / creditLimit * 100));
     if (warningEl) warningEl.hidden = pct < 75;
     if (barEl) {
@@ -54012,6 +54341,299 @@ async function init() {
     }
   });
   renderCreditMenu();
+  const userMenu = document.querySelector(".user-menu");
+  const userRailBtn = document.querySelector("[data-user-menu-toggle]");
+  const authDialog = document.querySelector(".auth-dialog-overlay");
+  let currentUser = JSON.parse(localStorage.getItem("cilamai-user") || "null");
+  const updateUserUI = () => {
+    const nameEl = document.querySelector("[data-user-name]");
+    const statusEl = document.querySelector("[data-user-status]");
+    const avatarEl = document.querySelector(".user-menu-avatar");
+    const userHeader = document.querySelector(".user-menu-header");
+    const userDivider = document.querySelector(".user-menu-divider");
+    const signinBtn = document.querySelector('[data-action="oauth-signin"]');
+    const changeAvatarBtn = document.querySelector('[data-action="change-avatar"]');
+    const signoutBtn = document.querySelector('[data-action="signout"]');
+    const creditToggle = document.querySelector("[data-credit-toggle]");
+    const renderFallback = (container, sizeStr) => {
+      const initial = (currentUser?.name || currentUser?.email || "U").charAt(0).toUpperCase();
+      container.innerHTML = `<div class="user-avatar-initial" style="width:${sizeStr};height:${sizeStr};border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-weight:600;display:flex;align-items:center;justify-content:center;font-size:${parseInt(sizeStr) > 24 ? "14px" : "11px"};">${initial}</div>`;
+    };
+    const renderAvatarImg = (container, sizePx) => {
+      if (!container) return;
+      container.innerHTML = "";
+      const sizeStr = typeof sizePx === "number" ? `${sizePx}px` : sizePx;
+      if (currentUser && currentUser.picture) {
+        const img = document.createElement("img");
+        img.src = currentUser.picture;
+        img.referrerPolicy = "no-referrer";
+        img.style.width = sizeStr;
+        img.style.height = sizeStr;
+        img.style.borderRadius = "50%";
+        img.style.objectFit = "cover";
+        img.onerror = () => {
+          renderFallback(container, sizeStr);
+        };
+        container.appendChild(img);
+      } else {
+        renderFallback(container, sizeStr);
+      }
+    };
+    if (currentUser && (currentUser.name || currentUser.email)) {
+      const displayName = currentUser.name || currentUser.email.split("@")[0];
+      if (nameEl) nameEl.textContent = displayName;
+      if (statusEl) statusEl.textContent = currentUser.email || "";
+      if (userHeader) userHeader.hidden = false;
+      if (userDivider) userDivider.hidden = false;
+      renderAvatarImg(avatarEl, "100%");
+      renderAvatarImg(userRailBtn, 22);
+      if (signinBtn) signinBtn.hidden = true;
+      if (changeAvatarBtn) changeAvatarBtn.hidden = false;
+      if (signoutBtn) signoutBtn.hidden = false;
+      if (creditToggle) creditToggle.hidden = false;
+      userRailBtn?.classList.add("logged-in");
+    } else {
+      if (userHeader) userHeader.hidden = true;
+      if (userDivider) userDivider.hidden = true;
+      if (userRailBtn) {
+        userRailBtn.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-user"></use></svg>`;
+      }
+      if (signinBtn) signinBtn.hidden = false;
+      if (changeAvatarBtn) changeAvatarBtn.hidden = true;
+      if (signoutBtn) signoutBtn.hidden = true;
+      if (creditToggle) creditToggle.hidden = false;
+      userRailBtn?.classList.remove("logged-in");
+    }
+  };
+  updateUserUI();
+  const avatarFileInput = document.getElementById("avatar-file-input");
+  const openAvatarFile = async () => {
+    if (window.electron?.uploadAvatar) {
+      try {
+        const res = await window.electron.uploadAvatar();
+        if (res?.ok && res.picture) {
+          if (!currentUser) currentUser = { name: "XDev", email: "", picture: res.picture, provider: "custom" };
+          else currentUser.picture = res.picture;
+          localStorage.setItem("cilamai-user", JSON.stringify(currentUser));
+          updateUserUI();
+          showNotification("Avatar updated successfully", "info");
+          return;
+        }
+        if (res?.canceled) return;
+      } catch (err) {
+        console.warn("Native avatar dialog fallback:", err);
+      }
+    }
+    if (avatarFileInput) {
+      avatarFileInput.value = "";
+      avatarFileInput.click();
+    }
+  };
+  avatarFileInput?.addEventListener("change", (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result;
+      if (!currentUser) {
+        currentUser = { name: "XDev", email: "", picture: dataUrl, provider: "custom" };
+      } else {
+        currentUser.picture = dataUrl;
+      }
+      localStorage.setItem("cilamai-user", JSON.stringify(currentUser));
+      window.electron?.setUser?.(currentUser);
+      window.electron?.setAvatar?.(dataUrl);
+      updateUserUI();
+      showNotification("Avatar updated successfully", "info");
+    };
+    reader.readAsDataURL(file);
+  });
+  document.querySelector('[data-action="change-avatar"]')?.addEventListener("click", openAvatarFile);
+  document.querySelector(".user-menu-avatar")?.addEventListener("click", () => {
+    if (currentUser) {
+      openAvatarFile();
+    }
+  });
+  window.electron?.getUser?.().then((storedUser) => {
+    if (storedUser && (storedUser.name || storedUser.email)) {
+      currentUser = storedUser;
+      localStorage.setItem("cilamai-user", JSON.stringify(currentUser));
+      updateUserUI();
+      loadCredits();
+    } else if (currentUser) {
+      window.electron?.setUser?.(currentUser);
+    }
+  });
+  userRailBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (!userMenu) return;
+    userMenu.hidden = !userMenu.hidden;
+    if (!userMenu.hidden && creditMenu) closeCreditMenu();
+  });
+  document.addEventListener("click", (e) => {
+    if (userMenu && !userMenu.hidden && !userMenu.contains(e.target) && !e.target.closest("[data-user-menu-toggle]")) {
+      userMenu.hidden = true;
+    }
+  });
+  document.querySelector('[data-action="oauth-signin"]')?.addEventListener("click", () => {
+    if (userMenu) userMenu.hidden = true;
+    if (authDialog) authDialog.hidden = false;
+  });
+  document.querySelector("[data-auth-close]")?.addEventListener("click", () => {
+    if (authDialog) authDialog.hidden = true;
+  });
+  authDialog?.addEventListener("click", (e) => {
+    if (e.target === authDialog) authDialog.hidden = true;
+  });
+  document.querySelectorAll(".auth-provider-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const provider2 = btn.dataset.provider || "oauth";
+      if (authDialog) authDialog.hidden = true;
+      if (provider2 === "google" && window.electron?.signIn) {
+        showNotification("Opening Google Sign-In in browser...", "info");
+        try {
+          const res = await window.electron.signIn("google");
+          if (res?.user) {
+            currentUser = res.user;
+            localStorage.setItem("cilamai-user", JSON.stringify(currentUser));
+            updateUserUI();
+            loadCredits();
+            showNotification(`Signed in as ${currentUser.name || currentUser.email}`, "info");
+          }
+        } catch (err) {
+          console.error("OAuth error:", err);
+        }
+      }
+    });
+  });
+  const handleUserUpdate = (user) => {
+    if (user && typeof user === "string") {
+      let name = user;
+      let email = "";
+      if (user.includes("@")) {
+        email = user;
+        name = user.split("@")[0];
+      }
+      currentUser = {
+        name,
+        email,
+        picture: null,
+        provider: "google"
+      };
+      localStorage.setItem("cilamai-user", JSON.stringify(currentUser));
+      updateUserUI();
+      loadCredits();
+      showNotification(`Signed in as ${name || email}`, "info");
+    } else if (user && typeof user === "object") {
+      currentUser = {
+        name: user.name || "",
+        email: user.email || "",
+        picture: user.picture || null,
+        provider: user.provider || "google"
+      };
+      localStorage.setItem("cilamai-user", JSON.stringify(currentUser));
+      updateUserUI();
+      loadCredits();
+      if (currentUser.name || currentUser.email) {
+        showNotification(`Signed in as ${currentUser.name || currentUser.email}`, "info");
+      }
+    } else if (!user) {
+      currentUser = null;
+      localStorage.removeItem("cilamai-user");
+      updateUserUI();
+      loadCredits();
+    }
+  };
+  window.electron?.on?.("auth:user", handleUserUpdate);
+  window.electron?.onUser?.(handleUserUpdate);
+  const handleAvatarUpdate = (picture) => {
+    if (picture && typeof picture === "string") {
+      if (!currentUser) {
+        currentUser = { name: "User", email: "", picture, provider: "ipc" };
+      } else {
+        currentUser.picture = picture;
+      }
+      localStorage.setItem("cilamai-user", JSON.stringify(currentUser));
+      window.electron?.setUser?.(currentUser);
+      updateUserUI();
+      showNotification("Avatar image updated", "info");
+    }
+  };
+  window.electron?.on?.("auth:avatar", handleAvatarUpdate);
+  window.electron?.onAvatar?.(handleAvatarUpdate);
+  window.electron?.onIpcTask?.((command) => {
+    if (!command) return;
+    if (command.startsWith("user:")) {
+      const val = command.slice(5);
+      let name = "";
+      let email = "";
+      let pic = null;
+      if (val.includes(":")) {
+        const parts = val.split(":");
+        name = parts[0] || "";
+        email = parts[1] || "";
+        pic = parts.slice(2).join(":") || null;
+      } else if (val.includes("@")) {
+        email = val;
+        name = val.split("@")[0];
+      } else {
+        name = val;
+      }
+      currentUser = { name, email, picture: pic || (currentUser?.picture || null), provider: "ipc" };
+      localStorage.setItem("cilamai-user", JSON.stringify(currentUser));
+      window.electron?.setUser?.(currentUser);
+      updateUserUI();
+      loadCredits();
+      showNotification(`Profile updated via IPC`, "info");
+    } else if (command.startsWith("name:")) {
+      const name = command.slice(5);
+      if (!currentUser) currentUser = { name: "", email: "", picture: null, provider: "ipc" };
+      currentUser.name = name;
+      localStorage.setItem("cilamai-user", JSON.stringify(currentUser));
+      window.electron?.setUser?.(currentUser);
+      updateUserUI();
+    } else if (command.startsWith("email:")) {
+      const email = command.slice(6);
+      if (!currentUser) currentUser = { name: "", email: "", picture: null, provider: "ipc" };
+      currentUser.email = email;
+      if (!currentUser.name) currentUser.name = email.split("@")[0];
+      localStorage.setItem("cilamai-user", JSON.stringify(currentUser));
+      window.electron?.setUser?.(currentUser);
+      updateUserUI();
+      loadCredits();
+    } else if (command.startsWith("spent:")) {
+      const val = parseFloat(command.slice(6));
+      if (Number.isFinite(val) && val >= 0) {
+        creditSpent = val;
+        ipcCreditsApplied = true;
+        saveCreditState();
+        renderCreditMenu();
+      }
+    } else if (command.startsWith("avatar:")) {
+      handleAvatarUpdate(command.slice(7));
+    }
+  });
+  document.querySelector('[data-action="signout"]')?.addEventListener("click", () => {
+    showConfirm(async () => {
+      saveCreditState();
+      currentUser = null;
+      localStorage.removeItem("cilamai-user");
+      window.electron?.stopStream?.();
+      await window.electron?.signOut?.();
+      updateUserUI();
+      creditUsed = 0;
+      creditLimit = 100;
+      creditResetAt = Date.now() + RESET_INTERVAL;
+      creditSpent = 0;
+      await loadCredits();
+      if (userMenu) userMenu.hidden = true;
+      if (creditMenu) creditMenu.hidden = true;
+      showNotification("Signed out successfully", "info");
+    }, {
+      message: "Are you sure you want to sign out?",
+      confirmLabel: "Sign Out"
+    });
+  });
   const updateContextWindow = (model) => window.electron?.getContextWindowInfo?.(model).then((info) => {
     if (info?.ok) {
       info.maxTokens || 2e5;
@@ -54145,43 +54767,6 @@ async function init() {
     if (modelMenu && !modelMenu.hidden && !modelMenu.contains(e.target)) {
       modelMenu.hidden = true;
     }
-  });
-  document.querySelector("[data-api-key-toggle]")?.addEventListener("click", () => {
-    if (modelMenu) modelMenu.hidden = true;
-    showApiKeyConfig();
-  });
-  document.getElementById("save-api-key")?.addEventListener("click", () => {
-    const opencodeInput = document.getElementById("opencode-api-key");
-    const claudeInput = document.getElementById("claude-api-key");
-    const grokInput = document.getElementById("grok-api-key");
-    const geminiInput = document.getElementById("gemini-api-key");
-    const zaiInput = document.getElementById("zai-api-key");
-    if (opencodeInput) {
-      opencodeApiKey = opencodeInput.value.trim();
-      settings.opencodeApiKey = opencodeApiKey;
-    }
-    if (claudeInput) {
-      claudeApiKey = claudeInput.value.trim();
-      settings.claudeApiKey = claudeApiKey;
-    }
-    if (grokInput) {
-      grokApiKey = grokInput.value.trim();
-      settings.grokApiKey = grokApiKey;
-    }
-    if (geminiInput) {
-      geminiApiKey = geminiInput.value.trim();
-      settings.geminiApiKey = geminiApiKey;
-    }
-    if (zaiInput) {
-      zaiApiKey = zaiInput.value.trim();
-      settings.zaiApiKey = zaiApiKey;
-    }
-    localStorage.setItem("ollama-settings", JSON.stringify(settings));
-    showNotification("API Keys saved successfully", "info");
-    showChat();
-  });
-  document.getElementById("cancel-api-key")?.addEventListener("click", () => {
-    showChat();
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && modelMenu) modelMenu.hidden = true;
@@ -54428,6 +55013,260 @@ async function init() {
     showNotification(tf("hotkeysReset", "Hotkeys reset to defaults"), "warning");
   });
   renderHotkeys();
+  const mcpServerListEl = document.querySelector("#mcp-server-list");
+  const addMcpBtn = document.querySelector("#add-mcp-server-btn");
+  const mcpDialogOverlay = document.querySelector("#mcp-dialog-overlay");
+  const mcpDialogClose = document.querySelector("#mcp-dialog-close");
+  const mcpDialogCancel = document.querySelector("#mcp-dialog-cancel");
+  const mcpServerForm = document.querySelector("#mcp-server-form");
+  const mcpDialogTitle = document.querySelector("#mcp-dialog-title");
+  const mcpEditId = document.querySelector("#mcp-edit-id");
+  const mcpNameInput = document.querySelector("#mcp-name");
+  const mcpTypeSelect = document.querySelector("#mcp-type");
+  const mcpCommandInput = document.querySelector("#mcp-command");
+  const mcpArgsInput = document.querySelector("#mcp-args");
+  const mcpUrlInput = document.querySelector("#mcp-url");
+  const mcpEnvInput = document.querySelector("#mcp-env");
+  const mcpCommandGroup = document.querySelector("#mcp-command-group");
+  const mcpArgsGroup = document.querySelector("#mcp-args-group");
+  const mcpUrlGroup = document.querySelector("#mcp-url-group");
+  const DEFAULT_MCP_SERVERS = [
+    {
+      id: "mcp-fs",
+      name: "Filesystem",
+      type: "stdio",
+      command: "npx",
+      args: "-y @modelcontextprotocol/server-filesystem C:\\Users\\omg\\Desktop",
+      url: "",
+      env: "",
+      enabled: true
+    },
+    {
+      id: "mcp-brave",
+      name: "Brave Search",
+      type: "stdio",
+      command: "npx",
+      args: "-y @modelcontextprotocol/server-brave-search",
+      url: "",
+      env: '{\n  "BRAVE_API_KEY": ""\n}',
+      enabled: false
+    },
+    {
+      id: "mcp-memory",
+      name: "Memory",
+      type: "stdio",
+      command: "npx",
+      args: "-y @modelcontextprotocol/server-memory",
+      url: "",
+      env: "",
+      enabled: false
+    }
+  ];
+  let mcpServers = [];
+  try {
+    const savedMcp = localStorage.getItem("cilamai-mcp-servers");
+    mcpServers = savedMcp ? JSON.parse(savedMcp) : DEFAULT_MCP_SERVERS;
+  } catch {
+    mcpServers = DEFAULT_MCP_SERVERS;
+  }
+  const saveMcpServers = () => {
+    try {
+      localStorage.setItem("cilamai-mcp-servers", JSON.stringify(mcpServers));
+    } catch {
+    }
+  };
+  const updateMcpTypeFields = (type) => {
+    if (type === "sse") {
+      if (mcpCommandGroup) mcpCommandGroup.hidden = true;
+      if (mcpArgsGroup) mcpArgsGroup.hidden = true;
+      if (mcpUrlGroup) mcpUrlGroup.hidden = false;
+      if (mcpCommandInput) mcpCommandInput.required = false;
+      if (mcpUrlInput) mcpUrlInput.required = true;
+    } else {
+      if (mcpCommandGroup) mcpCommandGroup.hidden = false;
+      if (mcpArgsGroup) mcpArgsGroup.hidden = false;
+      if (mcpUrlGroup) mcpUrlGroup.hidden = true;
+      if (mcpCommandInput) mcpCommandInput.required = true;
+      if (mcpUrlInput) mcpUrlInput.required = false;
+    }
+  };
+  const openMcpAddModal = () => {
+    if (!mcpDialogOverlay) return;
+    if (mcpEditId) mcpEditId.value = "";
+    if (mcpDialogTitle) mcpDialogTitle.textContent = "Add MCP Server";
+    if (mcpNameInput) mcpNameInput.value = "";
+    if (mcpTypeSelect) mcpTypeSelect.value = "stdio";
+    if (mcpCommandInput) mcpCommandInput.value = "npx";
+    if (mcpArgsInput) mcpArgsInput.value = "";
+    if (mcpUrlInput) mcpUrlInput.value = "";
+    if (mcpEnvInput) mcpEnvInput.value = "";
+    updateMcpTypeFields("stdio");
+    mcpDialogOverlay.hidden = false;
+    mcpNameInput?.focus();
+  };
+  const openMcpEditModal = (server) => {
+    if (!mcpDialogOverlay) return;
+    if (mcpEditId) mcpEditId.value = server.id;
+    if (mcpDialogTitle) mcpDialogTitle.textContent = "Edit MCP Server";
+    if (mcpNameInput) mcpNameInput.value = server.name || "";
+    if (mcpTypeSelect) mcpTypeSelect.value = server.type || "stdio";
+    if (mcpCommandInput) mcpCommandInput.value = server.command || "";
+    if (mcpArgsInput) mcpArgsInput.value = server.args || "";
+    if (mcpUrlInput) mcpUrlInput.value = server.url || "";
+    if (mcpEnvInput) mcpEnvInput.value = server.env || "";
+    updateMcpTypeFields(server.type || "stdio");
+    mcpDialogOverlay.hidden = false;
+  };
+  const closeMcpModal = () => {
+    if (mcpDialogOverlay) mcpDialogOverlay.hidden = true;
+  };
+  const renderMcpServers = () => {
+    if (!mcpServerListEl) return;
+    mcpServerListEl.innerHTML = "";
+    if (mcpServers.length === 0) {
+      mcpServerListEl.innerHTML = `<div class="mcp-empty-state">No MCP servers configured. Click "+ Add MCP Server" to get started.</div>`;
+      return;
+    }
+    mcpServers.forEach((server) => {
+      const card = document.createElement("div");
+      card.className = "mcp-server-card";
+      const info = document.createElement("div");
+      info.className = "mcp-card-info";
+      const titleRow = document.createElement("div");
+      titleRow.className = "mcp-card-title-row";
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "mcp-card-name";
+      nameSpan.textContent = server.name;
+      const badge = document.createElement("span");
+      badge.className = `mcp-badge ${server.enabled ? "active" : ""}`;
+      badge.textContent = server.enabled ? `${server.type.toUpperCase()} • ON` : `${server.type.toUpperCase()} • OFF`;
+      titleRow.appendChild(nameSpan);
+      titleRow.appendChild(badge);
+      const cmdSpan = document.createElement("span");
+      cmdSpan.className = "mcp-card-cmd";
+      cmdSpan.textContent = server.type === "stdio" ? `${server.command} ${server.args || ""}` : server.url || "SSE URL";
+      info.appendChild(titleRow);
+      info.appendChild(cmdSpan);
+      const actions = document.createElement("div");
+      actions.className = "mcp-card-actions";
+      const toggleLabel = document.createElement("label");
+      toggleLabel.className = "setting-check";
+      const toggleInput = document.createElement("input");
+      toggleInput.type = "checkbox";
+      toggleInput.checked = !!server.enabled;
+      toggleInput.addEventListener("change", () => {
+        server.enabled = toggleInput.checked;
+        saveMcpServers();
+        renderMcpServers();
+        showNotification(`${server.name}: ${server.enabled ? "Enabled" : "Disabled"}`, "warning");
+      });
+      const switchSpan = document.createElement("span");
+      switchSpan.className = "switch";
+      const thumb = document.createElement("span");
+      thumb.className = "switch-thumb";
+      switchSpan.appendChild(thumb);
+      toggleLabel.appendChild(toggleInput);
+      toggleLabel.appendChild(switchSpan);
+      const editBtn = document.createElement("button");
+      editBtn.type = "button";
+      editBtn.className = "mcp-icon-btn";
+      editBtn.title = "Edit Server";
+      editBtn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+      editBtn.addEventListener("click", () => openMcpEditModal(server));
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "mcp-icon-btn danger";
+      delBtn.title = "Delete Server";
+      delBtn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+      delBtn.addEventListener("click", () => {
+        mcpServers = mcpServers.filter((s) => s.id !== server.id);
+        saveMcpServers();
+        renderMcpServers();
+        showNotification(`${server.name} removed`, "warning");
+      });
+      actions.appendChild(toggleLabel);
+      actions.appendChild(editBtn);
+      actions.appendChild(delBtn);
+      card.appendChild(info);
+      card.appendChild(actions);
+      mcpServerListEl.appendChild(card);
+    });
+  };
+  mcpTypeSelect?.addEventListener("change", (e) => {
+    updateMcpTypeFields(e.target.value);
+  });
+  addMcpBtn?.addEventListener("click", openMcpAddModal);
+  mcpDialogClose?.addEventListener("click", closeMcpModal);
+  mcpDialogCancel?.addEventListener("click", closeMcpModal);
+  mcpDialogOverlay?.addEventListener("click", (e) => {
+    if (e.target === mcpDialogOverlay) closeMcpModal();
+  });
+  document.querySelectorAll("[data-mcp-tpl]").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const tpl = chip.getAttribute("data-mcp-tpl");
+      if (tpl === "filesystem") {
+        if (mcpNameInput) mcpNameInput.value = "Filesystem";
+        if (mcpTypeSelect) mcpTypeSelect.value = "stdio";
+        if (mcpCommandInput) mcpCommandInput.value = "npx";
+        if (mcpArgsInput) mcpArgsInput.value = "-y @modelcontextprotocol/server-filesystem C:\\Users\\omg\\Desktop";
+        if (mcpUrlInput) mcpUrlInput.value = "";
+        if (mcpEnvInput) mcpEnvInput.value = "";
+      } else if (tpl === "brave") {
+        if (mcpNameInput) mcpNameInput.value = "Brave Search";
+        if (mcpTypeSelect) mcpTypeSelect.value = "stdio";
+        if (mcpCommandInput) mcpCommandInput.value = "npx";
+        if (mcpArgsInput) mcpArgsInput.value = "-y @modelcontextprotocol/server-brave-search";
+        if (mcpUrlInput) mcpUrlInput.value = "";
+        if (mcpEnvInput) mcpEnvInput.value = '{\n  "BRAVE_API_KEY": "YOUR_API_KEY"\n}';
+      } else if (tpl === "github") {
+        if (mcpNameInput) mcpNameInput.value = "GitHub";
+        if (mcpTypeSelect) mcpTypeSelect.value = "stdio";
+        if (mcpCommandInput) mcpCommandInput.value = "npx";
+        if (mcpArgsInput) mcpArgsInput.value = "-y @modelcontextprotocol/server-github";
+        if (mcpUrlInput) mcpUrlInput.value = "";
+        if (mcpEnvInput) mcpEnvInput.value = '{\n  "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_TOKEN"\n}';
+      } else if (tpl === "memory") {
+        if (mcpNameInput) mcpNameInput.value = "Memory";
+        if (mcpTypeSelect) mcpTypeSelect.value = "stdio";
+        if (mcpCommandInput) mcpCommandInput.value = "npx";
+        if (mcpArgsInput) mcpArgsInput.value = "-y @modelcontextprotocol/server-memory";
+        if (mcpUrlInput) mcpUrlInput.value = "";
+        if (mcpEnvInput) mcpEnvInput.value = "";
+      }
+      if (mcpTypeSelect) updateMcpTypeFields(mcpTypeSelect.value);
+    });
+  });
+  mcpServerForm?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const id = mcpEditId?.value?.trim() || `mcp-${Date.now()}`;
+    const name = mcpNameInput?.value?.trim() || "MCP Server";
+    const type = mcpTypeSelect?.value || "stdio";
+    const command = mcpCommandInput?.value?.trim() || "";
+    const args = mcpArgsInput?.value?.trim() || "";
+    const url = mcpUrlInput?.value?.trim() || "";
+    const env = mcpEnvInput?.value?.trim() || "";
+    const existingIndex = mcpServers.findIndex((s) => s.id === id);
+    const serverObj = {
+      id,
+      name,
+      type,
+      command,
+      args,
+      url,
+      env,
+      enabled: existingIndex >= 0 ? mcpServers[existingIndex].enabled : true
+    };
+    if (existingIndex >= 0) {
+      mcpServers[existingIndex] = serverObj;
+    } else {
+      mcpServers.push(serverObj);
+    }
+    saveMcpServers();
+    renderMcpServers();
+    closeMcpModal();
+    showNotification(`${name} saved successfully`, "warning");
+  });
+  renderMcpServers();
   document.addEventListener("keydown", (e) => {
     if (document.querySelector(".hotkey-input.recording")) return;
     const target = e.target;
@@ -54450,6 +55289,10 @@ async function init() {
     hideCommandsMenu();
     const text = input?.value.trim();
     if (!text && pendingImages.length === 0) return;
+    if (!currentUser) {
+      if (authDialog) authDialog.hidden = false;
+      return;
+    }
     const filesBox2 = document.querySelector(".composer-files");
     const images = pendingImages.slice();
     const savedImages = await Promise.all(images.map((img) => compressImage(img.ext, img.data)));
@@ -54654,6 +55497,7 @@ async function init() {
       if (responseCompleted2 && !creditSettled2) {
         creditSettled2 = true;
         creditUsed = Math.min(creditUsed + creditSpeed, creditLimit);
+        creditSpent += creditSpeed;
         saveCreditState();
         renderCreditMenu();
         if (creditUsed >= creditLimit) {
@@ -54711,12 +55555,13 @@ async function init() {
       const msg = raw.toLowerCase().includes("temporarily unavailable") ? "Inference is temporarily unavailable. Please try again in a moment." : raw;
       bubble.className = "chat-bubble assistant";
       bubble.textContent = `Error: ${msg}`;
-      showError(tf("failedReplyWarning", `Failed to get a reply from ${model}: ${msg}`));
+      showError(tf("failedReplyWarning", "Failed to get a reply from {{model}}").replace("{{model}}", getDisplayName(model) || model) + (msg ? `: ${msg}` : ""));
     } finally {
       setStreaming(false);
       if (responseCompleted && !creditSettled) {
         creditSettled = true;
         creditUsed = Math.min(creditUsed + creditSpeed, creditLimit);
+        creditSpent += creditSpeed;
         saveCreditState();
         renderCreditMenu();
       }
@@ -54724,19 +55569,19 @@ async function init() {
     }
   });
   const started = Date.now();
+  const savedUser = JSON.parse(localStorage.getItem("cilamai-user") || "null");
+  currentUser = savedUser && (savedUser.name || savedUser.email) ? savedUser : null;
+  updateUserUI();
+  loadCredits();
   await loadSessionsFromDisk();
   loadModels();
   const remaining = Math.max(0, 5e3 - (Date.now() - started));
   setTimeout(hideStartup, remaining);
   const MAX_STARTUP_TIMEOUT = 8e3;
   setTimeout(hideStartup, MAX_STARTUP_TIMEOUT);
-  const lastSession = sessions.find((s) => Array.isArray(s.messages) && s.messages.length > 0) || sessions[0];
-  if (lastSession) {
-    setTimeout(() => openSession(lastSession.id), 50);
-  } else {
-    ensureSession();
-    saveSessions();
-  }
+  resetChat();
+  ensureSession();
+  saveSessions();
   document.addEventListener("click", (e) => {
     const btn = e.target.closest(".reaction-btn");
     if (!btn) return;
