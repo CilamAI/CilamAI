@@ -8,7 +8,9 @@
   <a href="https://github.com/CilamAI/CilamAI/actions/workflows/ci.yml">
     <img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/CilamAI/CilamAI/ci.yml?branch=main&label=build&style=flat-square" />
   </a>
-  <img alt="Platform" src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square" />
+  <a href="#supported">
+    <img alt="Platform" src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square" />
+  </a>
   <a href="LICENSE">
     <img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-green?style=flat-square" />
   </a>
