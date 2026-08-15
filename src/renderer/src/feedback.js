@@ -160,6 +160,26 @@ function init() {
       e.preventDefault()
       const msg = msgInput?.value?.trim()
       if (!msg) return
+
+      const typeRadio = [...typeRadios].find((r) => r.checked)
+      const type = typeRadio?.value || 'general'
+      const steps = document.querySelector('#feedback-steps')?.value?.trim() || ''
+      const fileName = previewFilename?.textContent?.trim() || ''
+      const hasScreenshot = !filePreview?.hidden && fileName
+
+      const typeLabel = {
+        bug: 'Bug Report',
+        feature: 'Feature Request',
+        general: 'General Feedback'
+      }[type] || 'Feedback'
+
+      let body = `**Type:** ${typeLabel}\n\n**Description:**\n${msg}`
+      if (steps) body += `\n\n**Steps to reproduce:**\n${steps}`
+      if (hasScreenshot) body += `\n\n**Attachment:** ${fileName}`
+
+      const url = `https://github.com/CilamAI/CilamAI/issues/new?title=${encodeURIComponent(typeLabel)}&body=${encodeURIComponent(body)}`
+      window.electron?.openExternal?.(url)
+
       form.reset()
       if (form) form.hidden = true
       if (feedbackTitle) feedbackTitle.hidden = true

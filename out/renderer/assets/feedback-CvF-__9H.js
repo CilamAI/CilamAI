@@ -55,13 +55,6 @@ async function loadLocale() {
     if (localeData[key]) el.setAttribute("placeholder", localeData[key]);
   });
 }
-function showToast(msg) {
-  const toast = document.createElement("div");
-  toast.className = "notification-toast";
-  toast.textContent = msg;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 2500);
-}
 function init() {
   loadTheme();
   loadLocale();
@@ -77,6 +70,10 @@ function init() {
   const cancelBtn = document.querySelector("#feedback-cancel-btn");
   const githubBtn = document.querySelector("#feedback-github-btn");
   const form = document.querySelector("#feedback-form");
+  const thanksPanel = document.querySelector("#feedback-thanks");
+  const thanksClose = document.querySelector("#feedback-thanks-close");
+  const feedbackTitle = document.querySelector(".feedback-title");
+  const titlebar = document.querySelector(".win11-titlebar");
   typeRadios.forEach((radio) => {
     radio.addEventListener("change", () => {
       if (radio.value === "bug") {
@@ -114,6 +111,11 @@ function init() {
       window.electron?.closeWindow?.() || window.close();
     });
   }
+  if (thanksClose) {
+    thanksClose.addEventListener("click", () => {
+      window.electron?.closeWindow?.() || window.close();
+    });
+  }
   const win11Close = document.querySelector("#win11-close-btn");
   if (win11Close) {
     win11Close.addEventListener("click", () => {
@@ -130,9 +132,11 @@ function init() {
       e.preventDefault();
       const msg = msgInput?.value?.trim();
       if (!msg) return;
-      showToast(localeData?.feedbackSent || "Thank you for your feedback!");
       form.reset();
-      setTimeout(() => window.close(), 1200);
+      if (form) form.hidden = true;
+      if (feedbackTitle) feedbackTitle.hidden = true;
+      if (titlebar) titlebar.hidden = true;
+      if (thanksPanel) thanksPanel.hidden = false;
     });
   }
 }

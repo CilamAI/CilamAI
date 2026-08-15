@@ -319,8 +319,55 @@
       font-weight: 500;
       animation: fadeIn 0.2s ease;
     }
+
+    .feedback-thanks {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 16px;
+      padding: 48px 16px;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .feedback-thanks-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: color-mix(in srgb, #10b981 18%, transparent);
+      color: #10b981;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: thanks-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes thanks-pop {
+      from { transform: scale(0.6); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .feedback-thanks-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0;
+    }
+
+    .feedback-thanks-text {
+      font-size: 13.5px;
+      color: var(--text-dim);
+      line-height: 1.5;
+      max-width: 360px;
+      margin: 0;
+    }
+
+    .feedback-thanks .feedback-submit-btn {
+      margin-top: 6px;
+    }
   </style>
-  <script type="module" crossorigin src="./assets/feedback-ldocCTFw.js"></script>
+  <script type="module" crossorigin src="./assets/feedback-CvF-__9H.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/style-xYxr_-eN.css">
 </head>
 <body>
@@ -341,6 +388,17 @@
 
   <div class="feedback-container">
     <h1 class="feedback-title" data-i18n="provideFeedback">Provide Feedback</h1>
+
+    <div class="feedback-thanks" id="feedback-thanks" hidden>
+      <div class="feedback-thanks-icon">
+        <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 6 9 17l-5-5"></path>
+        </svg>
+      </div>
+      <h2 class="feedback-thanks-title" data-i18n="feedbackThanksTitle">Thank you!</h2>
+      <p class="feedback-thanks-text" data-i18n="feedbackThanksText">Your feedback has been sent. We appreciate you helping us improve CilamAI.</p>
+      <button type="button" class="feedback-submit-btn" id="feedback-thanks-close" data-i18n="close">Close</button>
+    </div>
 
     <form class="feedback-form" id="feedback-form">
       <div class="feedback-group">

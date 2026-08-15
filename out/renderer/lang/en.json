@@ -161,6 +161,8 @@
   "githubIssues": "GitHub Issues",
   "sendFeedback": "Send Feedback",
   "feedbackSent": "Thank you for your feedback!",
+  "feedbackThanksTitle": "Thank you!",
+  "feedbackThanksText": "Your feedback has been sent. We appreciate you helping us improve CilamAI.",
   "provideFeedback": "Provide Feedback",
   "feedbackType": "Feedback Type",
   "bugReport": "Bug Report",
