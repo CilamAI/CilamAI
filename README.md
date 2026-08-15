@@ -21,21 +21,6 @@ English, 한국어 (Korean), Türkçe (Turkish), Русский (Russian), 简�
 
 </div>
 
-## Getting Started
-
-### Install on Windows
-
-Download the installer and run it:
-
-* **[Download CilamAI-Setup.exe](https://github.com/CilamAI/CilamAI/releases/latest/download/CilamAI-Setup.exe)** double-click through the wizard, and CilamAI is installed and ready to launch.
-* The installer creates Start Menu and optional desktop shortcuts, and uninstalls cleanly via *Uninstall CilamAI*.
-
-### Install for desktop windows
-
-```bash
-irm https://raw.githubusercontent.com/CilamAI/CilamAI/refs/heads/main/install.ps1 | iex
-```
-
 ## Keyboard Shortcuts
 
 | Keys | Action |
