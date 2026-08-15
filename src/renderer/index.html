@@ -987,14 +987,13 @@
 
   <div class="auth-dialog-overlay" hidden>
     <div class="auth-dialog">
-      <div class="auth-dialog-head">
-        <h3 data-i18n="signIn">Sign in</h3>
-        <button type="button" class="auth-dialog-close" data-auth-close aria-label="Close">&times;</button>
+      <div class="auth-dialog-logo">
+        <img src="./favicon.ico" alt="CilamAI" width="48" height="48" />
       </div>
-      <p class="auth-dialog-desc" data-i18n="chooseProviderSignIn">Choose a provider to sign in to your CilamAI account:</p>
+      <h3 class="auth-dialog-title" data-i18n="signInToCilamAI">Sign in to CilamAI</h3>
 
       <div class="auth-providers">
-        <button type="button" class="auth-provider-btn" data-provider="google">
+        <button type="button" class="auth-provider-btn auth-provider-primary" data-provider="google">
           <svg viewBox="0 0 24 24" width="18" height="18">
             <path fill="#4285F4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -1007,7 +1006,15 @@
           </svg>
           <span data-i18n="continueWithGoogle">Continue with Google</span>
         </button>
+        <button type="button" class="auth-provider-btn auth-provider-outline" data-auth-close>
+          <span data-i18n="signInAnotherWay">Sign in another way</span>
+        </button>
       </div>
+
+      <p class="auth-dialog-signup">
+        <span data-i18n="noAccount">Don't have an account?</span>
+        <a href="#" data-action="signup" data-i18n="signUp">Sign up</a>
+      </p>
     </div>
   </div>
 

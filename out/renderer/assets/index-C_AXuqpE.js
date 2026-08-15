@@ -55942,11 +55942,7 @@ async function init() {
       const nameSpan = document.createElement("span");
       nameSpan.className = "mcp-card-name";
       nameSpan.textContent = server.name;
-      const badge = document.createElement("span");
-      badge.className = `mcp-badge ${server.enabled ? "active" : ""}`;
-      badge.textContent = server.enabled ? `${server.type.toUpperCase()} • ON` : `${server.type.toUpperCase()} • OFF`;
       titleRow.appendChild(nameSpan);
-      titleRow.appendChild(badge);
       const cmdSpan = document.createElement("span");
       cmdSpan.className = "mcp-card-cmd";
       cmdSpan.textContent = server.type === "stdio" ? `${server.command} ${server.args || ""}` : server.url || "SSE URL";
