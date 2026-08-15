@@ -1357,6 +1357,12 @@ async function init() {
     btn.addEventListener('click', () => {
       if (btn.dataset.view === 'settings') {
         showSettings()
+      } else if (btn.dataset.view === 'feedback') {
+        if (window.electron?.openFeedbackWindow) {
+          window.electron.openFeedbackWindow()
+        } else {
+          showFeedback()
+        }
       } else {
         if (btn.dataset.reset === 'true') resetChat()
         else showChat()
