@@ -29,7 +29,8 @@
     "dist:portable": "electron-vite build && electron-builder --win portable",
     "dist:nsis": "electron-vite build && electron-builder --win nsis",
     "dist:dir": "electron-vite build && electron-builder --win --dir",
-    "iss": "node scripts/iss.mjs"
+    "iss": "node scripts/iss.mjs",
+    "postinstall": "node node_modules/electron/install.js"
   },
   "build": {
     "appId": "com.cilamai.desktop",
