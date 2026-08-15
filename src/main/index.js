@@ -298,6 +298,8 @@ ipcMain.handle('app:check-updates', async () => {
 
 ipcMain.handle('app:download-and-install', async (_event, downloadUrl) => {
   const fs = require('node:fs')
+  const { Readable } = require('node:stream')
+  const { pipeline } = require('node:stream/promises')
   const tempDir = app.getPath('temp')
   const fileName = `CilamAI-Update-${Date.now()}.exe`
   const filePath = join(tempDir, fileName)
@@ -308,69 +310,35 @@ ipcMain.handle('app:download-and-install', async (_event, downloadUrl) => {
     'https://github.com/CilamAI/CilamAI/releases/download/v0.1.0.1/CilamAI-Setup.exe'
   ].filter(Boolean)
 
-  const attemptDownload = (url, redirectCount = 0) => new Promise((resolve, reject) => {
-    if (redirectCount > 8) return reject(new Error('Too many redirects'))
-
-    const parsed = new URL(url)
-    const client = parsed.protocol === 'http:' ? http : https
-    const file = fs.createWriteStream(filePath)
-
-    const request = client.get(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) CilamAI',
-        Accept: '*/*'
-      }
-    }, (response) => {
-      if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
-        file.destroy()
-        fs.unlink(filePath, () => {})
-        const nextUrl = new URL(response.headers.location, url).href
-        return attemptDownload(nextUrl, redirectCount + 1).then(resolve).catch(reject)
-      }
-
-      if (response.statusCode !== 200) {
-        file.destroy()
-        fs.unlink(filePath, () => {})
-        return reject(new Error(`Download failed: ${response.statusCode}`))
-      }
-
-      response.pipe(file)
-      file.on('finish', () => {
-        file.close(() => resolve(filePath))
-      })
-    })
-
-    request.on('error', (err) => {
-      file.destroy()
-      fs.unlink(filePath, () => {})
-      reject(err)
-    })
-  })
-
-  let downloadedPath = null
-  let lastError = null
-
+  let downloaded = false
   for (const url of candidateUrls) {
     try {
-      downloadedPath = await attemptDownload(url)
-      if (downloadedPath) break
-    } catch (err) {
-      lastError = err
-    }
+      const response = await net.fetch(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) CilamAI' },
+        redirect: 'follow'
+      })
+      if (response.ok && response.body) {
+        const fileStream = fs.createWriteStream(filePath)
+        await pipeline(Readable.fromWeb(response.body), fileStream)
+        downloaded = true
+        break
+      }
+    } catch (e) {}
   }
 
-  if (!downloadedPath) {
-    throw (lastError || new Error('Download failed: 404'))
+  if (downloaded) {
+    try {
+      const child = require('node:child_process').spawn(filePath, ['/SILENT'], { detached: true, stdio: 'ignore' })
+      child.unref()
+      setTimeout(() => app.quit(), 600)
+      return { ok: true }
+    } catch (e) {}
   }
 
-  try {
-    const child = require('node:child_process').spawn(downloadedPath, ['/SILENT'], { detached: true, stdio: 'ignore' })
-    child.unref()
-    setTimeout(() => app.quit(), 600)
-    return { ok: true }
-  } catch (err) {
-    return { ok: false, error: err.message }
-  }
+  // Fallback: open browser download URL
+  const targetUrl = downloadUrl || 'https://github.com/CilamAI/CilamAI/releases/latest'
+  shell.openExternal(targetUrl)
+  return { ok: true, openedInBrowser: true }
 })
 
 ipcMain.handle('app:set-language', (_event, lang) => {
