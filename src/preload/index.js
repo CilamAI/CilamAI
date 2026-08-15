@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('electron', {
   consoleWarn: (msg) => ipcRenderer.send('app:console-warn', msg),
   checkUpdates: () => ipcRenderer.invoke('app:check-updates'),
   downloadAndInstall: (url) => ipcRenderer.invoke('app:download-and-install', url),
+  openFeedbackWindow: () => ipcRenderer.invoke('app:open-feedback-window'),
   checkInternet: () => ipcRenderer.invoke('app:check-internet'),
   sendMessage: (payload) => ipcRenderer.invoke('chat:send', payload),
   sendStream: (payload, onChunk, onReasoning) =>

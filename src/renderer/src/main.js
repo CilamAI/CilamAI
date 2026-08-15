@@ -1659,7 +1659,13 @@ async function init() {
             showNotification(`You're up to date (v${result.current}).`, 'info')
           }).catch((err) => showNotification(err.message || 'Unable to check for updates.', 'error'))
         }
-        if (action === 'feedback') showFeedback()
+        if (action === 'feedback') {
+          if (window.electron?.openFeedbackWindow) {
+            window.electron.openFeedbackWindow()
+          } else {
+            showFeedback()
+          }
+        }
         if (action === 'search') openSearchPage()
         if (action === 'close') window.electron?.closeWindow?.()
         if (action === 'refresh-models') loadModels()
@@ -4025,7 +4031,13 @@ function initFeedback() {
   }
 
   fv.querySelectorAll('[data-action="close-feedback"]').forEach((btn) => {
-    btn.addEventListener('click', () => showChat())
+    btn.addEventListener('click', () => {
+      if (window.location.hash === '#feedback') {
+        window.close()
+      } else {
+        showChat()
+      }
+    })
   })
 
   fv.querySelector('[data-action="open-github-issues"]')?.addEventListener('click', () => {
@@ -4044,9 +4056,29 @@ function initFeedback() {
       if (filePreview) filePreview.hidden = true
       if (attachTrigger) attachTrigger.hidden = false
       if (stepsGroup) stepsGroup.hidden = false
-      showChat()
+      if (window.location.hash === '#feedback') {
+        setTimeout(() => window.close(), 1000)
+      } else {
+        showChat()
+      }
     })
   }
+}
+
+if (window.location.hash === '#feedback') {
+  document.addEventListener('DOMContentLoaded', () => {
+    const tb = document.querySelector('.titlebar')
+    const sb = document.querySelector('.sidebar')
+    const chat = document.querySelector('.chat')
+    const comp = document.querySelector('.composer')
+    const wt = document.querySelector('.welcome-text')
+    if (tb) tb.style.display = 'none'
+    if (sb) sb.style.display = 'none'
+    if (chat) chat.style.display = 'none'
+    if (comp) comp.style.display = 'none'
+    if (wt) wt.style.display = 'none'
+    showFeedback()
+  })
 }
 
 if (document.readyState === 'loading') {

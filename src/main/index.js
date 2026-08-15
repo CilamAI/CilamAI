@@ -1243,6 +1243,52 @@ function createWindow() {
   }
 }
 
+let feedbackWindow = null
+
+function openFeedbackWindow() {
+  if (feedbackWindow && !feedbackWindow.isDestroyed()) {
+    feedbackWindow.focus()
+    return
+  }
+
+  feedbackWindow = new BrowserWindow({
+    title: 'Provide Feedback',
+    icon: join(app.getAppPath(), 'resources/icon.ico'),
+    width: 720,
+    height: 780,
+    minWidth: 540,
+    minHeight: 600,
+    autoHideMenuBar: true,
+    backgroundColor: '#0f1015',
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.mjs'),
+      sandbox: false
+    }
+  })
+
+  feedbackWindow.setMenuBarVisibility(false)
+
+  feedbackWindow.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url)
+    return { action: 'deny' }
+  })
+
+  if (process.env.ELECTRON_RENDERER_URL) {
+    feedbackWindow.loadURL(`${process.env.ELECTRON_RENDERER_URL}#feedback`)
+  } else {
+    feedbackWindow.loadFile(join(__dirname, '../renderer/index.html'), { hash: 'feedback' })
+  }
+
+  feedbackWindow.on('closed', () => {
+    feedbackWindow = null
+  })
+}
+
+ipcMain.handle('app:open-feedback-window', () => {
+  openFeedbackWindow()
+  return { ok: true }
+})
+
 
 const gotLock = app.requestSingleInstanceLock()
 
