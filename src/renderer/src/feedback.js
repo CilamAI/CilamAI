@@ -135,13 +135,6 @@ function init() {
     })
   }
 
-  const thanksCloseBtn = document.querySelector('#feedback-thanks-close-btn')
-  if (thanksCloseBtn) {
-    thanksCloseBtn.addEventListener('click', () => {
-      window.electron?.closeWindow?.() || window.close()
-    })
-  }
-
   const win11Close = document.querySelector('#win11-close-btn')
   if (win11Close) {
     win11Close.addEventListener('click', () => {
