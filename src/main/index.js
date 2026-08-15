@@ -347,6 +347,24 @@ ipcMain.handle('app:set-language', (_event, lang) => {
   return { ok: true, lang }
 })
 
+let currentTheme = 'dark'
+
+function broadcastTheme(theme) {
+  currentTheme = theme
+  BrowserWindow.getAllWindows().forEach((w) => {
+    if (!w.isDestroyed()) {
+      w.webContents.send('app:theme-changed', theme)
+    }
+  })
+}
+
+ipcMain.handle('app:set-theme', (_event, theme) => {
+  broadcastTheme(theme)
+  return { ok: true, theme }
+})
+
+ipcMain.handle('app:get-theme', () => ({ theme: currentTheme }))
+
 ipcMain.on('app:console-log', (_event, msg) => console.log(msg))
 ipcMain.on('app:console-info', (_event, msg) => console.info(msg))
 ipcMain.on('app:console-error', (_event, msg) => console.error(msg))

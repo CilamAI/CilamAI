@@ -125,6 +125,7 @@ let resolvedTheme = theme
 const applyTheme = () => {
   resolvedTheme = theme === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme
   document.documentElement.dataset.theme = resolvedTheme
+  window.electron?.setTheme?.(resolvedTheme)
 }
 applyTheme()
 const systemMedia = matchMedia('(prefers-color-scheme: dark)')

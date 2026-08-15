@@ -1,5 +1,40 @@
 // Provide Feedback standalone window logic
 let localeData = {}
+let currentTheme = 'dark'
+
+function applyTheme(themeName) {
+  if (themeName) currentTheme = themeName
+  const resolved = currentTheme === 'system'
+    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    : currentTheme
+  document.documentElement.dataset.theme = resolved
+}
+
+async function loadTheme() {
+  try {
+    const raw = localStorage.getItem('ollama-settings')
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (parsed.theme) currentTheme = parsed.theme
+    }
+  } catch {}
+
+  if (window.electron?.getTheme) {
+    try {
+      const res = await window.electron.getTheme()
+      if (res?.theme) currentTheme = res.theme
+    } catch {}
+  }
+  applyTheme()
+}
+
+if (window.electron?.onThemeChange) {
+  window.electron.onThemeChange((t) => applyTheme(t))
+}
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if (currentTheme === 'system') applyTheme()
+})
 
 async function loadLocale() {
   let lang = 'en'
@@ -38,6 +73,7 @@ function showToast(msg) {
 }
 
 function init() {
+  loadTheme()
   loadLocale()
 
   const typeRadios = document.querySelectorAll('input[name="feedback-type"]')
