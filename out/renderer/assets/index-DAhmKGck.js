@@ -55500,7 +55500,14 @@ async function init() {
     }
     input2.focus();
   });
-  document.querySelector("[data-screenshot]")?.addEventListener("click", async () => {
+  document.querySelector("[data-screenshot]")?.addEventListener("click", async (e) => {
+    const svg = e.currentTarget.querySelector("svg");
+    if (svg) {
+      svg.classList.remove("shimmer");
+      void svg.offsetWidth;
+      svg.classList.add("shimmer");
+      svg.addEventListener("animationend", () => svg.classList.remove("shimmer"), { once: true });
+    }
     if (attachMenu) attachMenu.hidden = true;
     const result = await window.electron?.captureScreenshot?.();
     if (!result?.ok) {
