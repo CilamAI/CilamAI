@@ -124,7 +124,8 @@ body {
   color: var(--text);
   border: 0;
   outline: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--ui-font, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  font-weight: var(--ui-font-weight, 400);
   font-size: 14px;
   overflow: hidden;
 }

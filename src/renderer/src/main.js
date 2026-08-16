@@ -1458,8 +1458,17 @@ async function init() {
     Forest: { accent: '#3fb950', bg: '#0d1f12', fg: '#b4e6b4' },
     Sunset: { accent: '#f78166', bg: '#1c1210', fg: '#f0d9c8' }
   }
-  const uiFonts = ['System default', 'Inter', 'Segoe UI', 'SF Pro', 'Roboto', 'JetBrains Mono', 'Fira Code', 'Cascadia Code']
+  const uiFonts = ['System default', 'Inter', 'Segoe UI', 'Roboto', 'JetBrains Mono', 'Fira Code', 'Cascadia Code']
   const fontWeights = ['Regular', 'Medium', 'Semi Bold', 'Bold']
+
+  if (settings.uiFont === 'SF Pro' || (settings.uiFont && !uiFonts.includes(settings.uiFont))) {
+    settings.uiFont = 'System default'
+    localStorage.setItem('cilamai-settings', JSON.stringify(settings))
+  }
+  document.documentElement.style.setProperty('--ui-font', settings.uiFont && settings.uiFont !== 'System default' ? `'${settings.uiFont}', sans-serif` : 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif')
+  if (settings.fontWeight) {
+    document.documentElement.style.setProperty('--ui-font-weight', settings.fontWeight.toLowerCase().replace(' ', ''))
+  }
 
   function initAppearanceMenus() {
     const presetMenu = document.getElementById('theme-preset-menu')
