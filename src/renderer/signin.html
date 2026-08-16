@@ -151,6 +151,20 @@
       background: rgba(255, 255, 255, 0.08);
     }
 
+    .signup-link {
+      margin-top: 16px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-dim);
+      text-decoration: underline;
+      cursor: pointer;
+      transition: color 0.15s ease;
+    }
+
+    .signup-link:hover {
+      color: var(--text);
+    }
+
     .waiting { display: none; }
     .waiting.active { display: flex; }
     .waiting-text { font-size: 15px; color: #acacac; margin-bottom: 16px; }
@@ -246,6 +260,7 @@
         <span>Continue with GitHub</span>
       </button>
     </div>
+    <div class="signup-link" id="signup-btn" title="Sign up">Sign up</div>
   </div>
 
   <div class="content waiting" id="waiting-panel">
