@@ -1060,8 +1060,8 @@ ipcMain.handle('auth:sign-in', async (_event, provider) => {
             resolve({ ok: true, user: userObj })
           } catch (err) {
             console.error('[OAuth] Token exchange error:', err)
-            res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' })
-            res.end(`<!DOCTYPE html><html><body style="background:#0f0f13;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;"><div style="text-align:center;"><h2>Authentication Error</h2><p style="color:#888;">Failed to complete sign-in. Please return to CilamAI and try again.</p></div></body></html>`)
+            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+            res.end(`<html><body style="background:#171717;"><script>window.close()</script></body></html>`)
             resolve({ ok: false, error: err.message })
           } finally {
             setTimeout(() => {
@@ -1100,6 +1100,195 @@ ipcMain.handle('auth:sign-in', async (_event, provider) => {
           })
           oauthHttpServer.listen(port, '127.0.0.1', () => {
             const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent('openid email profile')}&code_challenge=${encodeURIComponent(codeChallenge)}&code_challenge_method=S256&prompt=select_account%20consent`
+            shell.openExternal(authUrl)
+          })
+        }
+        tryNextPort()
+      }
+      listenWithRetry()
+    })
+  } else if (provider === 'github') {
+    const http = await import('node:http')
+
+    if (oauthHttpServer) {
+      try { oauthHttpServer.close() } catch {}
+      oauthHttpServer = null
+    }
+
+    const clientId = process.env.GITHUB_CLIENT_ID || ''
+
+    return new Promise((resolve) => {
+      let oauthPort = 3000
+      oauthHttpServer = http.createServer(async (req, res) => {
+        const urlObj = new URL(req.url, `http://127.0.0.1:${oauthPort}`)
+        const code = urlObj.searchParams.get('code')
+        const error = urlObj.searchParams.get('error')
+
+        if (error) {
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+          res.end(`<!DOCTYPE html><html><body style="background:#0f0f13;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;"><div style="text-align:center;"><h2>Sign-In Cancelled</h2><p style="color:#888;">You can close this window and return to CilamAI.</p></div><script>setTimeout(()=>window.close(),1500)</script></body></html>`)
+          try { oauthHttpServer.close() } catch {}
+          oauthHttpServer = null
+          resolve({ ok: false, error })
+          return
+        }
+
+        if (code) {
+          try {
+            console.log('[OAuth] Exchanging GitHub code for token...')
+            const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'User-Agent': 'CilamAI/1.0'
+              },
+              body: JSON.stringify({
+                client_id: clientId,
+                client_secret: process.env.GITHUB_CLIENT_SECRET || '',
+                code: code,
+                redirect_uri: `http://127.0.0.1:${oauthPort}`
+              })
+            })
+
+            const tokenData = await tokenRes.json()
+            console.log('[OAuth] GitHub token received:', tokenData.error || 'SUCCESS')
+
+            if (!tokenData.access_token) {
+              resolve({ ok: false, error: tokenData.error || 'No access token' })
+              res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+            res.end(`<html><body style="background:#171717;"><script>window.close()</script></body></html>`)
+              return
+            }
+
+            const accessToken = tokenData.access_token
+
+            const userRes = await fetch('https://api.github.com/user', {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                Accept: 'application/vnd.github+json',
+                'User-Agent': 'CilamAI/1.0'
+              }
+            })
+            const profile = await userRes.json()
+
+            let userEmail = profile.email || ''
+            if (!userEmail) {
+              try {
+                const emailRes = await fetch('https://api.github.com/user/emails', {
+                  headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    Accept: 'application/vnd.github+json',
+                    'User-Agent': 'CilamAI/1.0'
+                  }
+                })
+                const emails = await emailRes.json()
+                if (Array.isArray(emails)) {
+                  const primary = emails.find((e) => e.primary) || emails[0]
+                  if (primary) userEmail = primary.email || ''
+                }
+              } catch (e) {
+                console.error('[OAuth] GitHub emails fetch error:', e)
+              }
+            }
+
+            const userObj = {
+              name: profile.name || profile.login || userEmail.split('@')[0] || 'GitHub User',
+              email: userEmail,
+              picture: profile.avatar_url || null,
+              provider: 'github'
+            }
+
+            currentAuthUser = userObj
+            saveStoredAuthUser(userObj)
+
+            BrowserWindow.getAllWindows().forEach((win) => {
+              win.webContents.send('auth:user', userObj)
+            })
+
+            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+            res.end(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>CilamAI - Sign In Successful</title>
+  <style>
+    body {
+      background: transparent;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .card { text-align: center; }
+    .check {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: #10b981; display: flex;
+      align-items: center; justify-content: center;
+      margin: 0 auto 16px auto;
+    }
+    .check svg { width: 28px; height: 28px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    h2 { font-weight: 600; margin: 0 0 8px 0; color: #fff; font-size: 20px; }
+    p { color: #888899; margin: 0; font-size: 14px; }
+    .user { color: #6366f1; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+    <h2>Sign in successful!</h2>
+    <p>You can now close this tab and return to CilamAI.</p>
+  </div>
+  <script>setTimeout(() => window.close(), 1500);</script>
+</body>
+</html>`)
+            resolve({ ok: true, user: userObj })
+          } catch (err) {
+            console.error('[OAuth] GitHub token exchange error:', err)
+            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+            res.end(`<html><body style="background:#171717;"><script>window.close()</script></body></html>`)
+            resolve({ ok: false, error: err.message })
+          } finally {
+            setTimeout(() => {
+              try { oauthHttpServer?.close() } catch {}
+              oauthHttpServer = null
+            }, 2000)
+          }
+          return
+        }
+
+        res.writeHead(404)
+        res.end()
+      })
+
+      const listenWithRetry = () => {
+        const ports = Array.from({ length: 11 }, (_, i) => 3011 + i)
+        let portIndex = 0
+        const tryNextPort = () => {
+          if (portIndex >= ports.length) {
+            console.error('[OAuth] No free port found (3011-3021 all in use)')
+            resolve({ ok: false, error: 'No free port available for OAuth callback' })
+            return
+          }
+          const port = ports[portIndex++]
+          oauthPort = port
+          const redirectUri = `http://127.0.0.1:${port}`
+          oauthHttpServer.once('error', (err) => {
+            if (err.code === 'EADDRINUSE' && portIndex < ports.length) {
+              console.warn(`[OAuth] Port ${port} busy, trying next...`)
+              try { oauthHttpServer.close() } catch {}
+              tryNextPort()
+            } else {
+              console.error('[OAuth] Server error:', err)
+              resolve({ ok: false, error: err.message })
+            }
+          })
+          oauthHttpServer.listen(port, '127.0.0.1', () => {
+            const authUrl = `https://github.com/login/oauth/authorize?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent('read:user user:email')}`
             shell.openExternal(authUrl)
           })
         }
@@ -1257,7 +1446,7 @@ function createWindow() {
   if (process.env.ELECTRON_RENDERER_URL) {
     win.loadURL(process.env.ELECTRON_RENDERER_URL)
   } else {
-    win.loadFile(join(__dirname, '../renderer/index.html'))
+    win.loadFile(join(__dirname, '../renderer/signin.html'))
   }
 }
 
@@ -1275,8 +1464,8 @@ function openSigninWindow() {
   signinWindow = new BrowserWindow({
     title: 'Sign in - CilamAI',
     icon: join(app.getAppPath(), 'resources/icon.ico'),
-    width: 420,
-    height: 480,
+    width: 360,
+    height: 420,
     minWidth: 360,
     minHeight: 400,
     parent: mainWin || undefined,
@@ -1339,8 +1528,8 @@ function openFeedbackWindow() {
     maximizable: false,
     minimizable: false,
     frame: false,
-    hasShadow: false,
-    thickFrame: false,
+    hasShadow: true,
+    thickFrame: true,
     backgroundMaterial: 'mica',
     autoHideMenuBar: true,
     backgroundColor: '#0f1015',
