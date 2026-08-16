@@ -132,15 +132,39 @@ const stopRecognition = () => {
   recognizing = false
   document.querySelector('[data-mic-toggle]')?.classList.remove('listening')
 }
-const applyTheme = () => {
+const applyTheme = (skipIpc = false) => {
   resolvedTheme = theme === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme
   document.documentElement.dataset.theme = resolvedTheme
-  window.electron?.setTheme?.(resolvedTheme)
+  if (!skipIpc) window.electron?.setTheme?.(theme)
 }
 applyTheme()
 const systemMedia = matchMedia('(prefers-color-scheme: dark)')
 systemMedia.addEventListener('change', () => {
   if (theme === 'system') applyTheme()
+})
+
+window.electron?.onCustomColorsChange?.((colors) => {
+  if (colors && colors.accent) {
+    settings.accentColor = colors.accent
+    settings.bgColor = colors.bg
+    settings.fgColor = colors.fg
+    localStorage.setItem('cilamai-settings', JSON.stringify(settings))
+    applyCustomColorsVars()
+  }
+})
+
+window.electron?.onThemeChange?.((t) => {
+  if (!t || t === theme) return
+  theme = t
+  clearCustomColorsVars()
+  settings.accentColor = null
+  settings.bgColor = null
+  settings.fgColor = null
+  settings.customColorsActive = false
+  applyTheme(true)
+  settings.theme = t
+  localStorage.setItem('cilamai-settings', JSON.stringify(settings))
+  document.querySelectorAll('input[name="theme"]').forEach((r) => { r.checked = r.value === t })
 })
 const isOpenAI = () => provider === 'openai' || provider === 'opencode'
 const OPENCODE_URL = 'https://console.opencode.ai/inference/openai/v1'
@@ -1385,11 +1409,305 @@ async function init() {
     radio.addEventListener('change', () => {
       if (!radio.checked) return
       theme = radio.value
+      clearCustomColorsVars()
+      settings.accentColor = null
+      settings.bgColor = null
+      settings.fgColor = null
+      settings.customColorsActive = false
+      applyCustomColors()
       applyTheme()
       settings.theme = radio.value
       localStorage.setItem('cilamai-settings', JSON.stringify(settings))
     })
   })
+
+  function initDropdownToggle(btn, menu) {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const wasOpen = menu.classList.contains('open')
+      document.querySelectorAll('.lang-select-menu.open, .font-select-menu.open').forEach((m) => m.classList.remove('open'))
+      if (!wasOpen) {
+        const rect = btn.getBoundingClientRect()
+        const menuHeight = menu.offsetHeight || 200
+        const openUp = rect.bottom + menuHeight > window.innerHeight - 8
+        menu.classList.toggle('open-up', openUp)
+        menu.classList.add('open')
+        if (openUp) {
+          menu.style.left = `${Math.max(8, Math.min(window.innerWidth - menu.offsetWidth - 8, rect.right - menu.offsetWidth))}px`
+          menu.style.top = 'auto'
+          menu.style.bottom = `${window.innerHeight - rect.top + 6}px`
+        } else {
+          menu.style.left = `${Math.max(8, Math.min(window.innerWidth - menu.offsetWidth - 8, rect.right - menu.offsetWidth))}px`
+          menu.style.top = `${rect.bottom + 6}px`
+          menu.style.bottom = 'auto'
+        }
+      } else {
+        menu.classList.remove('open')
+      }
+    })
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.lang-select-wrap') && !e.target.closest('.theme-preset-wrap')) menu.classList.remove('open')
+    })
+  }
+
+  const themePresets = {
+    GitHub: { accent: '#0969DA', bg: '#FFFFFF', fg: '#1F2328' },
+    Dark: { accent: '#58a6ff', bg: '#0d1117', fg: '#e6edf3' },
+    Midnight: { accent: '#7c72ff', bg: '#161b22', fg: '#c9d1d9' },
+    Ocean: { accent: '#3bc9db', bg: '#0a1929', fg: '#d0e7ff' },
+    Forest: { accent: '#3fb950', bg: '#0d1f12', fg: '#b4e6b4' },
+    Sunset: { accent: '#f78166', bg: '#1c1210', fg: '#f0d9c8' }
+  }
+  const uiFonts = ['System default', 'Inter', 'Segoe UI', 'SF Pro', 'Roboto', 'JetBrains Mono', 'Fira Code', 'Cascadia Code']
+  const fontWeights = ['Regular', 'Medium', 'Semi Bold', 'Bold']
+
+  function initAppearanceMenus() {
+    const presetMenu = document.getElementById('theme-preset-menu')
+    const presetBtn = document.getElementById('theme-preset-btn')
+    if (presetMenu && presetBtn) {
+      presetMenu.innerHTML = ''
+      Object.keys(themePresets).forEach((name) => {
+        const opt = document.createElement('button')
+        opt.type = 'button'
+        opt.className = 'lang-option'
+        opt.textContent = name
+        if (name === (settings.themePreset || 'GitHub')) opt.classList.add('selected')
+        opt.addEventListener('click', () => {
+          const preset = themePresets[name]
+          if (!preset) return
+          settings.themePreset = name
+          settings.accentColor = preset.accent
+          settings.bgColor = preset.bg
+          settings.fgColor = preset.fg
+          settings.customColorsActive = true
+          localStorage.setItem('cilamai-settings', JSON.stringify(settings))
+          applyCustomColors()
+          presetBtn.textContent = name
+          presetMenu.classList.remove('open')
+          presetMenu.querySelectorAll('.lang-option').forEach((o) => o.classList.remove('selected'))
+          opt.classList.add('selected')
+        })
+        presetMenu.appendChild(opt)
+      })
+      presetBtn.textContent = settings.themePreset || 'GitHub'
+      initDropdownToggle(presetBtn, presetMenu)
+    }
+
+    const fontMenu = document.getElementById('theme-ui-font-menu')
+    const fontBtn = document.getElementById('theme-ui-font-btn')
+    if (fontMenu && fontBtn) {
+      fontMenu.innerHTML = ''
+      uiFonts.forEach((name) => {
+        const opt = document.createElement('button')
+        opt.type = 'button'
+        opt.className = 'lang-option'
+        opt.textContent = name
+        if (name === (settings.uiFont || 'System default')) opt.classList.add('selected')
+        opt.addEventListener('click', () => {
+          settings.uiFont = name
+          localStorage.setItem('cilamai-settings', JSON.stringify(settings))
+          document.documentElement.style.setProperty('--ui-font', name === 'System default' ? 'system-ui, sans-serif' : `'${name}', sans-serif`)
+          fontBtn.textContent = name
+          fontMenu.classList.remove('open')
+          fontMenu.querySelectorAll('.lang-option').forEach((o) => o.classList.remove('selected'))
+          opt.classList.add('selected')
+        })
+        fontMenu.appendChild(opt)
+      })
+      fontBtn.textContent = settings.uiFont || 'System default'
+      initDropdownToggle(fontBtn, fontMenu)
+    }
+
+    const weightMenu = document.getElementById('theme-font-weight-menu')
+    const weightBtn = document.getElementById('theme-font-weight-btn')
+    if (weightMenu && weightBtn) {
+      weightMenu.innerHTML = ''
+      fontWeights.forEach((name) => {
+        const opt = document.createElement('button')
+        opt.type = 'button'
+        opt.className = 'lang-option'
+        opt.textContent = name
+        if (name === (settings.fontWeight || 'Regular')) opt.classList.add('selected')
+        opt.addEventListener('click', () => {
+          settings.fontWeight = name
+          localStorage.setItem('cilamai-settings', JSON.stringify(settings))
+          document.documentElement.style.setProperty('--ui-font-weight', name.toLowerCase().replace(' ', ''))
+          weightBtn.textContent = name
+          weightMenu.classList.remove('open')
+          weightMenu.querySelectorAll('.lang-option').forEach((o) => o.classList.remove('selected'))
+          opt.classList.add('selected')
+        })
+        weightMenu.appendChild(opt)
+      })
+      weightBtn.textContent = settings.fontWeight || 'Regular'
+      initDropdownToggle(weightBtn, weightMenu)
+    }
+  }
+
+  function applyCustomColors() {
+    const accentInput = document.getElementById('theme-accent-color')
+    const bgInput = document.getElementById('theme-bg-color')
+    const fgInput = document.getElementById('theme-fg-color')
+    const accentHex = document.getElementById('theme-accent-hex')
+    const bgHex = document.getElementById('theme-bg-hex')
+    const fgHex = document.getElementById('theme-fg-hex')
+    const accent = settings.accentColor || '#0969DA'
+    const bg = settings.bgColor || '#FFFFFF'
+    const fg = settings.fgColor || '#1F2328'
+    if (accentInput) accentInput.value = accent
+    if (bgInput) bgInput.value = bg
+    if (fgInput) fgInput.value = fg
+    if (accentHex) accentHex.textContent = accent
+    if (bgHex) bgHex.textContent = bg
+    if (fgHex) fgHex.textContent = fg
+    if (settings.customColorsActive) applyCustomColorsVars()
+  }
+
+  function hexToRgb(hex) {
+    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+    if (!m) return null
+    return { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) }
+  }
+
+  function rgbToHex(r, g, b) {
+    return '#' + [r, g, b].map((x) => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, '0')).join('')
+  }
+
+  function isColorDark(hex) {
+    const c = hexToRgb(hex)
+    if (!c) return false
+    return (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255 < 0.5
+  }
+
+  function lighten(hex, amt) {
+    const c = hexToRgb(hex)
+    if (!c) return hex
+    return rgbToHex(c.r + (255 - c.r) * amt, c.g + (255 - c.g) * amt, c.b + (255 - c.b) * amt)
+  }
+
+  function darken(hex, amt) {
+    const c = hexToRgb(hex)
+    if (!c) return hex
+    return rgbToHex(c.r * (1 - amt), c.g * (1 - amt), c.b * (1 - amt))
+  }
+
+  function applyCustomColorsVars() {
+    const accent = settings.accentColor || '#0969DA'
+    const bg = settings.bgColor || '#FFFFFF'
+    const fg = settings.fgColor || '#1F2328'
+    const root = document.documentElement
+    const dark = isColorDark(bg)
+    root.style.setProperty('--accent', accent)
+    root.style.setProperty('--bg', bg)
+    root.style.setProperty('--text', fg)
+    root.style.setProperty('--surface', dark ? lighten(bg, 0.08) : darken(bg, 0.03))
+    root.style.setProperty('--surface-2', dark ? lighten(bg, 0.14) : darken(bg, 0.06))
+    root.style.setProperty('--border', dark ? lighten(bg, 0.22) : darken(bg, 0.1))
+    root.style.setProperty('--hover', dark ? lighten(bg, 0.18) : darken(bg, 0.08))
+    root.style.setProperty('--text-dim', dark ? lighten(fg, 0.45) : darken(fg, 0.4))
+    root.style.setProperty('--border-focus', accent)
+    root.style.setProperty('--accent-text', isColorDark(accent) ? '#fff' : '#000')
+    root.style.setProperty('--bubble-user', dark ? lighten(bg, 0.16) : darken(bg, 0.07))
+    root.style.setProperty('--scrollbar-thumb', dark ? lighten(bg, 0.3) : darken(bg, 0.15))
+    window.electron?.setCustomColors?.({ accent, bg, fg })
+  }
+
+  function clearCustomColorsVars() {
+    const root = document.documentElement
+    const vars = ['--accent', '--bg', '--text', '--surface', '--surface-2', '--border', '--hover', '--text-dim', '--border-focus', '--accent-text', '--bubble-user', '--scrollbar-thumb']
+    vars.forEach((v) => root.style.removeProperty(v))
+    window.electron?.setCustomColors?.({ accent: null, bg: null, fg: null })
+  }
+
+  function initAppearanceColorInputs() {
+    const accentInput = document.getElementById('theme-accent-color')
+    const bgInput = document.getElementById('theme-bg-color')
+    const fgInput = document.getElementById('theme-fg-color')
+    const accentHex = document.getElementById('theme-accent-hex')
+    const bgHex = document.getElementById('theme-bg-hex')
+    const fgHex = document.getElementById('theme-fg-hex')
+
+    function handleAccent(e) {
+      settings.accentColor = e.target.value
+      settings.customColorsActive = true
+      if (accentHex) accentHex.textContent = e.target.value
+      localStorage.setItem('cilamai-settings', JSON.stringify(settings))
+      applyCustomColorsVars()
+    }
+    function handleBg(e) {
+      settings.bgColor = e.target.value
+      settings.customColorsActive = true
+      if (bgHex) bgHex.textContent = e.target.value
+      localStorage.setItem('cilamai-settings', JSON.stringify(settings))
+      applyCustomColorsVars()
+    }
+    function handleFg(e) {
+      settings.fgColor = e.target.value
+      settings.customColorsActive = true
+      if (fgHex) fgHex.textContent = e.target.value
+      localStorage.setItem('cilamai-settings', JSON.stringify(settings))
+      applyCustomColorsVars()
+    }
+
+    if (accentInput) accentInput.addEventListener('input', handleAccent)
+    if (bgInput) bgInput.addEventListener('input', handleBg)
+    if (fgInput) fgInput.addEventListener('input', handleFg)
+    applyCustomColors()
+  }
+
+  initAppearanceMenus()
+  initAppearanceColorInputs()
+
+  const importBtn = document.getElementById('theme-import-btn')
+  if (importBtn) {
+    importBtn.addEventListener('click', () => {
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.accept = '.json'
+      input.addEventListener('change', (e) => {
+        const file = e.target.files[0]
+        if (!file) return
+        const reader = new FileReader()
+        reader.onload = (ev) => {
+          try {
+            const imported = JSON.parse(ev.target.result)
+            if (imported.accentColor) settings.accentColor = imported.accentColor
+            if (imported.bgColor) settings.bgColor = imported.bgColor
+            if (imported.fgColor) settings.fgColor = imported.fgColor
+            if (imported.uiFont) settings.uiFont = imported.uiFont
+            if (imported.fontWeight) settings.fontWeight = imported.fontWeight
+            if (imported.themePreset) settings.themePreset = imported.themePreset
+            settings.customColorsActive = true
+            localStorage.setItem('cilamai-settings', JSON.stringify(settings))
+            applyCustomColors()
+            initAppearanceMenus()
+            window.electron?.showNotification?.('Theme imported successfully', 'success')
+          } catch { window.electron?.showNotification?.('Invalid theme file', 'error') }
+        }
+        reader.readAsText(file)
+      })
+      input.click()
+    })
+  }
+
+  const copyBtn = document.getElementById('theme-copy-btn')
+  if (copyBtn) {
+    copyBtn.addEventListener('click', () => {
+      const data = JSON.stringify({
+        accentColor: settings.accentColor,
+        bgColor: settings.bgColor,
+        fgColor: settings.fgColor,
+        uiFont: settings.uiFont,
+        fontWeight: settings.fontWeight,
+        themePreset: settings.themePreset
+      }, null, 2)
+      navigator.clipboard.writeText(data).then(() => {
+        window.electron?.showNotification?.('Theme copied to clipboard', 'success')
+      }).catch(() => {
+        window.electron?.showNotification?.('Failed to copy theme', 'error')
+      })
+    })
+  }
 
   document.querySelectorAll('input[name="provider"]').forEach((radio) => {
     if (radio.value === provider) radio.checked = true
@@ -1604,6 +1922,49 @@ async function init() {
     })
   }
 
+  document.querySelectorAll('.setting-segmented').forEach((group) => {
+    const key = group.querySelector('.segmented-btn')?.dataset.segmented
+    if (key) {
+      const saved = settings[key]
+      if (saved) {
+        group.querySelectorAll('.segmented-btn').forEach((btn) => {
+          btn.classList.toggle('active', btn.dataset.value === saved)
+        })
+      }
+    }
+    group.addEventListener('click', (e) => {
+      const btn = e.target.closest('.segmented-btn')
+      if (!btn) return
+      group.querySelectorAll('.segmented-btn').forEach((b) => b.classList.remove('active'))
+      btn.classList.add('active')
+      const prefKey = btn.dataset.segmented
+      if (prefKey) {
+        settings[prefKey] = btn.dataset.value
+        localStorage.setItem('cilamai-settings', JSON.stringify(settings))
+      }
+    })
+  })
+
+  const prefPointerCursors = document.querySelector('#pref-pointer-cursors')
+  if (prefPointerCursors) {
+    prefPointerCursors.checked = settings.pointerCursors !== false
+    if (settings.pointerCursors !== false) document.body.classList.add('pointer-cursors')
+    prefPointerCursors.addEventListener('change', () => {
+      settings.pointerCursors = prefPointerCursors.checked
+      localStorage.setItem('cilamai-settings', JSON.stringify(settings))
+      document.body.classList.toggle('pointer-cursors', prefPointerCursors.checked)
+    })
+  }
+
+  const prefUiFontSize = document.querySelector('#pref-ui-font-size')
+  if (prefUiFontSize) {
+    if (settings.uiFontSize) prefUiFontSize.value = settings.uiFontSize
+    prefUiFontSize.addEventListener('change', () => {
+      settings.uiFontSize = prefUiFontSize.value
+      localStorage.setItem('cilamai-settings', JSON.stringify(settings))
+      document.documentElement.style.setProperty('--ui-font-scale', `${prefUiFontSize.value / 16}`)
+    })
+  }
 
   const selectModel = (fullName) => {
     const name = document.querySelector('.model-name')
