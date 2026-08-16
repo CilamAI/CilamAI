@@ -250,16 +250,18 @@
   </svg>
 
   <div class="startup-loading" id="startup-loading">
-    <svg class="md3-morph-indicator" viewBox="0 0 48 48" width="56" height="56">
-      <path fill="currentColor">
-        <animate attributeName="d" dur="3.6s" repeatCount="indefinite"
-          values="M 12 12 C 18 12 30 12 36 12 C 36 18 36 30 36 36 C 30 36 18 36 12 36 C 12 30 12 18 12 12 Z;
-                  M 24 5 C 34 5 43 14 43 24 C 43 34 34 43 24 43 C 14 43 5 34 5 24 C 5 14 14 5 24 5 Z;
-                  M 24 4 C 32 12 36 16 44 24 C 36 32 32 36 24 44 C 16 36 12 32 4 24 C 12 16 16 12 24 4 Z;
-                  M 24 7 C 27 16 32 21 41 24 C 32 27 27 32 24 41 C 21 32 16 27 7 24 C 16 21 21 16 24 7 Z;
-                  M 12 12 C 18 12 30 12 36 12 C 36 18 36 30 36 36 C 30 36 18 36 12 36 C 12 30 12 18 12 12 Z" />
-      </path>
-    </svg>
+    <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+      <svg class="md-spinner" viewBox="0 0 48 48" width="48" height="48" aria-hidden="true">
+        <circle class="md-spinner-track" cx="24" cy="24" r="20" />
+        <circle class="md-spinner-indeterminate" cx="24" cy="24" r="20" />
+      </svg>
+      <svg viewBox="0 0 24 24" width="20" height="20" style="position: absolute; color: #acacac;">
+        <path fill="currentColor" d="M12 2C12 7.52 16.48 12 22 12C16.48 12 12 16.48 12 22C12 16.48 7.52 12 2 12C7.52 12 12 7.52 12 2Z"/>
+      </svg>
+    </div>
+    <div style="position: absolute; bottom: 20px; font-size: 11px; color: #666;">
+      <a target="_blank" href="https://icons8.com/icon/7cIYrT9KBLfB/gemini-ai" style="color: inherit; text-decoration: underline;">Gemini Ai</a> icon by <a target="_blank" href="https://icons8.com" style="color: inherit; text-decoration: underline;">Icons8</a>
+    </div>
   </div>
 
   <section class="onboarding" data-onboarding hidden>
@@ -503,6 +505,14 @@
             </div>
           </div>
         </div>
+        <button type="button" class="composer-btn mic" aria-label="Voice input" data-mic-toggle>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+            <line x1="12" y1="19" x2="12" y2="23" />
+            <line x1="8" y1="23" x2="16" y2="23" />
+          </svg>
+        </button>
         <button type="submit" class="composer-btn send" aria-label="Send">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
             stroke-linecap="round" stroke-linejoin="round">
@@ -666,17 +676,6 @@
         <div class="hotkeys-actions">
           <button type="button" class="setting-btn" id="reset-hotkeys" data-i18n="resetToDefaults">Reset to
             defaults</button>
-        </div>
-      </div>
-      <hr class="setting-divider" />
-      <div class="setting-field">
-        <div class="setting-head">
-          <h3 class="setting-section" data-i18n="mcpTools">MCP Tools</h3>
-        </div>
-        <p class="setting-desc" data-i18n="mcpToolsDesc">Configure Model Context Protocol (MCP) servers and tools to extend AI capabilities.</p>
-        <div class="mcp-server-list" id="mcp-server-list"></div>
-        <div class="mcp-actions">
-          <button type="button" class="setting-btn" id="add-mcp-server-btn" data-i18n="addMcpServer">+ Add MCP Server</button>
         </div>
       </div>
 
@@ -985,6 +984,8 @@
     </div>
   </div>
 
+  <!-- Sign-in now in signin.html (shown on npm start) -->
+
   <div class="auth-dialog-overlay" hidden>
     <div class="auth-dialog">
       <div class="auth-dialog-logo">
@@ -1016,62 +1017,6 @@
         <a href="#" data-action="signup" data-i18n="signUp">Sign up</a>
       </p>
     </div>
-  </div>
-
-  <div class="mcp-dialog-overlay" id="mcp-dialog-overlay" hidden>
-    <div class="mcp-dialog">
-      <div class="mcp-dialog-head">
-        <h3 id="mcp-dialog-title" data-i18n="addMcpServer">Add MCP Server</h3>
-        <button type="button" class="mcp-dialog-close" id="mcp-dialog-close" aria-label="Close">&times;</button>
-      </div>
-      <p class="mcp-dialog-desc" data-i18n="mcpModalDesc">Configure a Model Context Protocol (MCP) server to provide tools and context to the AI model.</p>
-
-      <div class="mcp-quick-templates">
-        <span class="mcp-templates-label" data-i18n="quickTemplates">Quick Templates:</span>
-        <div class="mcp-template-chips">
-          <button type="button" class="mcp-chip" data-mcp-tpl="filesystem">Filesystem</button>
-          <button type="button" class="mcp-chip" data-mcp-tpl="brave">Brave Search</button>
-          <button type="button" class="mcp-chip" data-mcp-tpl="github">GitHub</button>
-          <button type="button" class="mcp-chip" data-mcp-tpl="memory">Memory</button>
-        </div>
-      </div>
-
-      <form id="mcp-server-form" class="mcp-form">
-        <input type="hidden" id="mcp-edit-id" value="" />
-        <div class="mcp-form-group">
-          <label for="mcp-name" data-i18n="serverName">Server Name</label>
-          <input type="text" id="mcp-name" class="mcp-input" placeholder="e.g. filesystem" required />
-        </div>
-        <div class="mcp-form-group">
-          <label for="mcp-type" data-i18n="transportType">Transport Type</label>
-          <select id="mcp-type" class="mcp-input mcp-select">
-            <option value="stdio">stdio (Local Command)</option>
-            <option value="sse">SSE (Server-Sent Events URL)</option>
-          </select>
-        </div>
-        <div class="mcp-form-group" id="mcp-command-group">
-          <label for="mcp-command" data-i18n="command">Command</label>
-          <input type="text" id="mcp-command" class="mcp-input" placeholder="e.g. npx" required />
-        </div>
-        <div class="mcp-form-group" id="mcp-args-group">
-          <label for="mcp-args" data-i18n="arguments">Arguments (space separated)</label>
-          <input type="text" id="mcp-args" class="mcp-input" placeholder="e.g. -y @modelcontextprotocol/server-filesystem C:\Users\omg\Desktop" />
-        </div>
-        <div class="mcp-form-group" id="mcp-url-group" hidden>
-          <label for="mcp-url" data-i18n="sseUrl">SSE URL</label>
-          <input type="url" id="mcp-url" class="mcp-input" placeholder="http://localhost:8000/sse" />
-        </div>
-        <div class="mcp-form-group">
-          <label for="mcp-env" data-i18n="envVars">Environment Variables (JSON format, optional)</label>
-          <textarea id="mcp-env" class="mcp-input mcp-textarea" placeholder='{ "BRAVE_API_KEY": "..." }' rows="2"></textarea>
-        </div>
-        <div class="mcp-dialog-actions">
-          <button type="button" class="mcp-btn secondary" id="mcp-dialog-cancel" data-i18n="cancel">Cancel</button>
-          <button type="submit" class="mcp-btn primary" id="mcp-dialog-save" data-i18n="saveServer">Save Server</button>
-        </div>
-      </form>
-    </div>
-  </div>
   </div>
 
   <div class="notification" role="alert" hidden>
