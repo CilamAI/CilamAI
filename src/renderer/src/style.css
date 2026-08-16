@@ -3463,6 +3463,7 @@ pre:hover .copy-code-btn {
   height: 48px;
   display: block;
   position: relative;
+  animation: md3-rotate 2s linear infinite;
 }
 
 .md3-loader-circle {
@@ -3472,14 +3473,10 @@ pre:hover .copy-code-btn {
   stroke: currentColor;
   stroke-width: 4;
   stroke-linecap: round;
-  transform-origin: center;
-  animation: md3-rotate 1.4s linear infinite;
 }
 
 .md3-loader-path {
-  stroke-dasharray: 1, 200;
-  stroke-dashoffset: 0;
-  animation: md3-dash 1.4s ease-in-out infinite;
+  animation: md3-dash 1.5s ease-in-out infinite;
 }
 
 /* Legacy loader class - now uses MD3 styling */
@@ -3524,13 +3521,13 @@ pre:hover .copy-code-btn {
   }
 
   50% {
-    stroke-dasharray: 100, 200;
-    stroke-dashoffset: -15;
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -35;
   }
 
   100% {
-    stroke-dasharray: 100, 200;
-    stroke-dashoffset: -125;
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -124;
   }
 }
 
