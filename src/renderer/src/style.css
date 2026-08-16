@@ -686,6 +686,7 @@ body {
   z-index: 200;
   user-select: none;
   -webkit-app-region: drag;
+  -webkit-font-smoothing: antialiased;
 }
 
 .titlebar-title {
