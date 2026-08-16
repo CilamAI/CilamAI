@@ -260,7 +260,7 @@
         <span>Continue with GitHub</span>
       </button>
     </div>
-    <div class="signup-link" id="signup-btn" title="Sign up">Sign up</div>
+    <a href="#" class="signup-link" id="signup-btn" title="Sign up">Sign up</a>
   </div>
 
   <div class="content waiting" id="waiting-panel">
@@ -303,6 +303,12 @@
 
       document.querySelector('#close-btn')?.addEventListener('click', () => {
         window.electron?.closeWindow?.() || window.close()
+      })
+
+      document.querySelector('#signup-btn')?.addEventListener('click', (e) => {
+        e.preventDefault()
+        // Defaulting to GitHub sign in for now as it's the primary provider
+        document.querySelector('#github-btn')?.click()
       })
 
       document.querySelector('#skip-btn')?.addEventListener('click', () => {
