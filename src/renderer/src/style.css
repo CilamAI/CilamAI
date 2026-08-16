@@ -3549,7 +3549,10 @@ pre:hover .copy-code-btn {
 
 .startup-loading {
   position: fixed;
-  inset: 0;
+  top: 40px;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: var(--bg);
   z-index: 300;
   display: flex;
