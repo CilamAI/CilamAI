@@ -3640,7 +3640,8 @@ pre:hover .copy-code-btn {
   cursor: default;
 }
 
-html.onboarding-active .titlebar-menu {
+html.onboarding-active .titlebar-menu,
+body:has(.startup-loading:not(.fade-out)) .titlebar-menu {
   display: none;
 }
 
