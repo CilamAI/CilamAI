@@ -1780,6 +1780,24 @@ body.shimmer-enabled .theme-card:has(input:checked) > * {
   background: var(--hover);
 }
 
+.composer-btn.mic {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.composer-btn.mic:hover {
+  color: var(--text);
+  background: var(--hover);
+}
+
+.composer-btn.mic.listening {
+  color: var(--accent-text);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
 .attach-menu-wrap {
   position: relative;
   flex-shrink: 0;
@@ -2370,7 +2388,6 @@ body.shimmer-enabled .theme-card:has(input:checked) > * {
 .font-select-menu::-webkit-scrollbar,
 .user-menu::-webkit-scrollbar,
 .credit-menu::-webkit-scrollbar,
-.mcp-dialog::-webkit-scrollbar,
 .auth-dialog::-webkit-scrollbar,
 .hotkeys-list::-webkit-scrollbar {
   width: 6px;
@@ -2381,7 +2398,6 @@ body.shimmer-enabled .theme-card:has(input:checked) > * {
 .font-select-menu::-webkit-scrollbar-track,
 .user-menu::-webkit-scrollbar-track,
 .credit-menu::-webkit-scrollbar-track,
-.mcp-dialog::-webkit-scrollbar-track,
 .auth-dialog::-webkit-scrollbar-track,
 .hotkeys-list::-webkit-scrollbar-track {
   background: transparent;
@@ -2391,7 +2407,6 @@ body.shimmer-enabled .theme-card:has(input:checked) > * {
 .font-select-menu::-webkit-scrollbar-thumb,
 .user-menu::-webkit-scrollbar-thumb,
 .credit-menu::-webkit-scrollbar-thumb,
-.mcp-dialog::-webkit-scrollbar-thumb,
 .auth-dialog::-webkit-scrollbar-thumb,
 .hotkeys-list::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
@@ -2402,7 +2417,6 @@ body.shimmer-enabled .theme-card:has(input:checked) > * {
 .font-select-menu::-webkit-scrollbar-thumb:hover,
 .user-menu::-webkit-scrollbar-thumb:hover,
 .credit-menu::-webkit-scrollbar-thumb:hover,
-.mcp-dialog::-webkit-scrollbar-thumb:hover,
 .auth-dialog::-webkit-scrollbar-thumb:hover,
 .hotkeys-list::-webkit-scrollbar-thumb:hover {
   background: var(--border-focus);
@@ -3455,7 +3469,7 @@ pre:hover .copy-code-btn {
   width: 100%;
   height: 100%;
   fill: none;
-  stroke: #000000;
+  stroke: currentColor;
   stroke-width: 4;
   stroke-linecap: round;
   transform-origin: center;
@@ -3552,15 +3566,35 @@ pre:hover .copy-code-btn {
   pointer-events: none;
 }
 
-.md3-morph-indicator {
-  color: var(--accent);
-  animation: md3-morph-spin 3.6s linear infinite;
+.md-spinner {
   transform-origin: center;
+  animation: md-spinner-rotate 1.5s linear infinite;
 }
 
-@keyframes md3-morph-spin {
-  0% { transform: rotate(0deg); }
+.md-spinner circle {
+  fill: none;
+  stroke-width: 4;
+}
+
+.md-spinner-track {
+  stroke: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.md-spinner-indeterminate {
+  stroke: var(--accent);
+  stroke-linecap: round;
+  stroke-dasharray: 90 150;
+  animation: md-spinner-dash 1.5s ease-in-out infinite;
+}
+
+@keyframes md-spinner-rotate {
   100% { transform: rotate(360deg); }
+}
+
+@keyframes md-spinner-dash {
+  0% { stroke-dasharray: 1 200; stroke-dashoffset: 0; }
+  50% { stroke-dasharray: 100 200; stroke-dashoffset: -15; }
+  100% { stroke-dasharray: 100 200; stroke-dashoffset: -120; }
 }
 
 .startup-model {
@@ -3904,296 +3938,6 @@ html[data-win11='true'] .onboarding {
   transform: scale(0.95);
 }
 
-/* MCP Tools Styles */
-.mcp-server-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 12px;
-  margin-bottom: 14px;
-}
-
-.mcp-empty-state {
-  padding: 18px;
-  background: var(--surface);
-  border: 1px dashed var(--border);
-  border-radius: 12px;
-  color: var(--text-dim);
-  font-size: 13px;
-  text-align: center;
-}
-
-.mcp-server-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  transition: border-color 0.2s ease, background 0.2s ease;
-}
-
-.mcp-server-card:hover {
-  border-color: var(--border-focus);
-}
-
-.mcp-card-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.mcp-card-title-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.mcp-card-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.mcp-badge {
-  font-size: 11px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 2px 7px;
-  border-radius: 6px;
-  background: var(--hover);
-  color: var(--text-dim);
-  border: 1px solid var(--border);
-}
-
-.mcp-badge.active {
-  background: rgba(16, 185, 129, 0.12);
-  color: #10b981;
-  border-color: rgba(16, 185, 129, 0.3);
-}
-
-.mcp-card-cmd {
-  font-size: 12px;
-  font-family: monospace;
-  color: var(--text-dim);
-  max-width: 420px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.mcp-card-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.mcp-icon-btn {
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text-dim);
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0;
-  transition: all 0.15s ease;
-}
-
-.mcp-icon-btn:hover {
-  background: var(--hover);
-  color: var(--text);
-  border-color: var(--border-focus);
-}
-
-.mcp-icon-btn.danger:hover {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-  border-color: rgba(239, 68, 68, 0.4);
-}
-
-/* MCP Dialog Modal */
-.mcp-dialog-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(5px);
-  z-index: 550;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: auth-fade-in 0.2s ease;
-  padding: 16px;
-}
-
-.mcp-dialog {
-  width: 100%;
-  max-width: 480px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.mcp-dialog-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.mcp-dialog-head h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.mcp-dialog-close {
-  background: transparent;
-  border: 0;
-  color: var(--text-dim);
-  font-size: 22px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 4px;
-}
-
-.mcp-dialog-close:hover {
-  color: var(--text);
-}
-
-.mcp-dialog-desc {
-  margin: 0;
-  font-size: 13px;
-  color: var(--text-dim);
-  line-height: 1.4;
-}
-
-.mcp-quick-templates {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.mcp-templates-label {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-dim);
-}
-
-.mcp-template-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.mcp-chip {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-size: 12px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.mcp-chip:hover {
-  background: var(--hover);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.mcp-form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.mcp-form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.mcp-form-group label {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text);
-}
-
-.mcp-input {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  color: var(--text);
-  padding: 9px 12px;
-  font-size: 13px;
-  outline: none;
-  font-family: inherit;
-  transition: border-color 0.2s ease;
-}
-
-.mcp-input:focus {
-  border-color: var(--accent);
-}
-
-.mcp-textarea {
-  resize: vertical;
-  min-height: 54px;
-  font-family: monospace;
-  font-size: 12px;
-}
-
-.mcp-dialog-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 6px;
-}
-
-.mcp-btn {
-  padding: 8px 16px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: all 0.15s ease;
-}
-
-.mcp-btn.secondary {
-  background: transparent;
-  border-color: var(--border);
-  color: var(--text);
-}
-
-.mcp-btn.secondary:hover {
-  background: var(--hover);
-}
-
-.mcp-btn.primary {
-  background: var(--accent);
-  color: var(--accent-text);
-}
-
-.mcp-btn.primary:hover {
-  opacity: 0.92;
-}
 
 /* ---------------------------------------------------- */
 /* Provide Feedback Panel                               */

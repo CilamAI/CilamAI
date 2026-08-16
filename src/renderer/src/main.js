@@ -3,7 +3,7 @@ import hljs from 'highlight.js'
 
 let settings = {}
 try {
-  settings = JSON.parse(localStorage.getItem('ollama-settings') || '{}')
+  settings = JSON.parse(localStorage.getItem('cilamai-settings') || '{}')
   if (typeof settings !== 'object' || settings === null) settings = {}
 } catch {
   settings = {}
@@ -51,7 +51,7 @@ const HOTKEY_ACTIONS = {
     run: () => {
       showThinking = !showThinking
       settings.showThinking = showThinking
-      localStorage.setItem('ollama-settings', JSON.stringify(settings))
+      localStorage.setItem('cilamai-settings', JSON.stringify(settings))
       showNotification(showThinking ? 'Thinking shown' : 'Thinking hidden', 'warning')
     }
   },
@@ -122,6 +122,16 @@ let zaiApiKey = settings.zaiApiKey || ''
 let showThinking = settings.showThinking !== false
 let theme = settings.theme || 'dark'
 let resolvedTheme = theme
+
+let recognition = null
+let recognizing = false
+const stopRecognition = () => {
+  if (recognition && recognizing) {
+    try { recognition.stop() } catch {}
+  }
+  recognizing = false
+  document.querySelector('[data-mic-toggle]')?.classList.remove('listening')
+}
 const applyTheme = () => {
   resolvedTheme = theme === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme
   document.documentElement.dataset.theme = resolvedTheme
@@ -199,7 +209,7 @@ function updateSendBtnState() {
   }
 }
 
-const SESSIONS_KEY = 'ollama-sessions'
+const SESSIONS_KEY = 'cilamai-sessions'
 let sessions = []
 let currentSessionId = null
 try {
@@ -741,7 +751,7 @@ function addTypingIndicator() {
 
   const bubble = document.createElement('div')
   bubble.className = 'chat-bubble assistant typing'
-  bubble.innerHTML = ''
+  bubble.innerHTML = '<svg class="md3-loader" viewBox="0 0 50 50" style="color: var(--text-dim);"><use href="#icon-15"></use></svg>'
   row.append(bubble)
   chat.append(row)
   if (isNearBottom(chat)) {
@@ -972,7 +982,7 @@ async function loadModels() {
       name.textContent = displayName
       name.dataset.fullModel = fullName
       settings.model = fullName
-      localStorage.setItem('ollama-settings', JSON.stringify(settings))
+      localStorage.setItem('cilamai-settings', JSON.stringify(settings))
       document.dispatchEvent(new CustomEvent('model-context-change', { detail: fullName }))
       menu.hidden = true
     })
@@ -1005,7 +1015,7 @@ function showSettings() {
 async function loadLocale(lang) {
   currentLang = lang
   settings.language = lang
-  localStorage.setItem('ollama-settings', JSON.stringify(settings))
+  localStorage.setItem('cilamai-settings', JSON.stringify(settings))
   try {
     const res = await fetch(`${LANG_BASE}${lang}.json`)
     localeData = res.ok ? await res.json() : {}
@@ -1145,6 +1155,7 @@ function showFeedback() {
 }
 
 function resetChat() {
+  stopRecognition()
   if (messages.length) saveSession()
   currentSessionId = null
   clearTimeout(sessionLoadTimer)
@@ -1376,7 +1387,7 @@ async function init() {
       theme = radio.value
       applyTheme()
       settings.theme = radio.value
-      localStorage.setItem('ollama-settings', JSON.stringify(settings))
+      localStorage.setItem('cilamai-settings', JSON.stringify(settings))
     })
   })
 
@@ -1386,7 +1397,7 @@ async function init() {
       if (!radio.checked) return
       provider = radio.value
       settings.provider = provider
-      localStorage.setItem('ollama-settings', JSON.stringify(settings))
+      localStorage.setItem('cilamai-settings', JSON.stringify(settings))
       loadModels()
     })
   })
@@ -1404,7 +1415,7 @@ async function init() {
         baseUrl = value
         settings.url = value
       }
-      localStorage.setItem('ollama-settings', JSON.stringify(settings))
+      localStorage.setItem('cilamai-settings', JSON.stringify(settings))
       loadModels()
     })
   }
@@ -1415,7 +1426,7 @@ async function init() {
     keyInput.addEventListener('change', () => {
       apiKey = keyInput.value.trim()
       settings.apiKey = apiKey
-      localStorage.setItem('ollama-settings', JSON.stringify(settings))
+      localStorage.setItem('cilamai-settings', JSON.stringify(settings))
     })
   }
 
@@ -1425,7 +1436,7 @@ async function init() {
     orgInput.addEventListener('change', () => {
       orgId = orgInput.value.trim()
       settings.orgId = orgId
-      localStorage.setItem('ollama-settings', JSON.stringify(settings))
+      localStorage.setItem('cilamai-settings', JSON.stringify(settings))
     })
   }
 
@@ -1480,7 +1491,7 @@ async function init() {
       opt.addEventListener('click', () => {
         const size = opt.dataset.fontSize
         settings.fontSize = size
-        localStorage.setItem('ollama-settings', JSON.stringify(settings))
+        localStorage.setItem('cilamai-settings', JSON.stringify(settings))
         applyFont(size)
         fontMenu.hidden = true
       })
@@ -1587,7 +1598,7 @@ async function init() {
 
     shimmerCheck.addEventListener('change', () => {
       settings.shimmerEffect = shimmerCheck.checked
-      localStorage.setItem('ollama-settings', JSON.stringify(settings))
+      localStorage.setItem('cilamai-settings', JSON.stringify(settings))
       if (settings.shimmerEffect) document.body.classList.add('shimmer-enabled')
       else document.body.classList.remove('shimmer-enabled')
     })
@@ -1601,7 +1612,7 @@ async function init() {
     name.textContent = displayName
     name.dataset.fullModel = fullName
     settings.model = fullName
-    localStorage.setItem('ollama-settings', JSON.stringify(settings))
+    localStorage.setItem('cilamai-settings', JSON.stringify(settings))
     const compInput = document.querySelector('.composer-input')
     if (compInput) compInput.setAttribute('placeholder', `Message ${displayName}`)
     showNotification(`Model set to ${displayName}`, 'info')
@@ -1751,7 +1762,7 @@ async function init() {
       }
     }
 
-    localStorage.setItem('ollama-settings', JSON.stringify(settings))
+    localStorage.setItem('cilamai-settings', JSON.stringify(settings))
     const keyInput = document.querySelector('#api-key')
     if (keyInput) keyInput.value = apiKey
     const opencodeInput = document.getElementById('opencode-api-key')
@@ -1796,7 +1807,7 @@ async function init() {
       changed = true
     }
     if (changed) {
-      localStorage.setItem('ollama-settings', JSON.stringify(settings))
+      localStorage.setItem('cilamai-settings', JSON.stringify(settings))
       loadModels()
     }
   })
@@ -1834,7 +1845,7 @@ async function init() {
             saveApiKey(args.slice(1).join(':'), target)
           }
           settings.model = target
-          localStorage.setItem('ollama-settings', JSON.stringify(settings))
+          localStorage.setItem('cilamai-settings', JSON.stringify(settings))
           await loadModels()
           const opt = document.querySelector(`.model-option[data-model="${target}"]`)
           if (opt) {
@@ -1890,7 +1901,7 @@ async function init() {
         else if (mode === 'off') showThinking = false
         else if (mode === 'toggle' || !mode) showThinking = !showThinking
         settings.showThinking = showThinking
-        localStorage.setItem('ollama-settings', JSON.stringify(settings))
+        localStorage.setItem('cilamai-settings', JSON.stringify(settings))
         showNotification(showThinking ? 'Thinking shown' : 'Thinking hidden', 'warning')
       },
       'thought': () => {
@@ -1899,7 +1910,7 @@ async function init() {
         else if (mode === 'off') showThinking = false
         else if (mode === 'toggle' || !mode) showThinking = !showThinking
         settings.showThinking = showThinking
-        localStorage.setItem('ollama-settings', JSON.stringify(settings))
+        localStorage.setItem('cilamai-settings', JSON.stringify(settings))
         showNotification(showThinking ? 'Thinking shown' : 'Thinking hidden', 'warning')
       },
       'context-window-boost': () => {
@@ -2375,6 +2386,69 @@ async function init() {
       attachMenu.hidden = true
     }
   })
+
+  // Voice input via Web Speech API
+  const micBtn = document.querySelector('[data-mic-toggle]')
+  const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition
+  if (micBtn) {
+    if (!SpeechRecognitionCtor) {
+      micBtn.hidden = true
+    } else {
+      const speechLangFor = () => {
+        if (currentLang === 'zh' || currentLang === 'zh-TW') return currentLang === 'zh-TW' ? 'zh-TW' : 'zh-CN'
+        return (localeData && localeData.speechLang) || currentLang || 'en-US'
+      }
+      recognition = new SpeechRecognitionCtor()
+      recognition.continuous = false
+      recognition.interimResults = false
+      recognition.lang = speechLangFor()
+
+      recognition.onresult = (event) => {
+        const input = document.querySelector('.composer-input')
+        if (!input) return
+        let finalText = ''
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const res = event.results[i]
+          if (res.isFinal) finalText += res[0].transcript
+        }
+        if (finalText) {
+          const start = input.selectionStart ?? input.value.length
+          const end = input.selectionEnd ?? input.value.length
+          const merged = (input.value.slice(0, start) + finalText + input.value.slice(end)).replace(/\s{2,}/g, ' ')
+          input.value = merged
+          const pos = start + finalText.length
+          input.setSelectionRange(pos, pos)
+          input.dispatchEvent(new Event('input'))
+        }
+      }
+      recognition.onerror = (e) => {
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+          showWarning(tf('micPermission', 'Microphone access was denied.'))
+        } else if (e.error !== 'aborted' && e.error !== 'no-speech') {
+          showWarning(tf('micError', 'Voice input stopped.'))
+        }
+        stopRecognition()
+      }
+      recognition.onend = () => stopRecognition()
+
+      micBtn.addEventListener('click', () => {
+        const input = document.querySelector('.composer-input')
+        if (recognizing) {
+          stopRecognition()
+          return
+        }
+        if (input) input.focus()
+        try {
+          recognition.lang = speechLangFor()
+          recognition.start()
+          recognizing = true
+          micBtn.classList.add('listening')
+        } catch {
+          stopRecognition()
+        }
+      })
+    }
+  }
 
   const CREDIT_USED_KEY = 'ai-credits-used'
   const CREDIT_LIMIT_KEY = 'ai-credits-limit'
@@ -2860,15 +2934,7 @@ async function init() {
       localStorage.removeItem('cilamai-user')
       window.electron?.stopStream?.()
       await window.electron?.signOut?.()
-      updateUserUI()
-      creditUsed = 0
-      creditLimit = 100
-      creditResetAt = Date.now() + RESET_INTERVAL
-      creditSpent = 0
-      await loadCredits()
-      closeUserMenu()
-      if (creditMenu) creditMenu.hidden = true
-      showNotification('Signed out successfully', 'info')
+      window.location.href = './signin.html'
     }, {
       message: 'Are you sure you want to sign out?',
       confirmLabel: 'Sign Out'
@@ -3240,7 +3306,7 @@ async function init() {
       const combo = normalizeKey(e)
       hotkeys[action] = combo
       settings.hotkeys = { ...hotkeys }
-      localStorage.setItem('ollama-settings', JSON.stringify(settings))
+      localStorage.setItem('cilamai-settings', JSON.stringify(settings))
       renderComboKeys(input.querySelector('.hotkey-keys'), combo)
       input.classList.remove('empty')
       stopRecording(input)
@@ -3268,7 +3334,7 @@ async function init() {
       if (action && DEFAULT_HOTKEYS[action]) {
         hotkeys[action] = DEFAULT_HOTKEYS[action]
         settings.hotkeys = { ...hotkeys }
-        localStorage.setItem('ollama-settings', JSON.stringify(settings))
+        localStorage.setItem('cilamai-settings', JSON.stringify(settings))
         const input = row.querySelector('.hotkey-input')
         if (input) {
           renderComboKeys(input.querySelector('.hotkey-keys'), hotkeys[action])
@@ -3285,293 +3351,13 @@ async function init() {
   document.querySelector('#reset-hotkeys')?.addEventListener('click', () => {
     hotkeys = { ...DEFAULT_HOTKEYS }
     settings.hotkeys = { ...hotkeys }
-    localStorage.setItem('ollama-settings', JSON.stringify(settings))
+    localStorage.setItem('cilamai-settings', JSON.stringify(settings))
     renderHotkeys()
     showNotification(tf('hotkeysReset', 'Hotkeys reset to defaults'), 'warning')
   })
 
   renderHotkeys()
 
-  // MCP Tools Manager
-  const mcpServerListEl = document.querySelector('#mcp-server-list')
-  const addMcpBtn = document.querySelector('#add-mcp-server-btn')
-  const mcpDialogOverlay = document.querySelector('#mcp-dialog-overlay')
-  const mcpDialogClose = document.querySelector('#mcp-dialog-close')
-  const mcpDialogCancel = document.querySelector('#mcp-dialog-cancel')
-  const mcpServerForm = document.querySelector('#mcp-server-form')
-  const mcpDialogTitle = document.querySelector('#mcp-dialog-title')
-  const mcpEditId = document.querySelector('#mcp-edit-id')
-  const mcpNameInput = document.querySelector('#mcp-name')
-  const mcpTypeSelect = document.querySelector('#mcp-type')
-  const mcpCommandInput = document.querySelector('#mcp-command')
-  const mcpArgsInput = document.querySelector('#mcp-args')
-  const mcpUrlInput = document.querySelector('#mcp-url')
-  const mcpEnvInput = document.querySelector('#mcp-env')
-  const mcpCommandGroup = document.querySelector('#mcp-command-group')
-  const mcpArgsGroup = document.querySelector('#mcp-args-group')
-  const mcpUrlGroup = document.querySelector('#mcp-url-group')
-
-  const DEFAULT_MCP_SERVERS = [
-    {
-      id: 'mcp-fs',
-      name: 'Filesystem',
-      type: 'stdio',
-      command: 'npx',
-      args: '-y @modelcontextprotocol/server-filesystem C:\\Users\\omg\\Desktop',
-      url: '',
-      env: '',
-      enabled: true
-    },
-    {
-      id: 'mcp-brave',
-      name: 'Brave Search',
-      type: 'stdio',
-      command: 'npx',
-      args: '-y @modelcontextprotocol/server-brave-search',
-      url: '',
-      env: '{\n  "BRAVE_API_KEY": ""\n}',
-      enabled: false
-    },
-    {
-      id: 'mcp-memory',
-      name: 'Memory',
-      type: 'stdio',
-      command: 'npx',
-      args: '-y @modelcontextprotocol/server-memory',
-      url: '',
-      env: '',
-      enabled: false
-    }
-  ]
-
-  let mcpServers = []
-  try {
-    const savedMcp = localStorage.getItem('cilamai-mcp-servers')
-    mcpServers = savedMcp ? JSON.parse(savedMcp) : DEFAULT_MCP_SERVERS
-  } catch {
-    mcpServers = DEFAULT_MCP_SERVERS
-  }
-
-  const saveMcpServers = () => {
-    try {
-      localStorage.setItem('cilamai-mcp-servers', JSON.stringify(mcpServers))
-    } catch { }
-  }
-
-  const updateMcpTypeFields = (type) => {
-    if (type === 'sse') {
-      if (mcpCommandGroup) mcpCommandGroup.hidden = true
-      if (mcpArgsGroup) mcpArgsGroup.hidden = true
-      if (mcpUrlGroup) mcpUrlGroup.hidden = false
-      if (mcpCommandInput) mcpCommandInput.required = false
-      if (mcpUrlInput) mcpUrlInput.required = true
-    } else {
-      if (mcpCommandGroup) mcpCommandGroup.hidden = false
-      if (mcpArgsGroup) mcpArgsGroup.hidden = false
-      if (mcpUrlGroup) mcpUrlGroup.hidden = true
-      if (mcpCommandInput) mcpCommandInput.required = true
-      if (mcpUrlInput) mcpUrlInput.required = false
-    }
-  }
-
-  const openMcpAddModal = () => {
-    if (!mcpDialogOverlay) return
-    if (mcpEditId) mcpEditId.value = ''
-    if (mcpDialogTitle) mcpDialogTitle.textContent = 'Add MCP Server'
-    if (mcpNameInput) mcpNameInput.value = ''
-    if (mcpTypeSelect) mcpTypeSelect.value = 'stdio'
-    if (mcpCommandInput) mcpCommandInput.value = 'npx'
-    if (mcpArgsInput) mcpArgsInput.value = ''
-    if (mcpUrlInput) mcpUrlInput.value = ''
-    if (mcpEnvInput) mcpEnvInput.value = ''
-    updateMcpTypeFields('stdio')
-    mcpDialogOverlay.hidden = false
-    mcpNameInput?.focus()
-  }
-
-  const openMcpEditModal = (server) => {
-    if (!mcpDialogOverlay) return
-    if (mcpEditId) mcpEditId.value = server.id
-    if (mcpDialogTitle) mcpDialogTitle.textContent = 'Edit MCP Server'
-    if (mcpNameInput) mcpNameInput.value = server.name || ''
-    if (mcpTypeSelect) mcpTypeSelect.value = server.type || 'stdio'
-    if (mcpCommandInput) mcpCommandInput.value = server.command || ''
-    if (mcpArgsInput) mcpArgsInput.value = server.args || ''
-    if (mcpUrlInput) mcpUrlInput.value = server.url || ''
-    if (mcpEnvInput) mcpEnvInput.value = server.env || ''
-    updateMcpTypeFields(server.type || 'stdio')
-    mcpDialogOverlay.hidden = false
-  }
-
-  const closeMcpModal = () => {
-    if (mcpDialogOverlay) mcpDialogOverlay.hidden = true
-  }
-
-  const renderMcpServers = () => {
-    if (!mcpServerListEl) return
-    mcpServerListEl.innerHTML = ''
-    if (mcpServers.length === 0) {
-      mcpServerListEl.innerHTML = `<div class="mcp-empty-state">No MCP servers configured. Click "+ Add MCP Server" to get started.</div>`
-      return
-    }
-
-    mcpServers.forEach((server) => {
-      const card = document.createElement('div')
-      card.className = 'mcp-server-card'
-
-      const info = document.createElement('div')
-      info.className = 'mcp-card-info'
-
-      const titleRow = document.createElement('div')
-      titleRow.className = 'mcp-card-title-row'
-
-      const nameSpan = document.createElement('span')
-      nameSpan.className = 'mcp-card-name'
-      nameSpan.textContent = server.name
-
-      titleRow.appendChild(nameSpan)
-
-      const cmdSpan = document.createElement('span')
-      cmdSpan.className = 'mcp-card-cmd'
-      cmdSpan.textContent = server.type === 'stdio' ? `${server.command} ${server.args || ''}` : (server.url || 'SSE URL')
-
-      info.appendChild(titleRow)
-      info.appendChild(cmdSpan)
-
-      const actions = document.createElement('div')
-      actions.className = 'mcp-card-actions'
-
-      const toggleLabel = document.createElement('label')
-      toggleLabel.className = 'setting-check'
-      const toggleInput = document.createElement('input')
-      toggleInput.type = 'checkbox'
-      toggleInput.checked = !!server.enabled
-      toggleInput.addEventListener('change', () => {
-        server.enabled = toggleInput.checked
-        saveMcpServers()
-        renderMcpServers()
-        showNotification(`${server.name}: ${server.enabled ? 'Enabled' : 'Disabled'}`, 'warning')
-      })
-      const switchSpan = document.createElement('span')
-      switchSpan.className = 'switch'
-      const thumb = document.createElement('span')
-      thumb.className = 'switch-thumb'
-      switchSpan.appendChild(thumb)
-      toggleLabel.appendChild(toggleInput)
-      toggleLabel.appendChild(switchSpan)
-
-      const editBtn = document.createElement('button')
-      editBtn.type = 'button'
-      editBtn.className = 'mcp-icon-btn'
-      editBtn.title = 'Edit Server'
-      editBtn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`
-      editBtn.addEventListener('click', () => openMcpEditModal(server))
-
-      const delBtn = document.createElement('button')
-      delBtn.type = 'button'
-      delBtn.className = 'mcp-icon-btn danger'
-      delBtn.title = 'Delete Server'
-      delBtn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`
-      delBtn.addEventListener('click', () => {
-        mcpServers = mcpServers.filter(s => s.id !== server.id)
-        saveMcpServers()
-        renderMcpServers()
-        showNotification(`${server.name} removed`, 'warning')
-      })
-
-      actions.appendChild(toggleLabel)
-      actions.appendChild(editBtn)
-      actions.appendChild(delBtn)
-
-      card.appendChild(info)
-      card.appendChild(actions)
-      mcpServerListEl.appendChild(card)
-    })
-  }
-
-  mcpTypeSelect?.addEventListener('change', (e) => {
-    updateMcpTypeFields(e.target.value)
-  })
-
-  addMcpBtn?.addEventListener('click', openMcpAddModal)
-  mcpDialogClose?.addEventListener('click', closeMcpModal)
-  mcpDialogCancel?.addEventListener('click', closeMcpModal)
-
-  mcpDialogOverlay?.addEventListener('click', (e) => {
-    if (e.target === mcpDialogOverlay) closeMcpModal()
-  })
-
-  document.querySelectorAll('[data-mcp-tpl]').forEach((chip) => {
-    chip.addEventListener('click', () => {
-      const tpl = chip.getAttribute('data-mcp-tpl')
-      if (tpl === 'filesystem') {
-        if (mcpNameInput) mcpNameInput.value = 'Filesystem'
-        if (mcpTypeSelect) mcpTypeSelect.value = 'stdio'
-        if (mcpCommandInput) mcpCommandInput.value = 'npx'
-        if (mcpArgsInput) mcpArgsInput.value = '-y @modelcontextprotocol/server-filesystem C:\\Users\\omg\\Desktop'
-        if (mcpUrlInput) mcpUrlInput.value = ''
-        if (mcpEnvInput) mcpEnvInput.value = ''
-      } else if (tpl === 'brave') {
-        if (mcpNameInput) mcpNameInput.value = 'Brave Search'
-        if (mcpTypeSelect) mcpTypeSelect.value = 'stdio'
-        if (mcpCommandInput) mcpCommandInput.value = 'npx'
-        if (mcpArgsInput) mcpArgsInput.value = '-y @modelcontextprotocol/server-brave-search'
-        if (mcpUrlInput) mcpUrlInput.value = ''
-        if (mcpEnvInput) mcpEnvInput.value = '{\n  "BRAVE_API_KEY": "YOUR_API_KEY"\n}'
-      } else if (tpl === 'github') {
-        if (mcpNameInput) mcpNameInput.value = 'GitHub'
-        if (mcpTypeSelect) mcpTypeSelect.value = 'stdio'
-        if (mcpCommandInput) mcpCommandInput.value = 'npx'
-        if (mcpArgsInput) mcpArgsInput.value = '-y @modelcontextprotocol/server-github'
-        if (mcpUrlInput) mcpUrlInput.value = ''
-        if (mcpEnvInput) mcpEnvInput.value = '{\n  "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_TOKEN"\n}'
-      } else if (tpl === 'memory') {
-        if (mcpNameInput) mcpNameInput.value = 'Memory'
-        if (mcpTypeSelect) mcpTypeSelect.value = 'stdio'
-        if (mcpCommandInput) mcpCommandInput.value = 'npx'
-        if (mcpArgsInput) mcpArgsInput.value = '-y @modelcontextprotocol/server-memory'
-        if (mcpUrlInput) mcpUrlInput.value = ''
-        if (mcpEnvInput) mcpEnvInput.value = ''
-      }
-      if (mcpTypeSelect) updateMcpTypeFields(mcpTypeSelect.value)
-    })
-  })
-
-  mcpServerForm?.addEventListener('submit', (e) => {
-    e.preventDefault()
-    const id = mcpEditId?.value?.trim() || `mcp-${Date.now()}`
-    const name = mcpNameInput?.value?.trim() || 'MCP Server'
-    const type = mcpTypeSelect?.value || 'stdio'
-    const command = mcpCommandInput?.value?.trim() || ''
-    const args = mcpArgsInput?.value?.trim() || ''
-    const url = mcpUrlInput?.value?.trim() || ''
-    const env = mcpEnvInput?.value?.trim() || ''
-
-    const existingIndex = mcpServers.findIndex(s => s.id === id)
-    const serverObj = {
-      id,
-      name,
-      type,
-      command,
-      args,
-      url,
-      env,
-      enabled: existingIndex >= 0 ? mcpServers[existingIndex].enabled : true
-    }
-
-    if (existingIndex >= 0) {
-      mcpServers[existingIndex] = serverObj
-    } else {
-      mcpServers.push(serverObj)
-    }
-
-    saveMcpServers()
-    renderMcpServers()
-    closeMcpModal()
-    showNotification(`${name} saved successfully`, 'warning')
-  })
-
-  renderMcpServers()
 
   document.addEventListener('keydown', (e) => {
     if (document.querySelector('.hotkey-input.recording')) return
@@ -3598,6 +3384,7 @@ async function init() {
   form?.addEventListener('submit', async (e) => {
     e.preventDefault()
     hideCommandsMenu()
+    stopRecognition()
     const text = input?.value.trim()
     if (!text && pendingImages.length === 0) return
 
@@ -3976,11 +3763,6 @@ async function init() {
   const remaining = Math.max(0, 5000 - (Date.now() - started))
   setTimeout(() => {
     hideStartup()
-    if (!currentUser) {
-      setTimeout(() => {
-        window.electron?.openSigninWindow?.()
-      }, 300)
-    }
   }, remaining)
 
   const MAX_STARTUP_TIMEOUT = 8000
