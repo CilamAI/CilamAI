@@ -1427,17 +1427,18 @@ async function init() {
       const wasOpen = menu.classList.contains('open')
       document.querySelectorAll('.lang-select-menu.open, .font-select-menu.open').forEach((m) => m.classList.remove('open'))
       if (!wasOpen) {
+        menu.classList.add('open')
         const rect = btn.getBoundingClientRect()
         const menuHeight = menu.offsetHeight || 200
+        const menuWidth = menu.offsetWidth || 180
         const openUp = rect.bottom + menuHeight > window.innerHeight - 8
         menu.classList.toggle('open-up', openUp)
-        menu.classList.add('open')
+        const left = Math.max(8, Math.min(window.innerWidth - menuWidth - 8, rect.right - menuWidth))
+        menu.style.left = `${left}px`
         if (openUp) {
-          menu.style.left = `${Math.max(8, Math.min(window.innerWidth - menu.offsetWidth - 8, rect.right - menu.offsetWidth))}px`
           menu.style.top = 'auto'
           menu.style.bottom = `${window.innerHeight - rect.top + 6}px`
         } else {
-          menu.style.left = `${Math.max(8, Math.min(window.innerWidth - menu.offsetWidth - 8, rect.right - menu.offsetWidth))}px`
           menu.style.top = `${rect.bottom + 6}px`
           menu.style.bottom = 'auto'
         }
