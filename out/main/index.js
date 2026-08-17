@@ -177,10 +177,7 @@ async function chatSendStream({ url, model, messages, provider, apiKey, envConfi
     }
   }
   if (aborted) {
-    try {
-      await reader.cancel();
-    } catch {
-    }
+    return { ok: true, aborted: true };
   }
   return { ok: true };
 }
@@ -1213,9 +1210,9 @@ ipcMain.handle("auth:sign-in", async (_event, provider) => {
       margin: 0 auto 16px auto;
     }
     .check svg { width: 28px; height: 28px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-    h2 { font-weight: 600; margin: 0 0 8px 0; color: #fff; font-size: 20px; }
+    h2 {  margin: 0 0 8px 0; color: #fff; font-size: 20px; }
     p { color: #888899; margin: 0; font-size: 14px; }
-    .user { color: #6366f1; font-weight: 600; }
+    .user { color: #6366f1;  }
   </style>
 </head>
 <body>
@@ -1398,9 +1395,9 @@ ipcMain.handle("auth:sign-in", async (_event, provider) => {
       margin: 0 auto 16px auto;
     }
     .check svg { width: 28px; height: 28px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-    h2 { font-weight: 600; margin: 0 0 8px 0; color: #fff; font-size: 20px; }
+    h2 {  margin: 0 0 8px 0; color: #fff; font-size: 20px; }
     p { color: #888899; margin: 0; font-size: 14px; }
-    .user { color: #6366f1; font-weight: 600; }
+    .user { color: #6366f1;  }
   </style>
 </head>
 <body>

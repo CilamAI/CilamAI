@@ -188,7 +188,7 @@ export async function chatSendStream({ url, model, messages, provider, apiKey, e
     }
   }
   if (aborted) {
-    try { await reader.cancel() } catch {}
+    return { ok: true, aborted: true }
   }
   return { ok: true }
 }

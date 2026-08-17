@@ -1442,10 +1442,9 @@ async function init() {
           menu.style.top = `${rect.bottom + 6}px`
           menu.style.bottom = 'auto'
         }
-      } else {
-        menu.classList.remove('open')
       }
     })
+
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.lang-select-wrap') && !e.target.closest('.theme-preset-wrap')) menu.classList.remove('open')
     })
@@ -1460,16 +1459,7 @@ async function init() {
     Sunset: { accent: '#f78166', bg: '#1c1210', fg: '#f0d9c8' }
   }
   const uiFonts = ['System default', 'Inter', 'Segoe UI', 'Roboto', 'JetBrains Mono', 'Fira Code', 'Cascadia Code']
-  const fontWeights = ['Regular', 'Medium', 'Semi Bold', 'Bold']
-
-  if (settings.uiFont === 'SF Pro' || (settings.uiFont && !uiFonts.includes(settings.uiFont))) {
-    settings.uiFont = 'System default'
-    localStorage.setItem('cilamai-settings', JSON.stringify(settings))
-  }
-  document.documentElement.style.setProperty('--ui-font', settings.uiFont && settings.uiFont !== 'System default' ? `'${settings.uiFont}', sans-serif` : 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif')
-  if (settings.fontWeight) {
-    document.documentElement.style.setProperty('--ui-font-weight', settings.fontWeight.toLowerCase().replace(' ', ''))
-  }
+  document.documentElement.style.setProperty('--ui-font', settings.uiFont && settings.uiFont !== 'System default' ? `'${settings.uiFont}', sans-serif` : 'system-ui, sans-serif')
 
   function addChevronSvg(btn) {
     const existing = btn.querySelector('svg')
@@ -1549,32 +1539,6 @@ async function init() {
       initDropdownToggle(fontBtn, fontMenu)
     }
 
-    const weightMenu = document.getElementById('theme-font-weight-menu')
-    const weightBtn = document.getElementById('theme-font-weight-btn')
-    if (weightMenu && weightBtn) {
-      weightMenu.innerHTML = ''
-      fontWeights.forEach((name) => {
-        const opt = document.createElement('button')
-        opt.type = 'button'
-        opt.className = 'lang-option'
-        opt.textContent = name
-        if (name === (settings.fontWeight || 'Regular')) opt.classList.add('selected')
-        opt.addEventListener('click', () => {
-          settings.fontWeight = name
-          localStorage.setItem('cilamai-settings', JSON.stringify(settings))
-          document.documentElement.style.setProperty('--ui-font-weight', name.toLowerCase().replace(' ', ''))
-          weightBtn.textContent = name
-          addChevronSvg(weightBtn)
-          weightMenu.classList.remove('open')
-          weightMenu.querySelectorAll('.lang-option').forEach((o) => o.classList.remove('selected'))
-          opt.classList.add('selected')
-        })
-        weightMenu.appendChild(opt)
-      })
-      weightBtn.textContent = settings.fontWeight || 'Regular'
-      addChevronSvg(weightBtn)
-      initDropdownToggle(weightBtn, weightMenu)
-    }
   }
 
   function applyCustomColors() {
@@ -1708,7 +1672,6 @@ async function init() {
             if (imported.bgColor) settings.bgColor = imported.bgColor
             if (imported.fgColor) settings.fgColor = imported.fgColor
             if (imported.uiFont) settings.uiFont = imported.uiFont
-            if (imported.fontWeight) settings.fontWeight = imported.fontWeight
             if (imported.themePreset) settings.themePreset = imported.themePreset
             settings.customColorsActive = true
             localStorage.setItem('cilamai-settings', JSON.stringify(settings))
@@ -1731,7 +1694,6 @@ async function init() {
         bgColor: settings.bgColor,
         fgColor: settings.fgColor,
         uiFont: settings.uiFont,
-        fontWeight: settings.fontWeight,
         themePreset: settings.themePreset
       }, null, 2)
       navigator.clipboard.writeText(data).then(() => {
@@ -3029,7 +2991,7 @@ async function init() {
 
     const renderFallback = (container, sizeStr) => {
       const initial = (currentUser?.name || currentUser?.email || 'U').charAt(0).toUpperCase()
-      container.innerHTML = `<div class="user-avatar-initial" style="width:${sizeStr};height:${sizeStr};border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-weight:600;display:flex;align-items:center;justify-content:center;font-size:${parseInt(sizeStr) > 24 ? '14px' : '11px'};">${initial}</div>`
+      container.innerHTML = `<div class="user-avatar-initial" style="width:${sizeStr};height:${sizeStr};border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:${parseInt(sizeStr) > 24 ? '14px' : '11px'};">${initial}</div>`
     }
 
     const renderAvatarImg = (container, sizePx) => {
