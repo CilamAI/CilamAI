@@ -284,20 +284,7 @@ function requireCore() {
     const match = re && re.exec(lexeme);
     return match && match.index === 0;
   }
-  const BACKREF_RE = new RegExp(either(
-    /\[(?:[^\\\]]|\\.)*\]/,
-    // a character class, inside which ( and \ lose their meaning
-    /\(\?<(?![=!])[^>]+>/,
-    // a named capture group `(?<name>` (not a lookbehind `(?<=` / `(?<!`)
-    /\(\?'[^']+'/,
-    // a named capture group `(?'name'`
-    /\(\??/,
-    // an opening parenthesis, capturing or non-capturing / lookahead
-    /\\([1-9][0-9]*)/,
-    // a backreference like `\1`
-    /\\./
-    // any other escape sequence
-  ));
+  const BACKREF_RE = /\[(?:[^\\\]]|\\.)*\]|\(\??|\\([1-9][0-9]*)|\\./;
   function _rewriteBackreferences(regexps, { joinWith }) {
     let numCaptures = 0;
     return regexps.map((regex) => {
@@ -317,7 +304,7 @@ function requireCore() {
           out += "\\" + String(Number(match[1]) + offset);
         } else {
           out += match[0];
-          if (match[0] === "(" || /^\(\?[<']/.test(match[0])) {
+          if (match[0] === "(") {
             numCaptures++;
           }
         }
@@ -905,7 +892,7 @@ function requireCore() {
     }
     return mode;
   }
-  var version = "11.12.0";
+  var version = "11.11.1";
   class HTMLInjectionError extends Error {
     constructor(reason, html) {
       super(reason);
@@ -1219,10 +1206,7 @@ function requireCore() {
           }
         }
         if (match.type === "illegal" && lexeme === "") {
-          if (match.index === codeToHighlight.length) ;
-          else {
-            modeBuffer += "\n";
-          }
+          modeBuffer += "\n";
           return 1;
         }
         if (iterations > 1e5 && iterations > match.index * 3) {
@@ -2030,7 +2014,7 @@ function requireAda() {
     const BASED_LITERAL_RE = INTEGER_RE + "#" + BASED_INTEGER_RE + "(\\." + BASED_INTEGER_RE + ")?#(" + EXPONENT_RE + ")?";
     const NUMBER_RE = "\\b(" + BASED_LITERAL_RE + "|" + DECIMAL_LITERAL_RE + ")";
     const ID_REGEX = "[A-Za-z](_?[A-Za-z0-9.])*";
-    const BAD_CHARS = `\\{\\}%#'"`;
+    const BAD_CHARS = `[]\\{\\}%#'"`;
     const COMMENTS = hljs.COMMENT("--", "$");
     const VAR_DECLS = {
       // TODO: These spaces are not required by the Ada syntax
@@ -2132,8 +2116,7 @@ function requireAda() {
       "do",
       "mod",
       "requeue",
-      "xor",
-      "parallel"
+      "xor"
     ];
     return {
       name: "Ada",
@@ -3104,13 +3087,9 @@ function requireArduino() {
           end: "'",
           illegal: "."
         },
-        // https://en.cppreference.com/w/cpp/language/string_literal
-        // a d-char-sequence never contains parentheses, backslashes or whitespace;
-        // quotes are excluded as well so the closing delimiter cannot swallow the
-        // quote that actually terminates the literal
         hljs.END_SAME_AS_BEGIN({
-          begin: /(?:u8?|U|L)?R"([^()\\\s"]{0,16})\(/,
-          end: /\)([^()\\\s"]{0,16})"/
+          begin: /(?:u8?|U|L)?R"([^()\\ ]{0,16})\(/,
+          end: /\)([^()\\ ]{0,16})"/
         })
       ]
     };
@@ -3119,7 +3098,7 @@ function requireArduino() {
       variants: [
         // Floating-point literal.
         {
-          begin: "[+-]?(?:(?:\\b[0-9](?:'?[0-9])*\\.(?:[0-9](?:'?[0-9])*)?|\\.[0-9](?:'?[0-9])*)(?:[Ee][+-]?[0-9](?:'?[0-9])*)?|\\b[0-9](?:'?[0-9])*[Ee][+-]?[0-9](?:'?[0-9])*|\\b0[Xx](?:[0-9A-Fa-f](?:'?[0-9A-Fa-f])*(?:\\.(?:[0-9A-Fa-f](?:'?[0-9A-Fa-f])*)?)?|\\.[0-9A-Fa-f](?:'?[0-9A-Fa-f])*)[Pp][+-]?[0-9](?:'?[0-9])*)(?:[Ff](?:16|32|64|128)?|(BF|bf)16|[Ll]|)"
+          begin: "[+-]?(?:(?:[0-9](?:'?[0-9])*\\.(?:[0-9](?:'?[0-9])*)?|\\.[0-9](?:'?[0-9])*)(?:[Ee][+-]?[0-9](?:'?[0-9])*)?|[0-9](?:'?[0-9])*[Ee][+-]?[0-9](?:'?[0-9])*|0[Xx](?:[0-9A-Fa-f](?:'?[0-9A-Fa-f])*(?:\\.(?:[0-9A-Fa-f](?:'?[0-9A-Fa-f])*)?)?|\\.[0-9A-Fa-f](?:'?[0-9A-Fa-f])*)[Pp][+-]?[0-9](?:'?[0-9])*)(?:[Ff](?:16|32|64|128)?|(BF|bf)16|[Ll]|)"
         },
         // Integer literal.
         {
@@ -3129,25 +3108,6 @@ function requireArduino() {
         }
       ],
       relevance: 0
-    };
-    const PREPROCESSOR_INCLUDE = {
-      scope: "meta",
-      begin: /#\s*include\b/,
-      end: /$/,
-      keywords: { keyword: "include" },
-      contains: [
-        {
-          // the `\` at the end of a line signaling continuation
-          begin: /\\\n/
-        },
-        STRINGS,
-        {
-          scope: "string",
-          begin: /<.*?>/
-        },
-        C_LINE_COMMENT_MODE,
-        hljs.C_BLOCK_COMMENT_MODE
-      ]
     };
     const PREPROCESSOR = {
       className: "meta",
@@ -3160,21 +3120,20 @@ function requireArduino() {
           relevance: 0
         },
         hljs.inherit(STRINGS, { className: "string" }),
+        {
+          className: "string",
+          begin: /<.*?>/
+        },
         C_LINE_COMMENT_MODE,
         hljs.C_BLOCK_COMMENT_MODE
       ]
     };
-    const PREPROCESSORS = [
-      PREPROCESSOR_INCLUDE,
-      PREPROCESSOR
-    ];
     const TITLE_MODE = {
       className: "title",
       begin: regex.optional(NAMESPACE_RE) + hljs.IDENT_RE,
       relevance: 0
     };
     const FUNCTION_TITLE = regex.optional(NAMESPACE_RE) + hljs.IDENT_RE + "\\s*\\(";
-    const MAX_FUNCTION_TYPE_TOKENS = 12;
     const RESERVED_KEYWORDS = [
       "alignas",
       "alignof",
@@ -3467,14 +3426,18 @@ function requireArduino() {
       },
       begin: regex.concat(
         /\b/,
-        `(?!${RESERVED_KEYWORDS.join("|")})`,
+        /(?!decltype)/,
+        /(?!if)/,
+        /(?!for)/,
+        /(?!switch)/,
+        /(?!while)/,
         hljs.IDENT_RE,
         regex.lookahead(/(<[^<>]+>|)\s*\(/)
       )
     };
     const EXPRESSION_CONTAINS = [
       FUNCTION_DISPATCH,
-      ...PREPROCESSORS,
+      PREPROCESSOR,
       CPP_PRIMITIVE_TYPES,
       C_LINE_COMMENT_MODE,
       hljs.C_BLOCK_COMMENT_MODE,
@@ -3513,7 +3476,7 @@ function requireArduino() {
     };
     const FUNCTION_DECLARATION = {
       className: "function",
-      begin: "(" + FUNCTION_TYPE_RE + "[\\*&\\s]+){1," + MAX_FUNCTION_TYPE_TOKENS + "}" + FUNCTION_TITLE,
+      begin: "(" + FUNCTION_TYPE_RE + "[\\*&\\s]+)+" + FUNCTION_TITLE,
       returnBegin: true,
       end: /[{;=]/,
       excludeEnd: true,
@@ -3585,7 +3548,7 @@ function requireArduino() {
         CPP_PRIMITIVE_TYPES,
         C_LINE_COMMENT_MODE,
         hljs.C_BLOCK_COMMENT_MODE,
-        ...PREPROCESSORS
+        PREPROCESSOR
       ]
     };
     return {
@@ -3608,7 +3571,7 @@ function requireArduino() {
         FUNCTION_DISPATCH,
         EXPRESSION_CONTAINS,
         [
-          ...PREPROCESSORS,
+          PREPROCESSOR,
           {
             // containers: ie, `vector <int> rooms (9);`
             begin: "\\b(deque|list|queue|priority_queue|pair|stack|vector|map|set|bitset|multiset|multimap|unordered_map|unordered_set|unordered_multiset|unordered_multimap|array|tuple|optional|variant|function|flat_map|flat_set)\\s*<(?!<)",
@@ -4278,7 +4241,10 @@ function requireXml() {
           starts: {
             end: /<\/style>/,
             returnEnd: true,
-            subLanguage: "css"
+            subLanguage: [
+              "css",
+              "xml"
+            ]
           }
         },
         {
@@ -4291,7 +4257,11 @@ function requireXml() {
           starts: {
             end: /<\/script>/,
             returnEnd: true,
-            subLanguage: "javascript"
+            subLanguage: [
+              "javascript",
+              "handlebars",
+              "xml"
+            ]
           }
         },
         // we need this for now for jSX
@@ -6107,50 +6077,11 @@ function requireC() {
     const NAMESPACE_RE = "[a-zA-Z_]\\w*::";
     const TEMPLATE_ARGUMENT_RE = "<[^<>]+>";
     const FUNCTION_TYPE_RE = "(" + DECLTYPE_AUTO_RE + "|" + regex.optional(NAMESPACE_RE) + "[a-zA-Z_]\\w*" + regex.optional(TEMPLATE_ARGUMENT_RE) + ")";
-    const ATOMIC_TYPES = regex.concat(/\batomic_/, regex.either(
-      "bool",
-      "char",
-      "schar",
-      "uchar",
-      "short",
-      "ushort",
-      "int",
-      "uint",
-      "long",
-      "ulong",
-      "llong",
-      "ullong",
-      "char16_t",
-      "char32_t",
-      "wchar_t",
-      "int_least8_t",
-      "uint_least8_t",
-      "int_least16_t",
-      "uint_least16_t",
-      "int_least32_t",
-      "uint_least32_t",
-      "int_least64_t",
-      "uint_least64_t",
-      "int_fast8_t",
-      "uint_fast8_t",
-      "int_fast16_t",
-      "uint_fast16_t",
-      "int_fast32_t",
-      "uint_fast32_t",
-      "int_fast64_t",
-      "uint_fast64_t",
-      "intptr_t",
-      "uintptr_t",
-      "size_t",
-      "ptrdiff_t",
-      "intmax_t",
-      "uintmax_t"
-    ), /\b/);
     const TYPES = {
       className: "type",
       variants: [
         { begin: "\\b[a-z\\d_]*_t\\b" },
-        { match: ATOMIC_TYPES }
+        { match: /\batomic_[a-z]{3,6}\b/ }
       ]
     };
     const CHARACTER_ESCAPES = "\\\\(x[0-9A-Fa-f]{2}|u[0-9A-Fa-f]{4,8}|[0-7]{3}|\\S)";
@@ -6168,13 +6099,9 @@ function requireC() {
           end: "'",
           illegal: "."
         },
-        // https://en.cppreference.com/w/cpp/language/string_literal
-        // a d-char-sequence never contains parentheses, backslashes or whitespace;
-        // quotes are excluded as well so the closing delimiter cannot swallow the
-        // quote that actually terminates the literal
         hljs.END_SAME_AS_BEGIN({
-          begin: /(?:u8?|U|L)?R"([^()\\\s"]{0,16})\(/,
-          end: /\)([^()\\\s"]{0,16})"/
+          begin: /(?:u8?|U|L)?R"([^()\\ ]{0,16})\(/,
+          end: /\)([^()\\ ]{0,16})"/
         })
       ]
     };
@@ -6188,25 +6115,6 @@ function requireC() {
       ],
       relevance: 0
     };
-    const PREPROCESSOR_INCLUDE = {
-      scope: "meta",
-      begin: /#\s*include\b/,
-      end: /$/,
-      keywords: { keyword: "include" },
-      contains: [
-        {
-          // the `\` at the end of a line signaling continuation
-          begin: /\\\n/
-        },
-        STRINGS,
-        {
-          scope: "string",
-          begin: /<.*?>/
-        },
-        C_LINE_COMMENT_MODE,
-        hljs.C_BLOCK_COMMENT_MODE
-      ]
-    };
     const PREPROCESSOR = {
       className: "meta",
       begin: /#\s*[a-z]+\b/,
@@ -6218,21 +6126,20 @@ function requireC() {
           relevance: 0
         },
         hljs.inherit(STRINGS, { className: "string" }),
+        {
+          className: "string",
+          begin: /<.*?>/
+        },
         C_LINE_COMMENT_MODE,
         hljs.C_BLOCK_COMMENT_MODE
       ]
     };
-    const PREPROCESSORS = [
-      PREPROCESSOR_INCLUDE,
-      PREPROCESSOR
-    ];
     const TITLE_MODE = {
       className: "title",
       begin: regex.optional(NAMESPACE_RE) + hljs.IDENT_RE,
       relevance: 0
     };
     const FUNCTION_TITLE = regex.optional(NAMESPACE_RE) + hljs.IDENT_RE + "\\s*\\(";
-    const MAX_FUNCTION_TYPE_TOKENS = 12;
     const C_KEYWORDS = [
       "asm",
       "auto",
@@ -6321,7 +6228,7 @@ function requireC() {
       built_in: "std string wstring cin cout cerr clog stdin stdout stderr stringstream istringstream ostringstream auto_ptr deque list queue stack vector map set pair bitset multiset multimap unordered_set unordered_map unordered_multiset unordered_multimap priority_queue make_pair array shared_ptr abort terminate abs acos asin atan2 atan calloc ceil cosh cos exit exp fabs floor fmod fprintf fputs free frexp fscanf future isalnum isalpha iscntrl isdigit isgraph islower isprint ispunct isspace isupper isxdigit tolower toupper labs ldexp log10 log malloc realloc memchr memcmp memcpy memset modf pow printf putchar puts scanf sinh sin snprintf sprintf sqrt sscanf strcat strchr strcmp strcpy strcspn strlen strncat strncmp strncpy strpbrk strrchr strspn strstr tanh tan vfprintf vprintf vsprintf endl initializer_list unique_ptr"
     };
     const EXPRESSION_CONTAINS = [
-      ...PREPROCESSORS,
+      PREPROCESSOR,
       TYPES,
       C_LINE_COMMENT_MODE,
       hljs.C_BLOCK_COMMENT_MODE,
@@ -6359,7 +6266,7 @@ function requireC() {
       relevance: 0
     };
     const FUNCTION_DECLARATION = {
-      begin: "(" + FUNCTION_TYPE_RE + "[\\*&\\s]+){1," + MAX_FUNCTION_TYPE_TOKENS + "}" + FUNCTION_TITLE,
+      begin: "(" + FUNCTION_TYPE_RE + "[\\*&\\s]+)+" + FUNCTION_TITLE,
       returnBegin: true,
       end: /[{;=]/,
       excludeEnd: true,
@@ -6416,7 +6323,7 @@ function requireC() {
         TYPES,
         C_LINE_COMMENT_MODE,
         hljs.C_BLOCK_COMMENT_MODE,
-        ...PREPROCESSORS
+        PREPROCESSOR
       ]
     };
     return {
@@ -6432,7 +6339,7 @@ function requireC() {
         FUNCTION_DECLARATION,
         EXPRESSION_CONTAINS,
         [
-          ...PREPROCESSORS,
+          PREPROCESSOR,
           {
             begin: hljs.IDENT_RE + "::",
             keywords: KEYWORDS
@@ -7103,7 +7010,7 @@ function requireCmake() {
       case_insensitive: true,
       keywords: { keyword: (
         // scripting commands
-        "block break cmake_host_system_information cmake_minimum_required cmake_parse_arguments cmake_policy configure_file continue elseif else endblock endforeach endfunction endif endmacro endwhile execute_process file find_file find_library find_package find_path find_program foreach function get_cmake_property get_directory_property get_filename_component get_property if include include_guard list macro mark_as_advanced math message option return separate_arguments set_directory_properties set_property set site_name string unset variable_watch while add_compile_definitions add_compile_options add_custom_command add_custom_target add_definitions add_dependencies add_executable add_library add_link_options add_subdirectory add_test aux_source_directory build_command create_test_sourcelist define_property enable_language enable_testing export fltk_wrap_ui get_source_file_property get_target_property get_test_property include_directories include_external_msproject include_regular_expression install link_directories link_libraries load_cache project qt_wrap_cpp qt_wrap_ui remove_definitions set_source_files_properties set_target_properties set_tests_properties source_group target_compile_definitions target_compile_features target_compile_options target_include_directories target_link_directories target_link_libraries target_link_options target_sources try_compile try_run ctest_build ctest_configure ctest_coverage ctest_empty_binary_directory ctest_memcheck ctest_read_custom_files ctest_run_script ctest_sleep ctest_start ctest_submit ctest_test ctest_update ctest_upload build_name exec_program export_library_dependencies install_files install_programs install_targets load_command make_directory output_required_files remove subdir_depends subdirs use_mangled_mesa utility_source variable_requires write_file qt5_use_modules qt5_use_package qt5_wrap_cpp on off true false and or not command policy target test exists is_newer_than is_directory is_symlink is_absolute matches less greater equal less_equal greater_equal strless strgreater strequal strless_equal strgreater_equal version_less version_greater version_equal version_less_equal version_greater_equal in_list defined"
+        "break cmake_host_system_information cmake_minimum_required cmake_parse_arguments cmake_policy configure_file continue elseif else endforeach endfunction endif endmacro endwhile execute_process file find_file find_library find_package find_path find_program foreach function get_cmake_property get_directory_property get_filename_component get_property if include include_guard list macro mark_as_advanced math message option return separate_arguments set_directory_properties set_property set site_name string unset variable_watch while add_compile_definitions add_compile_options add_custom_command add_custom_target add_definitions add_dependencies add_executable add_library add_link_options add_subdirectory add_test aux_source_directory build_command create_test_sourcelist define_property enable_language enable_testing export fltk_wrap_ui get_source_file_property get_target_property get_test_property include_directories include_external_msproject include_regular_expression install link_directories link_libraries load_cache project qt_wrap_cpp qt_wrap_ui remove_definitions set_source_files_properties set_target_properties set_tests_properties source_group target_compile_definitions target_compile_features target_compile_options target_include_directories target_link_directories target_link_libraries target_link_options target_sources try_compile try_run ctest_build ctest_configure ctest_coverage ctest_empty_binary_directory ctest_memcheck ctest_read_custom_files ctest_run_script ctest_sleep ctest_start ctest_submit ctest_test ctest_update ctest_upload build_name exec_program export_library_dependencies install_files install_programs install_targets load_command make_directory output_required_files remove subdir_depends subdirs use_mangled_mesa utility_source variable_requires write_file qt5_use_modules qt5_use_package qt5_wrap_cpp on off true false and or not command policy target test exists is_newer_than is_directory is_symlink is_absolute matches less greater equal less_equal greater_equal strless strgreater strequal strless_equal strgreater_equal version_less version_greater version_equal version_less_equal version_greater_equal in_list defined"
       ) },
       contains: [
         {
@@ -7114,11 +7021,7 @@ function requireCmake() {
         hljs.COMMENT(/#\[\[/, /]]/),
         hljs.HASH_COMMENT_MODE,
         hljs.QUOTE_STRING_MODE,
-        {
-          scope: "number",
-          begin: /\b\d+(\.\d+)?\b/,
-          relevance: 0
-        }
+        hljs.NUMBER_MODE
       ]
     };
   }
@@ -8054,13 +7957,9 @@ function requireCpp() {
           end: "'",
           illegal: "."
         },
-        // https://en.cppreference.com/w/cpp/language/string_literal
-        // a d-char-sequence never contains parentheses, backslashes or whitespace;
-        // quotes are excluded as well so the closing delimiter cannot swallow the
-        // quote that actually terminates the literal
         hljs.END_SAME_AS_BEGIN({
-          begin: /(?:u8?|U|L)?R"([^()\\\s"]{0,16})\(/,
-          end: /\)([^()\\\s"]{0,16})"/
+          begin: /(?:u8?|U|L)?R"([^()\\ ]{0,16})\(/,
+          end: /\)([^()\\ ]{0,16})"/
         })
       ]
     };
@@ -8069,7 +7968,7 @@ function requireCpp() {
       variants: [
         // Floating-point literal.
         {
-          begin: "[+-]?(?:(?:\\b[0-9](?:'?[0-9])*\\.(?:[0-9](?:'?[0-9])*)?|\\.[0-9](?:'?[0-9])*)(?:[Ee][+-]?[0-9](?:'?[0-9])*)?|\\b[0-9](?:'?[0-9])*[Ee][+-]?[0-9](?:'?[0-9])*|\\b0[Xx](?:[0-9A-Fa-f](?:'?[0-9A-Fa-f])*(?:\\.(?:[0-9A-Fa-f](?:'?[0-9A-Fa-f])*)?)?|\\.[0-9A-Fa-f](?:'?[0-9A-Fa-f])*)[Pp][+-]?[0-9](?:'?[0-9])*)(?:[Ff](?:16|32|64|128)?|(BF|bf)16|[Ll]|)"
+          begin: "[+-]?(?:(?:[0-9](?:'?[0-9])*\\.(?:[0-9](?:'?[0-9])*)?|\\.[0-9](?:'?[0-9])*)(?:[Ee][+-]?[0-9](?:'?[0-9])*)?|[0-9](?:'?[0-9])*[Ee][+-]?[0-9](?:'?[0-9])*|0[Xx](?:[0-9A-Fa-f](?:'?[0-9A-Fa-f])*(?:\\.(?:[0-9A-Fa-f](?:'?[0-9A-Fa-f])*)?)?|\\.[0-9A-Fa-f](?:'?[0-9A-Fa-f])*)[Pp][+-]?[0-9](?:'?[0-9])*)(?:[Ff](?:16|32|64|128)?|(BF|bf)16|[Ll]|)"
         },
         // Integer literal.
         {
@@ -8079,25 +7978,6 @@ function requireCpp() {
         }
       ],
       relevance: 0
-    };
-    const PREPROCESSOR_INCLUDE = {
-      scope: "meta",
-      begin: /#\s*include\b/,
-      end: /$/,
-      keywords: { keyword: "include" },
-      contains: [
-        {
-          // the `\` at the end of a line signaling continuation
-          begin: /\\\n/
-        },
-        STRINGS,
-        {
-          scope: "string",
-          begin: /<.*?>/
-        },
-        C_LINE_COMMENT_MODE,
-        hljs.C_BLOCK_COMMENT_MODE
-      ]
     };
     const PREPROCESSOR = {
       className: "meta",
@@ -8110,21 +7990,20 @@ function requireCpp() {
           relevance: 0
         },
         hljs.inherit(STRINGS, { className: "string" }),
+        {
+          className: "string",
+          begin: /<.*?>/
+        },
         C_LINE_COMMENT_MODE,
         hljs.C_BLOCK_COMMENT_MODE
       ]
     };
-    const PREPROCESSORS = [
-      PREPROCESSOR_INCLUDE,
-      PREPROCESSOR
-    ];
     const TITLE_MODE = {
       className: "title",
       begin: regex.optional(NAMESPACE_RE) + hljs.IDENT_RE,
       relevance: 0
     };
     const FUNCTION_TITLE = regex.optional(NAMESPACE_RE) + hljs.IDENT_RE + "\\s*\\(";
-    const MAX_FUNCTION_TYPE_TOKENS = 12;
     const RESERVED_KEYWORDS = [
       "alignas",
       "alignof",
@@ -8417,14 +8296,18 @@ function requireCpp() {
       },
       begin: regex.concat(
         /\b/,
-        `(?!${RESERVED_KEYWORDS.join("|")})`,
+        /(?!decltype)/,
+        /(?!if)/,
+        /(?!for)/,
+        /(?!switch)/,
+        /(?!while)/,
         hljs.IDENT_RE,
         regex.lookahead(/(<[^<>]+>|)\s*\(/)
       )
     };
     const EXPRESSION_CONTAINS = [
       FUNCTION_DISPATCH,
-      ...PREPROCESSORS,
+      PREPROCESSOR,
       CPP_PRIMITIVE_TYPES,
       C_LINE_COMMENT_MODE,
       hljs.C_BLOCK_COMMENT_MODE,
@@ -8463,7 +8346,7 @@ function requireCpp() {
     };
     const FUNCTION_DECLARATION = {
       className: "function",
-      begin: "(" + FUNCTION_TYPE_RE + "[\\*&\\s]+){1," + MAX_FUNCTION_TYPE_TOKENS + "}" + FUNCTION_TITLE,
+      begin: "(" + FUNCTION_TYPE_RE + "[\\*&\\s]+)+" + FUNCTION_TITLE,
       returnBegin: true,
       end: /[{;=]/,
       excludeEnd: true,
@@ -8535,7 +8418,7 @@ function requireCpp() {
         CPP_PRIMITIVE_TYPES,
         C_LINE_COMMENT_MODE,
         hljs.C_BLOCK_COMMENT_MODE,
-        ...PREPROCESSORS
+        PREPROCESSOR
       ]
     };
     return {
@@ -8558,7 +8441,7 @@ function requireCpp() {
         FUNCTION_DISPATCH,
         EXPRESSION_CONTAINS,
         [
-          ...PREPROCESSORS,
+          PREPROCESSOR,
           {
             // containers: ie, `vector <int> rooms (9);`
             begin: "\\b(deque|list|queue|priority_queue|pair|stack|vector|map|set|bitset|multiset|multimap|unordered_map|unordered_set|unordered_multiset|unordered_multimap|array|tuple|optional|variant|function|flat_map|flat_set)\\s*<(?!<)",
@@ -8830,23 +8713,16 @@ function requireCrystal() {
             hljs.BACKSLASH_ESCAPE,
             SUBST
           ],
-          // Unlike Ruby, Crystal has no "empty regex" (`//`) literal syntax,
-          // since `//` is already used for integer division. Treating it as
-          // a regex here would also make this variant swallow the rest of
-          // the line (or file) whenever `//` appears at the start of a
-          // statement, since there would be no closing delimiter to match.
-          //
-          // INTEGER_DIVISION (above, given priority over this REGEXP mode)
-          // already handles the common case where `//` starts matching at the
-          // same position as this mode, e.g. mid-expression like
-          // `something // 4`. But this outer REGEXP mode's `begin` can also
-          // start matching one character earlier, at a preceding newline
-          // (via its `\n` alternative), when `//`/`//=` is the first thing on
-          // a line; in that case INTEGER_DIVISION never gets a chance to
-          // compete, so this lookahead is what stops `//` from being
-          // misclassified as a regexp there too.
-          begin: "/(?!\\/)",
-          end: "/[a-z]*"
+          variants: [
+            {
+              begin: "//[a-z]*",
+              relevance: 0
+            },
+            {
+              begin: "/(?!\\/)",
+              end: "/[a-z]*"
+            }
+          ]
         }
       ],
       relevance: 0
@@ -8891,16 +8767,11 @@ function requireCrystal() {
       end: "\\]",
       contains: [hljs.inherit(hljs.QUOTE_STRING_MODE, { className: "string" })]
     };
-    const INTEGER_DIVISION = {
-      begin: /\/\/=?/,
-      relevance: 0
-    };
     const CRYSTAL_DEFAULT_CONTAINS = [
       EXPANSION,
       STRING,
       Q_STRING,
       REGEXP2,
-      INTEGER_DIVISION,
       REGEXP,
       ATTRIBUTE,
       VARIABLE,
@@ -9158,15 +9029,12 @@ function requireCsharp() {
       literal: LITERAL_KEYWORDS
     };
     const TITLE_MODE = hljs.inherit(hljs.TITLE_MODE, { begin: "[a-zA-Z](\\.?\\w)*" });
-    const DIGITS = "\\d(_*\\d)*";
-    const INTEGER_SUFFIX = "([uU][lL]?|[lL][uU]?)?";
-    const REAL_SUFFIX = "([fFdDmM]|[uU][lL]?|[lL][uU]?)?";
     const NUMBERS = {
       className: "number",
       variants: [
-        { begin: "\\b0[bB]_*[01](_*[01])*" + INTEGER_SUFFIX },
-        { begin: "(-?)\\b0[xX]_*[a-fA-F0-9](_*[a-fA-F0-9])*" + INTEGER_SUFFIX },
-        { begin: "(-?)(\\b" + DIGITS + "(\\.(" + DIGITS + ")?)?|\\." + DIGITS + ")([eE][-+]?" + DIGITS + ")?" + REAL_SUFFIX }
+        { begin: "\\b(0b[01']+)" },
+        { begin: "(-?)\\b([\\d']+(\\.[\\d']*)?|\\.[\\d']+)(u|U|l|L|ul|UL|f|F|b|B)" },
+        { begin: "(-?)(\\b0[xX][a-fA-F0-9']+|(\\b[\\d']+(\\.[\\d']*)?|\\.[\\d']+)([eE][-+]?[\\d']+)?)" }
       ],
       relevance: 0
     };
@@ -9420,7 +9288,6 @@ function requireCsp() {
       "child-src",
       "connect-src",
       "default-src",
-      "fenced-frame-src",
       "font-src",
       "form-action",
       "frame-ancestors",
@@ -9430,16 +9297,10 @@ function requireCsp() {
       "media-src",
       "object-src",
       "plugin-types",
-      "report-to",
       "report-uri",
-      "require-trusted-types-for",
       "sandbox",
       "script-src",
-      "script-src-attr",
-      "script-src-elem",
       "style-src",
-      "style-src-attr",
-      "style-src-elem",
       "trusted-types",
       "unsafe-hashes",
       "worker-src"
@@ -9484,10 +9345,6 @@ function requireCss() {
       HEXCOLOR: {
         scope: "number",
         begin: /#(([0-9a-fA-F]{3,4})|(([0-9a-fA-F]{2}){3,4}))\b/
-      },
-      UNICODE_RANGE: {
-        scope: "number",
-        begin: /\b[Uu]\+[0-9A-Fa-f][0-9A-Fa-f?]{0,5}(-[0-9A-Fa-f][0-9A-Fa-f]{0,5})?/
       },
       FUNCTION_DISPATCH: {
         className: "built_in",
@@ -9916,11 +9773,6 @@ function requireCss() {
     "container-type",
     "content",
     "content-visibility",
-    "corner-bottom-left-shape",
-    "corner-bottom-right-shape",
-    "corner-shape",
-    "corner-top-left-shape",
-    "corner-top-right-shape",
     "counter-increment",
     "counter-reset",
     "counter-set",
@@ -10257,7 +10109,6 @@ function requireCss() {
     "transition-timing-function",
     "translate",
     "unicode-bidi",
-    "unicode-range",
     "user-modify",
     "user-select",
     "vector-effect",
@@ -10355,10 +10206,9 @@ function requireCss() {
             modes.HEXCOLOR,
             modes.IMPORTANT,
             modes.CSS_NUMBER_MODE,
-            modes.UNICODE_RANGE,
             ...STRINGS,
             // needed to highlight these as strings and to avoid issues with
-            // illegal characters that might be inside urls that would trigger the
+            // illegal characters that might be inside urls that would tigger the
             // languages illegal stack
             {
               begin: /(url|data-uri)\(/,
@@ -10554,7 +10404,10 @@ function requireMarkdown() {
       subLanguage: "xml",
       relevance: 0
     };
-    const HORIZONTAL_RULE = { match: /^ {0,3}([-*_])[ \t]*(?:\1[ \t]*){2,}$/ };
+    const HORIZONTAL_RULE = {
+      begin: "^[-\\*]{3,}",
+      end: "$"
+    };
     const CODE = {
       className: "code",
       variants: [
@@ -10762,13 +10615,11 @@ function requireMarkdown() {
         HEADER,
         INLINE_HTML,
         LIST,
-        // must come before BOLD/ITALIC so that a `***` or `___` thematic break
-        // isn't mistaken for the start of bold text
-        HORIZONTAL_RULE,
         BOLD,
         ITALIC,
         BLOCKQUOTE,
         CODE,
+        HORIZONTAL_RULE,
         LINK,
         LINK_REFERENCE,
         ENTITY
@@ -10784,7 +10635,6 @@ function requireDart() {
   if (hasRequiredDart) return dart_1;
   hasRequiredDart = 1;
   function dart(hljs) {
-    const regex = hljs.regex;
     const SUBST = {
       className: "subst",
       variants: [{ begin: "\\$[A-Za-z0-9_]+" }]
@@ -10987,22 +10837,6 @@ function requireDart() {
       ]),
       $pattern: /[A-Za-z][A-Za-z0-9_]*\??/
     };
-    const CLASS_NAME_RE = regex.concat(
-      /\b_?/,
-      regex.either(
-        /(?:[A-Z]+[a-z0-9]+)+/,
-        /(?:[A-Z]+[a-z0-9]+)+[A-Z]+/
-      ),
-      /(?![A-Za-z0-9_])/
-    );
-    const CLASS_REFERENCE = {
-      match: CLASS_NAME_RE,
-      scope: "title.class"
-    };
-    const FUNCTION_REFERENCE = {
-      match: /\b(?!(?:assert|catch|for|if|switch|while)\b)[a-z_][A-Za-z0-9_]*(?=\()/,
-      scope: "title.function"
-    };
     return {
       name: "Dart",
       keywords: KEYWORDS,
@@ -11040,12 +10874,14 @@ function requireDart() {
             hljs.UNDERSCORE_TITLE_MODE
           ]
         },
-        CLASS_REFERENCE,
-        FUNCTION_REFERENCE,
         NUMBER,
         {
           className: "meta",
           begin: "@[A-Za-z]+"
+        },
+        {
+          begin: "=>"
+          // No markup, just a relevance booster
         }
       ]
     };
@@ -11320,13 +11156,6 @@ function requireDiff() {
           relevance: 10,
           match: regex.either(
             /^@@ +-\d+,\d+ +\+\d+,\d+ +@@/,
-            // @@ -1,2 +1,2 @@
-            /^@@ +-\d+ +\+\d+,\d+ +@@/,
-            // @@ -1 +1,2 @@
-            /^@@ +-\d+,\d+ +\+\d+ +@@/,
-            // @@ -1,2 +1 @@
-            /^@@ +-\d+ +\+\d+ +@@/,
-            // @@ -1 +1 @@
             /^\*\*\* +\d+,\d+ +\*\*\*\*$/,
             /^--- +\d+,\d+ +----$/
           )
@@ -11429,6 +11258,7 @@ function requireDns() {
   hasRequiredDns = 1;
   function dns(hljs) {
     const KEYWORDS = [
+      "IN",
       "A",
       "AAAA",
       "AFSDB",
@@ -11467,78 +11297,28 @@ function requireDns() {
       "TSIG",
       "TXT"
     ];
-    const ESCAPE_RE = /\\(?:\d{3}|[^\d\n])/;
-    const ESCAPE = {
-      scope: "char.escape",
-      match: ESCAPE_RE
-    };
-    const PUNCTUATION = {
-      scope: "punctuation",
-      match: /[()]/
-    };
-    const STRING = {
-      scope: "string",
-      begin: /"/,
-      end: /"/,
-      illegal: /\n/,
-      contains: [ESCAPE]
-    };
-    const CAA_PROPERTY_TAG = /\b(?:issuewild|issue|iodef|contactemail|contactphone|issuevmc|issuemail)\b/;
     return {
       name: "DNS Zone",
       aliases: [
         "bind",
         "zone"
       ],
-      case_insensitive: true,
       keywords: KEYWORDS,
       contains: [
         hljs.COMMENT(";", "$", { relevance: 0 }),
         {
-          match: [
-            /\bCAA\b/,
-            /[ \t]+/,
-            /\d+/,
-            /[ \t]+/,
-            CAA_PROPERTY_TAG
-          ],
-          scope: {
-            1: "keyword",
-            3: "number",
-            5: "attr"
-          }
-        },
-        STRING,
-        {
-          match: [
-            /\bTXT\b/,
-            /\s+/,
-            // one unquoted token (stopgap; multi-string / full RDATA mode later)
-            /(?!")(?:\\(?:\d{3}|[^\d\n])|[^\s;"()\\])+/
-          ],
-          scope: {
-            1: "keyword",
-            3: "string"
-          }
-        },
-        {
           className: "meta",
           begin: /^\$(TTL|GENERATE|INCLUDE|ORIGIN)\b/
         },
-        PUNCTUATION,
-        {
-          scope: "type",
-          match: /\b(?:IN|CH|HS)\b/
-        },
-        // IPv6 (lookahead: no word-boundary after trailing :)
+        // IPv6
         {
           className: "number",
-          begin: /(?:(?:[0-9A-Fa-f]{1,4}:){7}(?:[0-9A-Fa-f]{1,4}|:)|(?:[0-9A-Fa-f]{1,4}:){6}(?::[0-9A-Fa-f]{1,4}|(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:)|(?:[0-9A-Fa-f]{1,4}:){5}(?:(?::[0-9A-Fa-f]{1,4}){1,2}|:(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:)|(?:[0-9A-Fa-f]{1,4}:){4}(?:(?::[0-9A-Fa-f]{1,4}){1,3}|(?::[0-9A-Fa-f]{1,4})?:(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:)|(?:[0-9A-Fa-f]{1,4}:){3}(?:(?::[0-9A-Fa-f]{1,4}){1,4}|(?::[0-9A-Fa-f]{1,4}){0,2}:(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:)|(?:[0-9A-Fa-f]{1,4}:){2}(?:(?::[0-9A-Fa-f]{1,4}){1,5}|(?::[0-9A-Fa-f]{1,4}){0,3}:(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:)|(?:[0-9A-Fa-f]{1,4}:)(?:(?::[0-9A-Fa-f]{1,4}){1,6}|(?::[0-9A-Fa-f]{1,4}){0,4}:(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:)|(?::(?:(?::[0-9A-Fa-f]{1,4}){1,7}|(?::[0-9A-Fa-f]{1,4}){0,5}:(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:)))(?![0-9A-Fa-f:])/
+          begin: "((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:)))\\b"
         },
         // IPv4
         {
           className: "number",
-          begin: /(?:(?:25[0-5]|(?:2[0-4]|1?\d)?\d)\.){3}(?:25[0-5]|(?:2[0-4]|1?\d)?\d)\b/
+          begin: "((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]).){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\b"
         },
         hljs.inherit(hljs.NUMBER_MODE, { begin: /\b\d+[dhwm]?/ })
       ]
@@ -11716,7 +11496,6 @@ function requireDos() {
       name: "Batch file (DOS)",
       aliases: [
         "bat",
-        "batch",
         "cmd"
       ],
       case_insensitive: true,
@@ -12064,7 +11843,6 @@ function requireElixir() {
       "cond",
       "defstruct",
       "defguard",
-      "defguardp",
       "do",
       "else",
       "end",
@@ -12275,13 +12053,7 @@ function requireElixir() {
       beginKeywords: "defimpl defmodule defprotocol defrecord",
       end: /\bdo\b|$|;/
     });
-    const CHAR_LITERAL = {
-      scope: "string",
-      match: /\?'/,
-      relevance: 0
-    };
     const ELIXIR_DEFAULT_CONTAINS = [
-      CHAR_LITERAL,
       STRING,
       REGEX_SIGIL,
       UPCASE_SIGIL,
@@ -12770,8 +12542,8 @@ function requireRuby() {
       CLASS_REFERENCE,
       METHOD_DEFINITION,
       {
-        // swallow the scope resolution operator so `::` is not read as a symbol
-        begin: "::"
+        // swallow namespace qualifiers before symbols
+        begin: hljs.IDENT_RE + "::"
       },
       {
         className: "symbol",
@@ -14440,108 +14212,6 @@ function requireFortran() {
   fortran_1 = fortran;
   return fortran_1;
 }
-var freedesktop_1;
-var hasRequiredFreedesktop;
-function requireFreedesktop() {
-  if (hasRequiredFreedesktop) return freedesktop_1;
-  hasRequiredFreedesktop = 1;
-  function freedesktop(hljs) {
-    const regex = hljs.regex;
-    const FIELD_CODES = {
-      scope: "variable",
-      match: /%[a-zA-Z]/
-    };
-    const STRING = {
-      scope: "string",
-      begin: /"/,
-      end: /"/,
-      contains: [hljs.BACKSLASH_ESCAPE]
-    };
-    const COMMENT = {
-      scope: "comment",
-      begin: /#/,
-      end: /$/
-    };
-    const SECTIONS = [
-      "Desktop Entry",
-      "Unit",
-      "Service",
-      "Install",
-      "Socket",
-      "Mount",
-      "Automount",
-      "Swap",
-      "Path",
-      "Timer",
-      "Slice",
-      "Scope",
-      "Manager",
-      "connection",
-      "ipv4",
-      "wifi-security",
-      "wifi",
-      "ipv6",
-      "802-11-wireless-security",
-      "802-11-wireless",
-      "802-3-ethernet",
-      "vpn",
-      "Journal",
-      "Bridge",
-      "Desktop Action\\s+[A-Za-z0-9_-]+"
-    ];
-    SECTIONS.sort().reverse();
-    const SECTION = {
-      scope: "section",
-      begin: new RegExp("^\\[(" + SECTIONS.join("|") + ")\\]$")
-    };
-    const OPERATOR = {
-      scope: "operator",
-      match: /=/
-    };
-    const LITERALS = [
-      "Application",
-      "Link",
-      "Directory",
-      "forking",
-      "oneshot",
-      "OneShot",
-      "true",
-      "false",
-      "True",
-      "False"
-    ];
-    const LITERAL = {
-      scope: "literal",
-      match: new RegExp("\\b(" + LITERALS.join("|") + ")\\b")
-    };
-    const KEY_VALUE = {
-      begin: regex.concat(
-        /^[A-Za-z0-9_-]+(\[[A-Za-z0-9_@.]+\])?/,
-        regex.lookahead(/\s*=/)
-      ),
-      beginScope: "attr",
-      end: /$/,
-      contains: [
-        OPERATOR,
-        STRING,
-        LITERAL,
-        FIELD_CODES
-      ]
-    };
-    return {
-      name: "FreeDesktop config",
-      aliases: ["desktop", "systemd"],
-      case_insensitive: false,
-      contains: [
-        COMMENT,
-        SECTION,
-        KEY_VALUE
-      ]
-    };
-  }
-  freedesktop_1 = freedesktop;
-  return freedesktop_1;
-}
 var fsharp_1;
 var hasRequiredFsharp;
 function requireFsharp() {
@@ -14576,20 +14246,6 @@ function requireFsharp() {
     const joined = "(" + (opts.capture ? "" : "?:") + args.map((x) => source(x)).join("|") + ")";
     return joined;
   }
-  new RegExp(either(
-    /\[(?:[^\\\]]|\\.)*\]/,
-    // a character class, inside which ( and \ lose their meaning
-    /\(\?<(?![=!])[^>]+>/,
-    // a named capture group `(?<name>` (not a lookbehind `(?<=` / `(?<!`)
-    /\(\?'[^']+'/,
-    // a named capture group `(?'name'`
-    /\(\??/,
-    // an opening parenthesis, capturing or non-capturing / lookahead
-    /\\([1-9][0-9]*)/,
-    // a backreference like `\1`
-    /\\./
-    // any other escape sequence
-  ));
   function fsharp(hljs) {
     const KEYWORDS = [
       "abstract",
@@ -15653,108 +15309,43 @@ var hasRequiredGherkin;
 function requireGherkin() {
   if (hasRequiredGherkin) return gherkin_1;
   hasRequiredGherkin = 1;
-  const VARIABLE = {
-    scope: "variable",
-    begin: /<[^>\s]+>/
-  };
-  const LINE_START = /^[ \t]*/;
   function gherkin(hljs) {
-    const STEP_KEYWORDS = {
-      begin: [
-        LINE_START,
-        /\b(?:Given|When|Then|And|But)\b/
-      ],
-      beginScope: {
-        2: "keyword"
-      },
-      end: /$/,
-      contains: [
-        VARIABLE,
-        hljs.QUOTE_STRING_MODE
-      ]
-    };
-    const STAR_STEP = {
-      begin: [
-        LINE_START,
-        /\*(?=[ \t])/
-      ],
-      beginScope: {
-        2: "keyword"
-      },
-      end: /$/,
-      contains: [
-        VARIABLE,
-        hljs.QUOTE_STRING_MODE
-      ]
-    };
     return {
       name: "Gherkin",
       aliases: ["feature"],
-      // No global keywords — they are line-head structural tokens only
+      keywords: "Feature Background Ability Business Need Scenario Scenarios Scenario Outline Scenario Template Examples Given And Then But When",
       contains: [
         {
-          scope: "comment",
-          begin: /^[ \t]*#/,
-          end: /$/
+          className: "symbol",
+          begin: "\\*",
+          relevance: 0
         },
         {
-          // One or more tags on a line (after optional indent)
-          begin: [
-            LINE_START,
-            /@[^@\s]+(?:[ \t]+@[^@\s]+)*/
-          ],
-          beginScope: {
-            2: "meta"
-          }
+          className: "meta",
+          begin: "@[^@\\s]+"
         },
         {
-          scope: "string",
-          variants: [
+          begin: "\\|",
+          end: "\\|\\w*$",
+          contains: [
             {
-              // Optional content type after opener, e.g. """markdown
-              // Closer must be alone on the line (indent + delimiter only).
-              begin: /^[ \t]*"""\w*/,
-              end: /^[ \t]*"""[ \t]*$/
-            },
-            {
-              begin: /^[ \t]*```\w*/,
-              end: /^[ \t]*```[ \t]*$/
+              className: "string",
+              begin: "[^|]+"
             }
           ]
         },
         {
-          // "Business Need" and "Ability" are English dialect aliases, not primary keywords:
-          // https://cucumber.io/docs/gherkin/languages/#gherkin-dialect-en-content
-          begin: [
-            LINE_START,
-            /(Feature|Business Need|Ability|Rule|Examples?|Scenario(?:s| Outline| Template)?|Background)/,
-            /:/
-          ],
-          beginScope: {
-            2: "keyword",
-            3: "punctuation"
-          },
-          end: /$/,
-          contains: [
-            VARIABLE,
-            hljs.QUOTE_STRING_MODE
-          ]
+          className: "variable",
+          begin: "<",
+          end: ">"
         },
-        STEP_KEYWORDS,
-        STAR_STEP,
+        hljs.HASH_COMMENT_MODE,
         {
-          // Data tables: line-head `| … |` rows (Gherkin secondary keyword)
-          begin: /^[ \t]*\|/,
-          end: /$/,
-          contains: [
-            VARIABLE,
-            {
-              // Text runs between pipes; `<vars>` matched first above
-              scope: "string",
-              match: /[^|<\n]+/
-            }
-          ]
-        }
+          className: "string",
+          begin: '"""',
+          end: '"""'
+        },
+        hljs.QUOTE_STRING_MODE
       ]
     };
   }
@@ -19048,11 +18639,6 @@ function requireGo() {
               relevance: 0
             },
             {
-              match: /-?\b0[bB](_?[01])*i?/,
-              // leading 0b binary
-              relevance: 0
-            },
-            {
               match: /-?\.\d(_?\d)*([eE][+-]?\d(_?\d)*)?i?/,
               // decimal without a present digit before . (making a digit afterwards required)
               relevance: 0
@@ -19437,32 +19023,6 @@ var hasRequiredGroovy;
 function requireGroovy() {
   if (hasRequiredGroovy) return groovy_1;
   hasRequiredGroovy = 1;
-  var decimalDigits = "[0-9](_*[0-9])*";
-  var frac = `\\.(${decimalDigits})`;
-  var hexDigits = "[0-9a-fA-F](_*[0-9a-fA-F])*";
-  var NUMERIC = {
-    className: "number",
-    variants: [
-      // DecimalFloatingPointLiteral
-      // including ExponentPart
-      { begin: `(\\b(${decimalDigits})((${frac})|\\.)?|(${frac}))[eE][+-]?(${decimalDigits})[fFdD]?\\b` },
-      // excluding ExponentPart
-      { begin: `\\b(${decimalDigits})((${frac})[fFdD]?\\b|\\.([fFdD]\\b)?)` },
-      { begin: `(${frac})[fFdD]?\\b` },
-      { begin: `\\b(${decimalDigits})[fFdD]\\b` },
-      // HexadecimalFloatingPointLiteral
-      { begin: `\\b0[xX]((${hexDigits})\\.?|(${hexDigits})?\\.(${hexDigits}))[pP][+-]?(${decimalDigits})[fFdD]?\\b` },
-      // DecimalIntegerLiteral
-      { begin: "\\b(0|[1-9](_*[0-9])*)[lL]?\\b" },
-      // HexIntegerLiteral
-      { begin: `\\b0[xX](${hexDigits})[lL]?\\b` },
-      // OctalIntegerLiteral
-      { begin: "\\b0(_*[0-7])*[lL]?\\b" },
-      // BinaryIntegerLiteral
-      { begin: "\\b0[bB][01](_*[01])*[lL]?\\b" }
-    ],
-    relevance: 0
-  };
   function variants(variants2, obj = {}) {
     obj.variants = variants2;
     return obj;
@@ -19497,7 +19057,10 @@ function requireGroovy() {
       begin: /~?\/[^\/\n]+\//,
       contains: [hljs.BACKSLASH_ESCAPE]
     };
-    const NUMBER = NUMERIC;
+    const NUMBER = variants([
+      hljs.BINARY_NUMBER_MODE,
+      hljs.C_NUMBER_MODE
+    ]);
     const STRING = variants(
       [
         {
@@ -20109,7 +19672,7 @@ function requireHaskell() {
           className: "class",
           begin: "\\b(data|(new)?type)\\b",
           end: "$",
-          keywords: "data family type newtype deriving where",
+          keywords: "data family type newtype deriving",
           contains: [
             PRAGMA,
             CONSTRUCTOR,
@@ -21148,15 +20711,7 @@ function requireJava() {
   function java(hljs) {
     const regex = hljs.regex;
     const JAVA_IDENT_RE = "[À-ʸa-zA-Z_$][À-ʸa-zA-Z_$0-9]*";
-    const ARRAY_BRACKETS_OPTIONAL_RE = "(?:(?:\\s*\\[\\s*])+)?";
-    const SIMPLE_TYPE_RE = JAVA_IDENT_RE + "<@@@>" + ARRAY_BRACKETS_OPTIONAL_RE;
-    const WILDCARD_TYPE_RE = "\\?(?:\\s+(?:extends|super)\\s+" + SIMPLE_TYPE_RE + ")?";
-    const TYPE_ARG_RE = "(?:" + WILDCARD_TYPE_RE + "|" + SIMPLE_TYPE_RE + ")";
-    const TYPE_ARGS_OPTIONAL_RE = recurRegex(
-      "(?:\\s*<\\s*" + TYPE_ARG_RE + "(?:\\s*,\\s*" + TYPE_ARG_RE + ")*\\s*>)?",
-      /<@@@>/g,
-      2
-    );
+    const GENERIC_IDENT_RE = JAVA_IDENT_RE + recurRegex("(?:<" + JAVA_IDENT_RE + "~~~(?:\\s*,\\s*" + JAVA_IDENT_RE + "~~~)*>)?", /~~~/g, 2);
     const MAIN_KEYWORDS = [
       "synchronized",
       "abstract",
@@ -21306,24 +20861,17 @@ function requireJava() {
           scope: "keyword"
         },
         {
-          // Expression keywords prevent keyword-led expressions from being
-          // recognized as variable or method declarations.
-          beginKeywords: "new throw return else yield assert",
-          relevance: 0
-        },
-        {
           begin: [
+            regex.concat(/(?!else)/, JAVA_IDENT_RE),
+            /\s+/,
             JAVA_IDENT_RE,
-            regex.concat(TYPE_ARGS_OPTIONAL_RE, ARRAY_BRACKETS_OPTIONAL_RE, /\s+/),
-            JAVA_IDENT_RE,
-            ARRAY_BRACKETS_OPTIONAL_RE,
-            /\s*/,
+            /\s+/,
             /=(?!=)/
           ],
           className: {
             1: "type",
             3: "variable",
-            6: "operator"
+            5: "operator"
           }
         },
         {
@@ -21343,16 +20891,18 @@ function requireJava() {
           ]
         },
         {
+          // Expression keywords prevent 'keyword Name(...)' from being
+          // recognized as a function definition
+          beginKeywords: "new throw return else",
+          relevance: 0
+        },
+        {
           begin: [
-            JAVA_IDENT_RE,
-            regex.concat(TYPE_ARGS_OPTIONAL_RE, ARRAY_BRACKETS_OPTIONAL_RE, /\s+/),
-            JAVA_IDENT_RE,
+            "(?:" + GENERIC_IDENT_RE + "\\s+)",
+            hljs.UNDERSCORE_IDENT_RE,
             /\s*(?=\()/
           ],
-          className: {
-            1: "type",
-            3: "title.function"
-          },
+          className: { 2: "title.function" },
           keywords: KEYWORDS,
           contains: [
             {
@@ -21531,7 +21081,6 @@ function requireJavascript() {
     "localStorage",
     "sessionStorage",
     "module",
-    "self",
     "global"
     // Node.js
   ];
@@ -21874,8 +21423,7 @@ function requireJavascript() {
         noneOf([
           ...BUILT_IN_GLOBALS,
           "super",
-          "import",
-          "await"
+          "import"
         ].map((x) => `${x}\\s*\\(`)),
         IDENT_RE$1,
         regex.lookahead(/\s*\(/)
@@ -21939,7 +21487,7 @@ function requireJavascript() {
       keywords: KEYWORDS$1,
       // this will be extended by TypeScript
       exports: { PARAMS_CONTAINS, CLASS_REFERENCE },
-      illegal: /#(?![$_A-Za-z])/,
+      illegal: /#(?![$_A-z])/,
       contains: [
         hljs.SHEBANG({
           label: "shebang",
@@ -22154,16 +21702,10 @@ var hasRequiredJson;
 function requireJson() {
   if (hasRequiredJson) return json_1;
   hasRequiredJson = 1;
-  const EXTENDED_NUMBER_RE = "([-+]?)(\\b0[xX][a-fA-F0-9]+|(\\b\\d+(\\.\\d*)?|\\.\\d+)([eE][-+]?\\d+)?)|NaN|[-+]?Infinity";
-  const EXTENDED_NUMBER_MODE = {
-    scope: "number",
-    match: EXTENDED_NUMBER_RE,
-    relevance: 0
-  };
   function json(hljs) {
     const ATTRIBUTE = {
       className: "attr",
-      begin: /(("(\\.|[^\\"\r\n])*")|('(\\.|[^\\'\r\n])*'))(?=\s*:)/,
+      begin: /"(\\.|[^\\"\r\n])*"(?=\s*:)/,
       relevance: 1.01
     };
     const PUNCTUATION = {
@@ -22182,17 +21724,16 @@ function requireJson() {
     };
     return {
       name: "JSON",
-      aliases: ["jsonc", "json5"],
+      aliases: ["jsonc"],
       keywords: {
         literal: LITERALS
       },
       contains: [
         ATTRIBUTE,
         PUNCTUATION,
-        hljs.APOS_STRING_MODE,
         hljs.QUOTE_STRING_MODE,
         LITERALS_MODE,
-        EXTENDED_NUMBER_MODE,
+        hljs.C_NUMBER_MODE,
         hljs.C_LINE_COMMENT_MODE,
         hljs.C_BLOCK_COMMENT_MODE
       ],
@@ -22746,9 +22287,7 @@ function requireKotlin() {
       name: "Kotlin",
       aliases: [
         "kt",
-        "kts",
-        "ktm",
-        "ktx"
+        "kts"
       ],
       keywords: KEYWORDS,
       contains: [
@@ -23335,7 +22874,6 @@ function requireLeaf() {
   if (hasRequiredLeaf) return leaf_1;
   hasRequiredLeaf = 1;
   function leaf(hljs) {
-    const regex = hljs.regex;
     const IDENT = /([A-Za-z_][A-Za-z_0-9]*)?/;
     const LITERALS = [
       "true",
@@ -23356,7 +22894,7 @@ function requireLeaf() {
         },
         {
           scope: "keyword",
-          match: `\\b${regex.either(...LITERALS)}\\b`
+          match: LITERALS.join("|")
         },
         {
           scope: "variable",
@@ -23441,10 +22979,6 @@ function requireLess() {
       HEXCOLOR: {
         scope: "number",
         begin: /#(([0-9a-fA-F]{3,4})|(([0-9a-fA-F]{2}){3,4}))\b/
-      },
-      UNICODE_RANGE: {
-        scope: "number",
-        begin: /\b[Uu]\+[0-9A-Fa-f][0-9A-Fa-f?]{0,5}(-[0-9A-Fa-f][0-9A-Fa-f]{0,5})?/
       },
       FUNCTION_DISPATCH: {
         className: "built_in",
@@ -23873,11 +23407,6 @@ function requireLess() {
     "container-type",
     "content",
     "content-visibility",
-    "corner-bottom-left-shape",
-    "corner-bottom-right-shape",
-    "corner-shape",
-    "corner-top-left-shape",
-    "corner-top-right-shape",
     "counter-increment",
     "counter-reset",
     "counter-set",
@@ -24214,7 +23743,6 @@ function requireLess() {
     "transition-timing-function",
     "translate",
     "unicode-bidi",
-    "unicode-range",
     "user-modify",
     "user-select",
     "vector-effect",
@@ -24298,7 +23826,6 @@ function requireLess() {
           excludeEnd: true
         }
       },
-      modes.UNICODE_RANGE,
       modes.HEXCOLOR,
       PARENS_MODE,
       IDENT_MODE("variable", "@@?" + IDENT_RE, 10),
@@ -24497,8 +24024,8 @@ function requireLisp() {
       { relevance: 0 }
     );
     const VARIABLE = {
-      scope: "variable",
-      match: /\*[^\s()*]+\*/
+      begin: "\\*",
+      end: "\\*"
     };
     const KEYWORD = {
       className: "symbol",
@@ -25138,7 +24665,6 @@ function requireLlvm() {
         // another language than an actual comment
         hljs.COMMENT(/;\s*$/, null, { relevance: 0 }),
         hljs.COMMENT(/;/, /$/),
-        hljs.C_BLOCK_COMMENT_MODE,
         {
           className: "string",
           begin: /"/,
@@ -25261,7 +24787,7 @@ function requireLua() {
       keywords: {
         $pattern: hljs.UNDERSCORE_IDENT_RE,
         literal: "true false nil",
-        keyword: "and break do else elseif end for goto if in local global not or repeat return then until while",
+        keyword: "and break do else elseif end for goto if in local not or repeat return then until while",
         built_in: (
           // Metatags and globals:
           "_G _ENV _VERSION __index __newindex __mode __call __metatable __tostring __len __gc __add __sub __mul __div __mod __pow __concat __unm __eq __lt __le assert collectgarbage dofile error getfenv getmetatable ipairs load loadfile loadstring module next pairs pcall print rawequal rawget rawset require select setfenv setmetatable tonumber tostring type unpack xpcall arg self coroutine resume yield status wrap create running debug getupvalue debug sethook getmetatable gethook setmetatable setlocal traceback setfenv getinfo setupvalue getlocal getregistry getfenv io lines write close flush open output type read stderr stdin input stdout popen tmpfile math log max acos huge ldexp pi cos tanh pow deg tan cosh sinh random randomseed frexp ceil floor rad abs sqrt modf asin min mod fmod log10 atan2 exp sin atan os exit setlocale date getenv difftime remove time clock tmpname rename execute package preload loadlib loaded loaders cpath config path seeall string sub upper len gfind rep find match char dump gmatch reverse byte format gsub lower table setn insert getn foreachi maxn foreach concat sort remove"
@@ -35135,13 +34661,8 @@ function requireNsis() {
       "FILE_ATTRIBUTE_READONLY",
       "FILE_ATTRIBUTE_SYSTEM",
       "FILE_ATTRIBUTE_TEMPORARY",
-      "HKCC",
       "HKCR",
-      "HKCR32",
-      "HKCR64",
       "HKCU",
-      "HKCU32",
-      "HKCU64",
       "HKDD",
       "HKEY_CLASSES_ROOT",
       "HKEY_CURRENT_CONFIG",
@@ -35151,8 +34672,6 @@ function requireNsis() {
       "HKEY_PERFORMANCE_DATA",
       "HKEY_USERS",
       "HKLM",
-      "HKLM32",
-      "HKLM64",
       "HKPD",
       "HKU",
       "IDABORT",
@@ -35180,33 +34699,23 @@ function requireNsis() {
       "MB_TOPMOST",
       "MB_USERICON",
       "MB_YESNO",
-      "MB_YESNOCANCEL",
+      "NORMAL",
       "OFFLINE",
       "READONLY",
       "SHCTX",
       "SHELL_CONTEXT",
-      "SW_HIDE",
-      "SW_SHOW",
-      "SW_SHOWMAXIMIZED",
-      "SW_SHOWMINIMIZED",
-      "SW_SHOWNORMAL"
+      "SYSTEM|TEMPORARY"
     ];
     const COMPILER_FLAGS = [
       "addincludedir",
       "addplugindir",
       "appendfile",
-      "appendmemfile",
       "assert",
       "cd",
       "define",
       "delfile",
       "echo",
       "else",
-      "elseif",
-      "elseifdef",
-      "elseifmacrodef",
-      "elseifmacrondef",
-      "elseifndef",
       "endif",
       "error",
       "execute",
@@ -35222,10 +34731,8 @@ function requireNsis() {
       "insertmacro",
       "macro",
       "macroend",
-      "macroundef",
       "makensis",
       "packhdr",
-      "pragma",
       "searchparse",
       "searchreplace",
       "system",
@@ -35258,18 +34765,14 @@ function requireNsis() {
     const PARAMETERS = {
       // command parameters
       className: "params",
-      begin: regex.concat(
-        regex.either(...PARAM_NAMES),
-        /\b/
-      )
+      begin: regex.either(...PARAM_NAMES)
     };
     const COMPILER = {
       // !compiler_flags
       className: "keyword",
       begin: regex.concat(
         /!/,
-        regex.either(...COMPILER_FLAGS),
-        /\b/
+        regex.either(...COMPILER_FLAGS)
       )
     };
     const ESCAPE_CHARS = {
@@ -35327,7 +34830,6 @@ function requireNsis() {
       "CompletedText",
       "ComponentText",
       "CopyFiles",
-      "CPU",
       "CRCCheck",
       "CreateDirectory",
       "CreateFont",
@@ -35383,15 +34885,12 @@ function requireNsis() {
       "GetInstDirError",
       "GetKnownFolderPath",
       "GetLabelAddress",
-      "GetRegView",
-      "GetShellVarContext",
       "GetTempFileName",
       "GetWinVer",
       "Goto",
       "HideWindow",
       "Icon",
       "IfAbort",
-      "IfAltRegView",
       "IfErrors",
       "IfFileExists",
       "IfRebootFlag",
@@ -35429,11 +34928,7 @@ function requireNsis() {
       "LockWindow",
       "LogSet",
       "LogText",
-      "ManifestAppendCustomString",
-      "ManifestDisableWindowFiltering",
       "ManifestDPIAware",
-      "ManifestDPIAwareness",
-      "ManifestGdiScaling",
       "ManifestLongPathAware",
       "ManifestMaxVersionTested",
       "ManifestSupportedOS",
@@ -35453,7 +34948,6 @@ function requireNsis() {
       "Quit",
       "ReadEnvStr",
       "ReadINIStr",
-      "ReadMemory",
       "ReadRegDWORD",
       "ReadRegStr",
       "Reboot",
@@ -35479,7 +34973,6 @@ function requireNsis() {
       "SetCompress",
       "SetCompressor",
       "SetCompressorDictSize",
-      "SetCompressionLevel",
       "SetCtlColors",
       "SetCurInstType",
       "SetDatablockOptimize",
@@ -35508,9 +35001,7 @@ function requireNsis() {
       "StrCpy",
       "StrLen",
       "SubCaption",
-      "Target",
       "Unicode",
-      "UnsafeStrCpy",
       "UninstallButtonText",
       "UninstallCaption",
       "UninstallIcon",
@@ -35630,7 +35121,7 @@ function requireNsis() {
         ),
         VARIABLE_DEFINITION,
         FUNCTION_DEFINITION,
-        { beginKeywords: "Function PageEx Section SectionGroup FunctionEnd PageExEnd SectionEnd SectionGroupEnd" },
+        { beginKeywords: "Function PageEx Section SectionGroup FunctionEnd SectionEnd" },
         STRING,
         COMPILER,
         DEFINES,
@@ -35638,7 +35129,7 @@ function requireNsis() {
         LANGUAGES,
         PARAMETERS,
         PLUGINS,
-        hljs.C_NUMBER_MODE
+        hljs.NUMBER_MODE
       ]
     };
   }
@@ -36895,8 +36386,6 @@ function requirePhp() {
         VARIABLE,
         LEFT_AND_RIGHT_SIDE_OF_DOUBLE_COLON,
         hljs.C_BLOCK_COMMENT_MODE,
-        hljs.C_LINE_COMMENT_MODE,
-        hljs.HASH_COMMENT_MODE,
         STRING,
         NUMBER,
         CONSTRUCTOR_CALL
@@ -36920,8 +36409,6 @@ function requirePhp() {
       NAMED_ARGUMENT,
       LEFT_AND_RIGHT_SIDE_OF_DOUBLE_COLON,
       hljs.C_BLOCK_COMMENT_MODE,
-      hljs.C_LINE_COMMENT_MODE,
-      hljs.HASH_COMMENT_MODE,
       STRING,
       NUMBER,
       CONSTRUCTOR_CALL
@@ -37050,8 +36537,6 @@ function requirePhp() {
                 VARIABLE,
                 LEFT_AND_RIGHT_SIDE_OF_DOUBLE_COLON,
                 hljs.C_BLOCK_COMMENT_MODE,
-                hljs.C_LINE_COMMENT_MODE,
-                hljs.HASH_COMMENT_MODE,
                 STRING,
                 NUMBER
               ]
@@ -38416,7 +37901,6 @@ function requirePython() {
       "in",
       "is",
       "lambda",
-      "lazy",
       "match",
       "nonlocal|10",
       "not",
@@ -38432,9 +37916,7 @@ function requirePython() {
     const BUILT_INS = [
       "__import__",
       "abs",
-      "aiter",
       "all",
-      "anext",
       "any",
       "ascii",
       "bin",
@@ -38457,7 +37939,6 @@ function requirePython() {
       "filter",
       "float",
       "format",
-      "frozendict",
       "frozenset",
       "getattr",
       "globals",
@@ -38490,7 +37971,6 @@ function requirePython() {
       "repr",
       "reversed",
       "round",
-      "sentinel",
       "set",
       "setattr",
       "slice",
@@ -38572,7 +38052,7 @@ function requirePython() {
           relevance: 10
         },
         {
-          begin: /([fFtT][rR]|[rR][fFtT]|[fFtT])'''/,
+          begin: /([fF][rR]|[rR][fF]|[fF])'''/,
           end: /'''/,
           contains: [
             hljs.BACKSLASH_ESCAPE,
@@ -38582,7 +38062,7 @@ function requirePython() {
           ]
         },
         {
-          begin: /([fFtT][rR]|[rR][fFtT]|[fFtT])"""/,
+          begin: /([fF][rR]|[rR][fF]|[fF])"""/,
           end: /"""/,
           contains: [
             hljs.BACKSLASH_ESCAPE,
@@ -38610,7 +38090,7 @@ function requirePython() {
           end: /"/
         },
         {
-          begin: /([fFtT][rR]|[rR][fFtT]|[fFtT])'/,
+          begin: /([fF][rR]|[rR][fF]|[fF])'/,
           end: /'/,
           contains: [
             hljs.BACKSLASH_ESCAPE,
@@ -38619,7 +38099,7 @@ function requirePython() {
           ]
         },
         {
-          begin: /([fFtT][rR]|[rR][fFtT]|[fFtT])"/,
+          begin: /([fF][rR]|[rR][fF]|[fF])"/,
           end: /"/,
           contains: [
             hljs.BACKSLASH_ESCAPE,
@@ -39823,16 +39303,16 @@ function requireRust() {
     const UNDERSCORE_IDENT_RE = regex.concat(RAW_IDENTIFIER, hljs.UNDERSCORE_IDENT_RE);
     const IDENT_RE = regex.concat(RAW_IDENTIFIER, hljs.IDENT_RE);
     const FUNCTION_INVOKE = {
-      scope: "title.function.invoke",
+      className: "title.function.invoke",
       relevance: 0,
       begin: regex.concat(
         /\b/,
-        /(?!(?:let|for|while|if|else|match)\b)/,
+        /(?!let|for|while|if|else|match\b)/,
         IDENT_RE,
         regex.lookahead(/\s*\(/)
       )
     };
-    const NUMBER_SUFFIX = "([ui](8|16|32|64|128|size)|f(16|32|64|128))?";
+    const NUMBER_SUFFIX = "([ui](8|16|32|64|128|size)|f(32|64))?";
     const KEYWORDS = [
       "abstract",
       "as",
@@ -39866,7 +39346,6 @@ function requireRust() {
       "override",
       "priv",
       "pub",
-      "raw",
       "ref",
       "return",
       "self",
@@ -39977,10 +39456,8 @@ function requireRust() {
       "u64",
       "u128",
       "usize",
-      "f16",
       "f32",
       "f64",
-      "f128",
       "str",
       "char",
       "bool",
@@ -40009,7 +39486,7 @@ function requireRust() {
           illegal: null
         }),
         {
-          scope: "symbol",
+          className: "symbol",
           // negative lookahead to avoid matching `'`
           begin: /'[a-zA-Z_][a-zA-Z0-9_]*(?!')/
         },
@@ -40023,14 +39500,14 @@ function requireRust() {
               contains: [
                 {
                   scope: "char.escape",
-                  match: /\\('|"|\\|\w|x\w{2}|u\w{4}|U\w{8})/
+                  match: /\\('|\w|x\w{2}|u\w{4}|U\w{8})/
                 }
               ]
             }
           ]
         },
         {
-          scope: "number",
+          className: "number",
           variants: [
             { begin: "\\b0b([01_]+)" + NUMBER_SUFFIX },
             { begin: "\\b0o([0-7_]+)" + NUMBER_SUFFIX },
@@ -40041,33 +39518,22 @@ function requireRust() {
         },
         {
           begin: [
-            /\bsafe/,
-            /\s+/,
-            /extern/
-          ],
-          scope: {
-            1: "keyword",
-            3: "keyword"
-          }
-        },
-        {
-          begin: [
             /fn/,
             /\s+/,
             UNDERSCORE_IDENT_RE
           ],
-          scope: {
+          className: {
             1: "keyword",
             3: "title.function"
           }
         },
         {
-          scope: "meta",
+          className: "meta",
           begin: "#!?\\[",
           end: "\\]",
           contains: [
             {
-              scope: "string",
+              className: "string",
               begin: /"/,
               end: /"/,
               contains: [
@@ -40083,7 +39549,7 @@ function requireRust() {
             /(?:mut\s+)?/,
             UNDERSCORE_IDENT_RE
           ],
-          scope: {
+          className: {
             1: "keyword",
             3: "keyword",
             4: "variable"
@@ -40098,7 +39564,7 @@ function requireRust() {
             /\s+/,
             /in/
           ],
-          scope: {
+          className: {
             1: "keyword",
             3: "variable",
             5: "keyword"
@@ -40110,7 +39576,7 @@ function requireRust() {
             /\s+/,
             UNDERSCORE_IDENT_RE
           ],
-          scope: {
+          className: {
             1: "keyword",
             3: "title.class"
           }
@@ -40121,7 +39587,7 @@ function requireRust() {
             /\s+/,
             UNDERSCORE_IDENT_RE
           ],
-          scope: {
+          className: {
             1: "keyword",
             3: "title.class"
           }
@@ -40135,7 +39601,7 @@ function requireRust() {
           }
         },
         {
-          scope: "punctuation",
+          className: "punctuation",
           begin: "->"
         },
         FUNCTION_INVOKE
@@ -41116,10 +40582,6 @@ function requireScss() {
         scope: "number",
         begin: /#(([0-9a-fA-F]{3,4})|(([0-9a-fA-F]{2}){3,4}))\b/
       },
-      UNICODE_RANGE: {
-        scope: "number",
-        begin: /\b[Uu]\+[0-9A-Fa-f][0-9A-Fa-f?]{0,5}(-[0-9A-Fa-f][0-9A-Fa-f]{0,5})?/
-      },
       FUNCTION_DISPATCH: {
         className: "built_in",
         begin: /[\w-]+(?=\()/
@@ -41547,11 +41009,6 @@ function requireScss() {
     "container-type",
     "content",
     "content-visibility",
-    "corner-bottom-left-shape",
-    "corner-bottom-right-shape",
-    "corner-shape",
-    "corner-top-left-shape",
-    "corner-top-right-shape",
     "counter-increment",
     "counter-reset",
     "counter-set",
@@ -41888,7 +41345,6 @@ function requireScss() {
     "transition-timing-function",
     "translate",
     "unicode-bidi",
-    "unicode-range",
     "user-modify",
     "user-select",
     "vector-effect",
@@ -41990,7 +41446,6 @@ function requireScss() {
             VARIABLE,
             modes.HEXCOLOR,
             modes.CSS_NUMBER_MODE,
-            modes.UNICODE_RANGE,
             hljs.QUOTE_STRING_MODE,
             hljs.APOS_STRING_MODE,
             modes.IMPORTANT,
@@ -42057,7 +41512,7 @@ function requireShell() {
           // We cannot add \s (spaces) in the regular expression otherwise it will be too broad and produce unexpected result.
           // For instance, in the following example, it would match "echo /path/to/home >" as a prompt:
           // echo /path/to/home > t.exe
-          begin: /^\s{0,3}[./~\w\d[\]()@-]*[>%$#][ ]?/,
+          begin: /^\s{0,3}[/~\w\d[\]()@-]*[>%$#][ ]?/,
           starts: {
             end: /[^\\](?=\s*$)/,
             subLanguage: "bash"
@@ -42375,9 +41830,9 @@ function requireSqf() {
     };
     const KEYWORDS = [
       "break",
+      "breakWith",
       "breakOut",
       "breakTo",
-      "breakWith",
       "case",
       "catch",
       "continue",
@@ -42389,16 +41844,12 @@ function requireSqf() {
       "exitWith",
       "for",
       "forEach",
-      "forEachMember",
-      "forEachMemberAgent",
-      "forEachMemberTeam",
-      "forEachReversed",
       "from",
       "if",
+      "local",
       "private",
-      "privateAll",
-      "step",
       "switch",
+      "step",
       "then",
       "throw",
       "to",
@@ -42412,8 +41863,8 @@ function requireSqf() {
       "civilian",
       "configNull",
       "controlNull",
-      "diaryRecordNull",
       "displayNull",
+      "diaryRecordNull",
       "east",
       "endl",
       "false",
@@ -42421,7 +41872,6 @@ function requireSqf() {
       "independent",
       "lineBreak",
       "locationNull",
-      "netObjNull",
       "nil",
       "objNull",
       "opfor",
@@ -42451,7 +41901,6 @@ function requireSqf() {
       "actionKeysNames",
       "actionKeysNamesArray",
       "actionName",
-      "actionNow",
       "actionParams",
       "activateAddons",
       "activatedAddons",
@@ -42472,7 +41921,6 @@ function requireSqf() {
       "addCuratorEditableObjects",
       "addCuratorEditingArea",
       "addCuratorPoints",
-      "addCuratorSelected",
       "addEditorObject",
       "addEventHandler",
       "addForce",
@@ -42496,7 +41944,6 @@ function requireSqf() {
       "addMagazineGlobal",
       "addMagazinePool",
       "addMagazines",
-      "addMagazinesTurret",
       "addMagazineTurret",
       "addMenu",
       "addMenuItem",
@@ -42547,7 +41994,6 @@ function requireSqf() {
       "allActiveTitleEffects",
       "allAddonsInfo",
       "allAirports",
-      "allCameras",
       "allControls",
       "allCurators",
       "allCutLayers",
@@ -42557,7 +42003,6 @@ function requireSqf() {
       "allDiarySubjects",
       "allDisplays",
       "allEnv3DSoundSources",
-      "allExtensions",
       "allGroups",
       "allLODs",
       "allMapMarkers",
@@ -42587,8 +42032,6 @@ function requireSqf() {
       "ammo",
       "ammoOnPylon",
       "and",
-      "angularVelocity",
-      "angularVelocityModelSpace",
       "animate",
       "animateBay",
       "animateDoor",
@@ -42632,7 +42075,6 @@ function requireSqf() {
       "atan2",
       "atg",
       "ATLToASL",
-      "attachChild",
       "attachedObject",
       "attachedObjects",
       "attachedTo",
@@ -42645,9 +42087,7 @@ function requireSqf() {
       "backpackContainer",
       "backpackItems",
       "backpackMagazines",
-      "backpacks",
       "backpackSpaceFor",
-      "batteryChargeRTD",
       "behaviour",
       "benchmark",
       "bezierInterpolation",
@@ -42661,9 +42101,9 @@ function requireSqf() {
       "briefingName",
       "buildingExit",
       "buildingPos",
-      "buldozer_enableRoadDiag",
-      "buldozer_isEnabledRoadDiag",
-      "buldozer_loadNewRoads",
+      "buldozer_EnableRoadDiag",
+      "buldozer_IsEnabledRoadDiag",
+      "buldozer_LoadNewRoads",
       "buldozer_reloadOperMap",
       "buttonAction",
       "buttonSetAction",
@@ -42730,7 +42170,6 @@ function requireSqf() {
       "cheatsEnabled",
       "checkAIFeature",
       "checkVisibility",
-      "childAttached",
       "className",
       "clear3DENAttribute",
       "clear3DENInventory",
@@ -42742,13 +42181,11 @@ function requireSqf() {
       "clearItemCargo",
       "clearItemCargoGlobal",
       "clearItemPool",
-      "clearKillConfirmations",
       "clearMagazineCargo",
       "clearMagazineCargoGlobal",
       "clearMagazinePool",
       "clearOverlay",
       "clearRadio",
-      "clearVehicleInit",
       "clearWeaponCargo",
       "clearWeaponCargoGlobal",
       "clearWeaponPool",
@@ -42762,7 +42199,6 @@ function requireSqf() {
       "collisionDisabledWith",
       "combatBehaviour",
       "combatMode",
-      "combatPace",
       "commandArtilleryFire",
       "commandChat",
       "commander",
@@ -42781,13 +42217,11 @@ function requireSqf() {
       "commitOverlay",
       "compatibleItems",
       "compatibleMagazines",
-      "compatibleWeapons",
       "compile",
       "compileFinal",
       "compileScript",
       "completedFSM",
       "composeText",
-      "config_greater_greater_name",
       "configClasses",
       "configFile",
       "configHierarchy",
@@ -42826,7 +42260,6 @@ function requireSqf() {
       "createGuardedPoint",
       "createHashMap",
       "createHashMapFromArray",
-      "createHashMapObject",
       "createLocation",
       "createMarker",
       "createMarkerLocal",
@@ -42838,8 +42271,6 @@ function requireSqf() {
       "createSimpleTask",
       "createSite",
       "createSoundSource",
-      "createSoundSourceLocal",
-      "createTarget",
       "createTask",
       "createTeam",
       "createTrigger",
@@ -42888,7 +42319,6 @@ function requireSqf() {
       "ctrlMapAnimCommit",
       "ctrlMapAnimDone",
       "ctrlMapCursor",
-      "ctrlMapDir",
       "ctrlMapMouseOver",
       "ctrlMapPosition",
       "ctrlMapScale",
@@ -42898,7 +42328,6 @@ function requireSqf() {
       "ctrlModel",
       "ctrlModelDirAndUp",
       "ctrlModelScale",
-      "ctrlModelVectorSide",
       "ctrlMousePosition",
       "ctrlParent",
       "ctrlParentControlsGroup",
@@ -42984,7 +42413,6 @@ function requireSqf() {
       "ctrlURL",
       "ctrlURLOverlayMode",
       "ctrlVisible",
-      "ctrlWebBrowserAction",
       "ctRowControls",
       "ctRowCount",
       "ctSetCurSel",
@@ -43005,7 +42433,6 @@ function requireSqf() {
       "curatorPoints",
       "curatorRegisteredObjects",
       "curatorSelected",
-      "curatorSelectionPreset",
       "curatorWaypointCost",
       "current3DENOperation",
       "currentChannel",
@@ -43060,13 +42487,11 @@ function requireSqf() {
       "deleteResources",
       "deleteSite",
       "deleteStatus",
-      "deleteTarget",
       "deleteTeam",
       "deleteVehicle",
       "deleteVehicleCrew",
       "deleteWaypoint",
       "detach",
-      "detachChild",
       "detectedMines",
       "diag_activeMissionFSMs",
       "diag_activeScripts",
@@ -43078,21 +42503,18 @@ function requireSqf() {
       "diag_captureSlowFrame",
       "diag_codePerformance",
       "diag_deltaTime",
-      "diag_drawMode",
+      "diag_drawmode",
       "diag_dumpCalltraceToLog",
       "diag_dumpScriptAssembly",
       "diag_dumpTerrainSynth",
       "diag_dynamicSimulationEnd",
-      "diag_dynamicSimulationStart",
       "diag_enable",
       "diag_enabled",
       "diag_exportConfig",
       "diag_exportTerrainSVG",
       "diag_fps",
-      "diag_fpsMin",
-      "diag_frameNo",
-      "diag_getTerrainGrid",
-      "diag_getTerrainHeight",
+      "diag_fpsmin",
+      "diag_frameno",
       "diag_getTerrainSegmentOffset",
       "diag_lightNewLoad",
       "diag_list",
@@ -43101,15 +42523,11 @@ function requireSqf() {
       "diag_logSlowFrame",
       "diag_mergeConfigFile",
       "diag_recordTurretLimits",
-      "diag_remainsCollector",
-      "diag_resetAnims",
-      "diag_resetShapes",
+      "diag_resetFSM",
+      "diag_resetshapes",
       "diag_scope",
       "diag_setLightNew",
-      "diag_setTerrainHeight",
-      "diag_SQFCDebugDump",
       "diag_stacktrace",
-      "diag_testScriptSimpleVM",
       "diag_tickTime",
       "diag_toggle",
       "dialog",
@@ -43173,7 +42591,6 @@ function requireSqf() {
       "drawPolygon",
       "drawRectangle",
       "drawTriangle",
-      "drawXPolygon",
       "driver",
       "drop",
       "dynamicSimulationDistance",
@@ -43208,9 +42625,7 @@ function requireSqf() {
       "enableEngineArtillery",
       "enableEnvironment",
       "enableFatigue",
-      "enableFreeLook",
       "enableGunLights",
-      "enableGunStabilization",
       "enableInfoPanelComponent",
       "enableIRLasers",
       "enableMimics",
@@ -43234,7 +42649,6 @@ function requireSqf() {
       "enableWeaponDisassembly",
       "endLoadingScreen",
       "endMission",
-      "enemy",
       "engineOn",
       "enginesIsOnRTD",
       "enginesPowerRTD",
@@ -43256,7 +42670,6 @@ function requireSqf() {
       "exp",
       "expectedDestination",
       "exportJIPMessages",
-      "exportLandscapeXYZ",
       "eyeDirection",
       "eyePos",
       "face",
@@ -43294,7 +42707,6 @@ function requireSqf() {
       "flyInHeight",
       "flyInHeightASL",
       "focusedCtrl",
-      "focusOn",
       "fog",
       "fogForecast",
       "fogParams",
@@ -43306,7 +42718,6 @@ function requireSqf() {
       "forceFlagTexture",
       "forceFollowRoad",
       "forceGeneratorRTD",
-      "forceHitPointsDamageSync",
       "forceMap",
       "forceRespawn",
       "forceSpeed",
@@ -43314,6 +42725,9 @@ function requireSqf() {
       "forceWalk",
       "forceWeaponFire",
       "forceWeatherChange",
+      "forEachMember",
+      "forEachMemberAgent",
+      "forEachMemberTeam",
       "forgetTarget",
       "format",
       "formation",
@@ -43326,12 +42740,9 @@ function requireSqf() {
       "formLeader",
       "freeExtension",
       "freeLook",
-      "friendly",
       "fromEditor",
-      "fromJSON",
       "fuel",
       "fullCrew",
-      "gameValueToJson",
       "gearIDCAmmoCount",
       "gearSlotAmmoCount",
       "gearSlotData",
@@ -43339,22 +42750,17 @@ function requireSqf() {
       "get",
       "get3DENActionState",
       "get3DENAttribute",
-      "get3DENAttributes",
       "get3DENCamera",
       "get3DENConnections",
       "get3DENEntity",
       "get3DENEntityID",
       "get3DENGrid",
       "get3DENIconsVisible",
-      "get3DENLayer",
       "get3DENLayerEntities",
       "get3DENLinesVisible",
       "get3DENMissionAttribute",
-      "get3DENMissionAttributes",
       "get3DENMouseOver",
-      "get3DENParent",
       "get3DENSelected",
-      "getAimDirectionAndUp",
       "getAimingCoef",
       "getAllEnv3DSoundControllers",
       "getAllEnvSoundControllers",
@@ -43365,7 +42771,6 @@ function requireSqf() {
       "getAllUnitTraits",
       "getAmmoCargo",
       "getAnimAimPrecision",
-      "getAnimationsQueue",
       "getAnimSpeedCoef",
       "getArray",
       "getArtilleryAmmo",
@@ -43378,7 +42783,6 @@ function requireSqf() {
       "getAudioOptionVolumes",
       "getBackpackCargo",
       "getBleedingRemaining",
-      "getBoneNames",
       "getBurningValue",
       "getCalculatePlayerVisibilityByFriendly",
       "getCameraViewDirection",
@@ -43391,9 +42795,7 @@ function requireSqf() {
       "getConnectedUAVUnit",
       "getContainerMaxLoad",
       "getCorpse",
-      "getCorpseWeaponholders",
       "getCruiseControl",
-      "getCurrentPlayerLevel",
       "getCursorObjectParams",
       "getCustomAimCoef",
       "getCustomSoundController",
@@ -43413,7 +42815,6 @@ function requireSqf() {
       "getEditorObjectScope",
       "getElevationOffset",
       "getEngineTargetRPMRTD",
-      "getEntityInfo",
       "getEnv3DSoundController",
       "getEnvSoundController",
       "getEventHandlerInfo",
@@ -43424,7 +42825,6 @@ function requireSqf() {
       "getFriend",
       "getFSMVariable",
       "getFuelCargo",
-      "getFuelConsumptionCoef",
       "getGraphValues",
       "getGroupIcon",
       "getGroupIconParams",
@@ -43434,12 +42834,9 @@ function requireSqf() {
       "getHitIndex",
       "getHitPointDamage",
       "getItemCargo",
-      "getLeaning",
-      "getLightInfo",
       "getLighting",
       "getLightingAt",
       "getLoadedModsInfo",
-      "getLoginStatus",
       "getMagazineCargo",
       "getMarkerColor",
       "getMarkerPos",
@@ -43451,12 +42848,10 @@ function requireSqf() {
       "getMissionDLCs",
       "getMissionLayerEntities",
       "getMissionLayers",
-      "getMissionOptions",
       "getMissionPath",
       "getModelInfo",
       "getMousePosition",
       "getMusicPlayedTime",
-      "getNextId",
       "getNumber",
       "getObjectArgument",
       "getObjectChildren",
@@ -43474,21 +42869,16 @@ function requireSqf() {
       "getOrDefaultCall",
       "getOxygenRemaining",
       "getPersonUsedDLCs",
-      "getPhysicsCollisionFlag",
       "getPilotCameraDirection",
-      "getPilotCameraOpticsMode",
       "getPilotCameraPosition",
       "getPilotCameraRotation",
       "getPilotCameraTarget",
       "getPiPViewDistance",
       "getPlateNumber",
       "getPlayerChannel",
-      "getPlayerCloudId",
       "getPlayerID",
-      "getPlayerLevel",
       "getPlayerScores",
       "getPlayerUID",
-      "getPlayerUIDOld",
       "getPlayerVoNVolume",
       "getPos",
       "getPosASL",
@@ -43505,18 +42895,13 @@ function requireSqf() {
       "getRemoteSensorsDisabled",
       "getRepairCargo",
       "getResolution",
-      "getRespawnVehicleInfo",
       "getRoadInfo",
       "getRotorBrakeRTD",
-      "getSelectionBones",
       "getSensorTargets",
       "getSensorThreats",
-      "getServerInfo",
       "getShadowDistance",
-      "getShotInfo",
       "getShotParents",
       "getSlingLoad",
-      "getSlotItemName",
       "getSoundController",
       "getSoundControllerResult",
       "getSpeed",
@@ -43533,16 +42918,13 @@ function requireSqf() {
       "getTextRaw",
       "getTextureInfo",
       "getTextWidth",
-      "getTIParameters",
+      "getTiParameters",
       "getTotalDLCUsageTime",
-      "getTowParent",
       "getTrimOffsetRTD",
       "getTurretLimits",
       "getTurretOpticsMode",
       "getUnitFreefallInfo",
       "getUnitLoadout",
-      "getUnitMovesInfo",
-      "getUnitState",
       "getUnitTrait",
       "getUnloadInCombat",
       "getUserInfo",
@@ -43550,15 +42932,11 @@ function requireSqf() {
       "getUserMFDValue",
       "getVariable",
       "getVehicleCargo",
-      "getVehicleTIPars",
-      "getVideoOptions",
-      "getWaterFillPercentage",
-      "getWaterLeakiness",
+      "getVehicleTiPars",
       "getWeaponCargo",
       "getWeaponSway",
       "getWingsOrientationRTD",
       "getWingsPositionRTD",
-      "getWorld",
       "getWPPos",
       "glanceAt",
       "globalChat",
@@ -43570,7 +42948,7 @@ function requireSqf() {
       "groupFromNetId",
       "groupIconSelectable",
       "groupIconsVisible",
-      "groupId",
+      "groupID",
       "groupOwner",
       "groupRadio",
       "groups",
@@ -43583,7 +42961,6 @@ function requireSqf() {
       "handgunMagazine",
       "handgunWeapon",
       "handsHit",
-      "hasCustomFace",
       "hashValue",
       "hasInterface",
       "hasPilotCamera",
@@ -43599,9 +42976,6 @@ function requireSqf() {
       "hcShowBar",
       "hcShownBar",
       "headgear",
-      "hiddenActions",
-      "hideActions",
-      "hideBehindScripted",
       "hideBody",
       "hideObject",
       "hideObjectGlobal",
@@ -43615,16 +42989,12 @@ function requireSqf() {
       "htmlLoad",
       "HUDMovementLevels",
       "humidity",
-      "ignore3DENHistory",
-      "ignoreTarget",
       "image",
-      "import",
       "importAllGroups",
       "importance",
       "in",
       "inArea",
       "inAreaArray",
-      "inAreaArrayIndexes",
       "incapacitatedState",
       "inflame",
       "inflamed",
@@ -43642,7 +43012,6 @@ function requireSqf() {
       "inRangeOfArtillery",
       "insert",
       "insertEditorObject",
-      "insideBuilding",
       "intersect",
       "is3DEN",
       "is3DENMultiplayer",
@@ -43651,9 +43020,7 @@ function requireSqf() {
       "isActionMenuVisible",
       "isAgent",
       "isAimPrecisionEnabled",
-      "isAISteeringComponentEnabled",
       "isAllowedCrewInImmobile",
-      "isAppSubscribed",
       "isArray",
       "isAutoHoverOn",
       "isAutonomous",
@@ -43687,7 +43054,6 @@ function requireSqf() {
       "isGamePaused",
       "isGroupDeletedWhenEmpty",
       "isHidden",
-      "isHideBehindScripted",
       "isInRemainsCollector",
       "isInstructorFigureEnabled",
       "isIRLaserOn",
@@ -43711,9 +43077,7 @@ function requireSqf() {
       "isOnRoad",
       "isPiPEnabled",
       "isPlayer",
-      "isPlayerSupporter",
       "isRealTime",
-      "isRemoteControlling",
       "isRemoteExecuted",
       "isRemoteExecutedJIP",
       "isSaving",
@@ -43727,9 +43091,7 @@ function requireSqf() {
       "isSteamOverlayEnabled",
       "isStreamFriendlyUIEnabled",
       "isStressDamageEnabled",
-      "isSwitchingWeapon",
       "isText",
-      "isThrowable",
       "isTouchingGround",
       "isTurnedOut",
       "isTutHintsEnabled",
@@ -43737,7 +43099,6 @@ function requireSqf() {
       "isUAVConnected",
       "isUIContext",
       "isUniformAllowed",
-      "isUsingAISteeringComponent",
       "isVehicleCargo",
       "isVehicleRadarOn",
       "isVehicleSensorEnabled",
@@ -43752,7 +43113,6 @@ function requireSqf() {
       "joinAsSilent",
       "joinSilent",
       "joinString",
-      "jsonToGameValue",
       "kbAddDatabase",
       "kbAddDatabaseTargets",
       "kbAddTopic",
@@ -43764,7 +43124,6 @@ function requireSqf() {
       "keyImage",
       "keyName",
       "keys",
-      "kickPlayer",
       "knowsAbout",
       "land",
       "landAt",
@@ -43875,11 +43234,9 @@ function requireSqf() {
       "lnbTextRight",
       "lnbValue",
       "load",
-      "load3DENScenario",
       "loadAbs",
       "loadBackpack",
       "loadConfig",
-      "loadCuratorSelectionPreset",
       "loadFile",
       "loadGame",
       "loadIdentity",
@@ -43888,7 +43245,6 @@ function requireSqf() {
       "loadStatus",
       "loadUniform",
       "loadVest",
-      "local",
       "localize",
       "localNamespace",
       "locationPosition",
@@ -43905,7 +43261,7 @@ function requireSqf() {
       "lockIdentity",
       "lockInventory",
       "lockTurret",
-      "lockWP",
+      "lockWp",
       "log",
       "logEntities",
       "logNetwork",
@@ -43936,7 +43292,6 @@ function requireSqf() {
       "markerChannel",
       "markerColor",
       "markerDir",
-      "markerDrawPriority",
       "markerPolyline",
       "markerPos",
       "markerShadow",
@@ -43980,7 +43335,6 @@ function requireSqf() {
       "min",
       "mineActive",
       "mineDetectedBy",
-      "missileState",
       "missileTarget",
       "missileTargetPos",
       "missionConfigFile",
@@ -44011,7 +43365,6 @@ function requireSqf() {
       "moveInTurret",
       "moveObjectToEnd",
       "moveOut",
-      "moveTarget",
       "moveTime",
       "moveTo",
       "moveToCompleted",
@@ -44045,12 +43398,10 @@ function requireSqf() {
       "not",
       "numberOfEnginesRTD",
       "numberToDate",
-      "object",
       "objectCurators",
       "objectFromNetId",
       "objectParent",
       "objStatus",
-      "onBriefingGear",
       "onBriefingGroup",
       "onBriefingNotes",
       "onBriefingPlan",
@@ -44063,7 +43414,6 @@ function requireSqf() {
       "onGroupIconOverLeave",
       "onHCGroupSelectionChanged",
       "onMapSingleClick",
-      "onOfficialServer",
       "onPlayerConnected",
       "onPlayerDisconnected",
       "onPreloadFinished",
@@ -44072,7 +43422,6 @@ function requireSqf() {
       "onTeamSwitch",
       "openCuratorInterface",
       "openDLCPage",
-      "openDSInterface",
       "openGPS",
       "openMap",
       "openSteamApp",
@@ -44084,7 +43433,6 @@ function requireSqf() {
       "owner",
       "param",
       "params",
-      "parentAttached",
       "parseNumber",
       "parseSimpleArray",
       "parseText",
@@ -44106,7 +43454,6 @@ function requireSqf() {
       "playerRespawnTime",
       "playerSide",
       "playersNumber",
-      "playerTargetLock",
       "playGesture",
       "playMission",
       "playMove",
@@ -44142,7 +43489,6 @@ function requireSqf() {
       "primaryWeaponMagazine",
       "priority",
       "processDiaryLink",
-      "processInitCommands",
       "productVersion",
       "profileName",
       "profileNamespace",
@@ -44156,7 +43502,6 @@ function requireSqf() {
       "pushBack",
       "pushBackUnique",
       "putWeaponPool",
-      "pylonAction",
       "queryItemsPool",
       "queryMagazinePool",
       "queryWeaponPool",
@@ -44185,10 +43530,8 @@ function requireSqf() {
       "reload",
       "reloadEnabled",
       "remoteControl",
-      "remoteControlled",
       "remoteExec",
       "remoteExecCall",
-      "remoteExecutedJIPID",
       "remoteExecutedOwner",
       "remove3DENConnection",
       "remove3DENEventHandler",
@@ -44206,8 +43549,6 @@ function requireSqf() {
       "removeAllHandgunItems",
       "removeAllItems",
       "removeAllItemsWithMagazines",
-      "removeAllMagazines",
-      "removeAllMagazinesTurret",
       "removeAllMissionEventHandlers",
       "removeAllMPEventHandlers",
       "removeAllMusicEventHandlers",
@@ -44219,7 +43560,6 @@ function requireSqf() {
       "removeBackpack",
       "removeBackpackGlobal",
       "removeBinocularItem",
-      "removeClothing",
       "removeCuratorAddons",
       "removeCuratorCameraArea",
       "removeCuratorEditableObjects",
@@ -44261,7 +43601,6 @@ function requireSqf() {
       "removeWeaponAttachmentCargo",
       "removeWeaponCargo",
       "removeWeaponGlobal",
-      "removeWeaponItem",
       "removeWeaponTurret",
       "reportRemoteTarget",
       "requiredVersion",
@@ -44291,7 +43630,6 @@ function requireSqf() {
       "ropes",
       "ropesAttachedTo",
       "ropeSegments",
-      "ropeSetCargoMass",
       "ropeUnwind",
       "ropeUnwound",
       "rotorsForcesRTD",
@@ -44305,7 +43643,6 @@ function requireSqf() {
       "safeZoneXAbs",
       "safeZoneY",
       "save3DENInventory",
-      "save3DENPreferences",
       "saveGame",
       "saveIdentity",
       "saveJoysticks",
@@ -44323,7 +43660,6 @@ function requireSqf() {
       "scoreSide",
       "screenshot",
       "screenToWorld",
-      "screenToWorldDirection",
       "scriptDone",
       "scriptName",
       "scudState",
@@ -44345,14 +43681,9 @@ function requireSqf() {
       "selectPlayer",
       "selectRandom",
       "selectRandomWeighted",
-      "selectThrowable",
       "selectWeapon",
       "selectWeaponTurret",
-      "sendAnalyticEvent",
       "sendAUMessage",
-      "sendCloudRequest",
-      "sendCloudRequestClient",
-      "sendCloudRequestServer",
       "sendSimpleCommand",
       "sendTask",
       "sendTaskResult",
@@ -44361,13 +43692,10 @@ function requireSqf() {
       "serverCommand",
       "serverCommandAvailable",
       "serverCommandExecutable",
-      "serverConfigTopLevelEntry",
       "serverName",
       "serverNamespace",
-      "serverStartMission",
       "serverTime",
       "set",
-      "set3DENAttachedCursorEntity",
       "set3DENAttribute",
       "set3DENAttributes",
       "set3DENGrid",
@@ -44387,46 +43715,37 @@ function requireSqf() {
       "setAmmo",
       "setAmmoCargo",
       "setAmmoOnPylon",
-      "setAngularVelocity",
-      "setAngularVelocityModelSpace",
       "setAnimSpeedCoef",
       "setAperture",
       "setApertureNew",
-      "setAPURTD",
       "setArmoryPoints",
       "setAttributes",
       "setAutonomous",
-      "setBatteryChargeRTD",
-      "setBatteryRTD",
       "setBehaviour",
       "setBehaviourStrong",
       "setBleedingRemaining",
       "setBrakesRTD",
-      "setCameraEffect",
       "setCameraInterest",
       "setCamShakeDefParams",
       "setCamShakeParams",
-      "setCamUseTI",
+      "setCamUseTi",
       "setCaptive",
       "setCenterOfMass",
       "setCollisionLight",
       "setCombatBehaviour",
       "setCombatMode",
-      "setCompassDeclination",
       "setCompassOscillation",
       "setConvoySeparation",
       "setCruiseControl",
       "setCuratorCameraAreaCeiling",
       "setCuratorCoef",
       "setCuratorEditingAreaType",
-      "setCuratorSelected",
-      "setCuratorSelectionPreset",
       "setCuratorWaypointCost",
       "setCurrentChannel",
       "setCurrentTask",
       "setCurrentWaypoint",
       "setCustomAimCoef",
-      "setCustomMissionData",
+      "SetCustomMissionData",
       "setCustomSoundController",
       "setCustomWeightRTD",
       "setDamage",
@@ -44451,7 +43770,7 @@ function requireSqf() {
       "setEffectiveCommander",
       "setEngineRpmRTD",
       "setFace",
-      "setFaceAnimation",
+      "setFaceanimation",
       "setFatigue",
       "setFeatureType",
       "setFlagAnimationPhase",
@@ -44468,12 +43787,11 @@ function requireSqf() {
       "setFSMVariable",
       "setFuel",
       "setFuelCargo",
-      "setFuelConsumptionCoef",
       "setGroupIcon",
       "setGroupIconParams",
       "setGroupIconsSelectable",
       "setGroupIconsVisible",
-      "setGroupId",
+      "setGroupid",
       "setGroupIdGlobal",
       "setGroupOwner",
       "setGusts",
@@ -44487,10 +43805,6 @@ function requireSqf() {
       "setIdentity",
       "setImportance",
       "setInfoPanel",
-      "setJointDriveAngularVelocity",
-      "setJointDriveLinearVelocity",
-      "setJointDriveOrientation",
-      "setJointDrivePosition",
       "setLeader",
       "setLightAmbient",
       "setLightAttenuation",
@@ -44515,7 +43829,6 @@ function requireSqf() {
       "setMarkerColorLocal",
       "setMarkerDir",
       "setMarkerDirLocal",
-      "setMarkerDrawPriority",
       "setMarkerPolyline",
       "setMarkerPolylineLocal",
       "setMarkerPos",
@@ -44535,7 +43848,6 @@ function requireSqf() {
       "setMimic",
       "setMissileTarget",
       "setMissileTargetPos",
-      "setMissionOptions",
       "setMousePosition",
       "setMusicEffect",
       "setMusicEventHandler",
@@ -44558,9 +43870,7 @@ function requireSqf() {
       "setParticleFire",
       "setParticleParams",
       "setParticleRandom",
-      "setPhysicsCollisionFlag",
       "setPilotCameraDirection",
-      "setPilotCameraOpticsMode",
       "setPilotCameraRotation",
       "setPilotCameraTarget",
       "setPilotLight",
@@ -44607,24 +43917,19 @@ function requireSqf() {
       "setSpeedMode",
       "setStamina",
       "setStaminaScheme",
-      "setStarterRTD",
       "setStatValue",
       "setSuppression",
       "setSystemOfUnits",
       "setTargetAge",
-      "setTargetSize",
       "setTaskMarkerOffset",
       "setTaskResult",
       "setTaskState",
       "setTerrainGrid",
       "setTerrainHeight",
       "setText",
-      "setThrottleRTD",
       "setTimeMultiplier",
-      "setTIParameter",
+      "setTiParameter",
       "setTitleEffect",
-      "setToneMapping",
-      "setToneMappingParams",
       "setTowParent",
       "setTrafficDensity",
       "setTrafficDistance",
@@ -44663,14 +43968,13 @@ function requireSqf() {
       "setVehicleArmor",
       "setVehicleCargo",
       "setVehicleId",
-      "setVehicleInit",
       "setVehicleLock",
       "setVehiclePosition",
       "setVehicleRadar",
       "setVehicleReceiveRemoteTargets",
       "setVehicleReportOwnPosition",
       "setVehicleReportRemoteTargets",
-      "setVehicleTIPars",
+      "setVehicleTiPars",
       "setVehicleVarName",
       "setVelocity",
       "setVelocityModelSpace",
@@ -44678,8 +43982,6 @@ function requireSqf() {
       "setViewDistance",
       "setVisibleIfTreeCollapsed",
       "setWantedRPMRTD",
-      "setWaterFillPercentage",
-      "setWaterLeakiness",
       "setWaves",
       "setWaypointBehaviour",
       "setWaypointCombatMode",
@@ -44713,17 +44015,16 @@ function requireSqf() {
       "showCommandingMenu",
       "showCompass",
       "showCuratorCompass",
-      "showGPS",
+      "showGps",
       "showHUD",
       "showLegend",
       "showMap",
-      "shownAction",
       "shownArtilleryComputer",
       "shownChat",
       "shownCompass",
       "shownCuratorCompass",
       "showNewEditorObject",
-      "shownGPS",
+      "shownGps",
       "shownHUD",
       "shownMap",
       "shownPad",
@@ -44750,7 +44051,6 @@ function requireSqf() {
       "simulCloudDensity",
       "simulCloudOcclusion",
       "simulInClouds",
-      "simulSetHumidity",
       "simulWeatherSync",
       "sin",
       "size",
@@ -44769,7 +44069,6 @@ function requireSqf() {
       "soldierMagazines",
       "someAmmo",
       "sort",
-      "soundParams",
       "soundVolume",
       "spawn",
       "speaker",
@@ -44781,11 +44080,9 @@ function requireSqf() {
       "squadParams",
       "stance",
       "startLoadingScreen",
-      "steamGameRecordingEvent",
       "stop",
       "stopEngineRTD",
       "stopped",
-      "stopSound",
       "str",
       "sunOrMoon",
       "supportInfo",
@@ -44844,8 +44141,6 @@ function requireSqf() {
       "textLog",
       "textLogFormat",
       "tg",
-      "throttleRTD",
-      "throwables",
       "time",
       "timeMultiplier",
       "titleCut",
@@ -44855,7 +44150,6 @@ function requireSqf() {
       "titleText",
       "toArray",
       "toFixed",
-      "toJSON",
       "toLower",
       "toLowerANSI",
       "toString",
@@ -44922,7 +44216,6 @@ function requireSqf() {
       "UAVControl",
       "uiNamespace",
       "uiSleep",
-      "uiTime",
       "unassignCurator",
       "unassignItem",
       "unassignTeam",
@@ -44973,8 +44266,6 @@ function requireSqf() {
       "vectorModelToWorldVisual",
       "vectorMultiply",
       "vectorNormalized",
-      "vectorSide",
-      "vectorSideVisual",
       "vectorUp",
       "vectorUpVisual",
       "vectorWorldToModel",
@@ -44998,13 +44289,12 @@ function requireSqf() {
       "vestMagazines",
       "viewDistance",
       "visibleCompass",
-      "visibleGPS",
+      "visibleGps",
       "visibleMap",
       "visiblePosition",
       "visiblePositionASL",
       "visibleScoretable",
       "visibleWatch",
-      "waterDamaged",
       "waves",
       "waypointAttachedObject",
       "waypointAttachedVehicle",
@@ -45036,7 +44326,6 @@ function requireSqf() {
       "weaponAccessoriesCargo",
       "weaponCargo",
       "weaponDirection",
-      "weaponDisassemblyEnabled",
       "weaponInertia",
       "weaponLowered",
       "weaponReloadingTime",
@@ -45104,7 +44393,7 @@ function requireSqf() {
         //There's no ? in SQF
         /@/,
         //There's no @ in SQF
-        // brute-force-fixing the build error. See https://github.com/highlightjs/highlight.js/pull/3193#issuecomment-843088729
+        // Brute-force-fixing the build error. See https://github.com/highlightjs/highlight.js/pull/3193#issuecomment-843088729
         / \| /,
         // . is only used in numbers
         /[a-zA-Z_]\./,
@@ -46391,10 +45680,6 @@ function requireStylus() {
         scope: "number",
         begin: /#(([0-9a-fA-F]{3,4})|(([0-9a-fA-F]{2}){3,4}))\b/
       },
-      UNICODE_RANGE: {
-        scope: "number",
-        begin: /\b[Uu]\+[0-9A-Fa-f][0-9A-Fa-f?]{0,5}(-[0-9A-Fa-f][0-9A-Fa-f]{0,5})?/
-      },
       FUNCTION_DISPATCH: {
         className: "built_in",
         begin: /[\w-]+(?=\()/
@@ -46822,11 +46107,6 @@ function requireStylus() {
     "container-type",
     "content",
     "content-visibility",
-    "corner-bottom-left-shape",
-    "corner-bottom-right-shape",
-    "corner-shape",
-    "corner-top-left-shape",
-    "corner-top-right-shape",
     "counter-increment",
     "counter-reset",
     "counter-set",
@@ -47163,7 +46443,6 @@ function requireStylus() {
     "transition-timing-function",
     "translate",
     "unicode-bidi",
-    "unicode-range",
     "user-modify",
     "user-select",
     "vector-effect",
@@ -47325,7 +46604,6 @@ function requireStylus() {
                 VARIABLE,
                 hljs.APOS_STRING_MODE,
                 modes.CSS_NUMBER_MODE,
-                modes.UNICODE_RANGE,
                 hljs.QUOTE_STRING_MODE
               ]
             }
@@ -47437,20 +46715,6 @@ function requireSwift() {
     const joined = "(" + (opts.capture ? "" : "?:") + args.map((x) => source(x)).join("|") + ")";
     return joined;
   }
-  new RegExp(either(
-    /\[(?:[^\\\]]|\\.)*\]/,
-    // a character class, inside which ( and \ lose their meaning
-    /\(\?<(?![=!])[^>]+>/,
-    // a named capture group `(?<name>` (not a lookbehind `(?<=` / `(?<!`)
-    /\(\?'[^']+'/,
-    // a named capture group `(?'name'`
-    /\(\??/,
-    // an opening parenthesis, capturing or non-capturing / lookahead
-    /\\([1-9][0-9]*)/,
-    // a backreference like `\1`
-    /\\./
-    // any other escape sequence
-  ));
   const keywordWrapper = (keyword) => concat(
     /\b/,
     keyword,
@@ -49433,7 +48697,6 @@ function requireTypescript() {
     "localStorage",
     "sessionStorage",
     "module",
-    "self",
     "global"
     // Node.js
   ];
@@ -49776,8 +49039,7 @@ function requireTypescript() {
         noneOf([
           ...BUILT_IN_GLOBALS,
           "super",
-          "import",
-          "await"
+          "import"
         ].map((x) => `${x}\\s*\\(`)),
         IDENT_RE$1,
         regex.lookahead(/\s*\(/)
@@ -49841,7 +49103,7 @@ function requireTypescript() {
       keywords: KEYWORDS$1,
       // this will be extended by TypeScript
       exports: { PARAMS_CONTAINS, CLASS_REFERENCE },
-      illegal: /#(?![$_A-Za-z])/,
+      illegal: /#(?![$_A-z])/,
       contains: [
         hljs.SHEBANG({
           label: "shebang",
@@ -52570,7 +51832,6 @@ function requireLib() {
   hljs.registerLanguage("fix", /* @__PURE__ */ requireFix());
   hljs.registerLanguage("flix", /* @__PURE__ */ requireFlix());
   hljs.registerLanguage("fortran", /* @__PURE__ */ requireFortran());
-  hljs.registerLanguage("freedesktop", /* @__PURE__ */ requireFreedesktop());
   hljs.registerLanguage("fsharp", /* @__PURE__ */ requireFsharp());
   hljs.registerLanguage("gams", /* @__PURE__ */ requireGams());
   hljs.registerLanguage("gauss", /* @__PURE__ */ requireGauss());
@@ -52709,7 +51970,7 @@ var libExports = /* @__PURE__ */ requireLib();
 const HighlightJS = /* @__PURE__ */ getDefaultExportFromCjs(libExports);
 let settings = {};
 try {
-  settings = JSON.parse(localStorage.getItem("ollama-settings") || "{}");
+  settings = JSON.parse(localStorage.getItem("cilamai-settings") || "{}");
   if (typeof settings !== "object" || settings === null) settings = {};
 } catch {
   settings = {};
@@ -52755,7 +52016,7 @@ const HOTKEY_ACTIONS = {
     run: () => {
       showThinking = !showThinking;
       settings.showThinking = showThinking;
-      localStorage.setItem("ollama-settings", JSON.stringify(settings));
+      localStorage.setItem("cilamai-settings", JSON.stringify(settings));
       showNotification(showThinking ? "Thinking shown" : "Thinking hidden", "warning");
     }
   },
@@ -52821,15 +52082,51 @@ let zaiApiKey = settings.zaiApiKey || "";
 let showThinking = settings.showThinking !== false;
 let theme = settings.theme || "dark";
 let resolvedTheme = theme;
-const applyTheme = () => {
+let recognition = null;
+let recognizing = false;
+const stopRecognition = () => {
+  if (recognition && recognizing) {
+    try {
+      recognition.stop();
+    } catch {
+    }
+  }
+  recognizing = false;
+  document.querySelector("[data-mic-toggle]")?.classList.remove("listening");
+};
+const applyTheme = (skipIpc = false) => {
   resolvedTheme = theme === "system" ? matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light" : theme;
   document.documentElement.dataset.theme = resolvedTheme;
-  window.electron?.setTheme?.(resolvedTheme);
+  if (!skipIpc) window.electron?.setTheme?.(theme);
 };
 applyTheme();
 const systemMedia = matchMedia("(prefers-color-scheme: dark)");
 systemMedia.addEventListener("change", () => {
   if (theme === "system") applyTheme();
+});
+window.electron?.onCustomColorsChange?.((colors) => {
+  if (colors && colors.accent) {
+    settings.accentColor = colors.accent;
+    settings.bgColor = colors.bg;
+    settings.fgColor = colors.fg;
+    localStorage.setItem("cilamai-settings", JSON.stringify(settings));
+    applyCustomColorsVars();
+  }
+});
+window.electron?.onThemeChange?.((t) => {
+  if (!t || t === theme) return;
+  theme = t;
+  clearCustomColorsVars();
+  settings.accentColor = null;
+  settings.bgColor = null;
+  settings.fgColor = null;
+  settings.customColorsActive = false;
+  applyTheme(true);
+  settings.theme = t;
+  localStorage.setItem("cilamai-settings", JSON.stringify(settings));
+  document.querySelectorAll('input[name="theme"]').forEach((r) => {
+    r.checked = r.value === t;
+  });
 });
 const isOpenAI = () => provider === "openai" || provider === "opencode";
 const OPENCODE_URL = "https://console.opencode.ai/inference/openai/v1";
@@ -52899,7 +52196,7 @@ function updateSendBtnState() {
     sendBtn.disabled = false;
   }
 }
-const SESSIONS_KEY = "ollama-sessions";
+const SESSIONS_KEY = "cilamai-sessions";
 let sessions = [];
 let currentSessionId = null;
 try {
@@ -53367,7 +52664,7 @@ function addTypingIndicator() {
   row.className = "chat-row assistant";
   const bubble = document.createElement("div");
   bubble.className = "chat-bubble assistant typing";
-  bubble.innerHTML = "";
+  bubble.innerHTML = '<svg class="md3-loader" viewBox="0 0 50 50" style="color: var(--text-dim);"><use href="#icon-15"></use></svg>';
   row.append(bubble);
   chat.append(row);
   if (isNearBottom(chat)) {
@@ -53632,7 +52929,7 @@ async function loadModels() {
       name.textContent = displayName;
       name.dataset.fullModel = fullName;
       settings.model = fullName;
-      localStorage.setItem("ollama-settings", JSON.stringify(settings));
+      localStorage.setItem("cilamai-settings", JSON.stringify(settings));
       document.dispatchEvent(new CustomEvent("model-context-change", { detail: fullName }));
       menu.hidden = true;
     });
@@ -53660,7 +52957,7 @@ function showSettings() {
 async function loadLocale(lang) {
   currentLang = lang;
   settings.language = lang;
-  localStorage.setItem("ollama-settings", JSON.stringify(settings));
+  localStorage.setItem("cilamai-settings", JSON.stringify(settings));
   try {
     const res = await fetch(`${LANG_BASE}${lang}.json`);
     localeData = res.ok ? await res.json() : {};
@@ -53793,6 +53090,7 @@ function showFeedback() {
   }
 }
 function resetChat() {
+  stopRecognition();
   if (messages.length) saveSession();
   currentSessionId = null;
   clearTimeout(sessionLoadTimer);
@@ -54007,18 +53305,326 @@ async function init() {
     radio.addEventListener("change", () => {
       if (!radio.checked) return;
       theme = radio.value;
+      clearCustomColorsVars2();
+      settings.accentColor = null;
+      settings.bgColor = null;
+      settings.fgColor = null;
+      settings.customColorsActive = false;
+      applyCustomColors();
       applyTheme();
       settings.theme = radio.value;
-      localStorage.setItem("ollama-settings", JSON.stringify(settings));
+      localStorage.setItem("cilamai-settings", JSON.stringify(settings));
     });
   });
+  function initDropdownToggle(btn, menu) {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const wasOpen = menu.classList.contains("open");
+      document.querySelectorAll(".lang-select-menu.open, .font-select-menu.open").forEach((m) => m.classList.remove("open"));
+      if (!wasOpen) {
+        menu.classList.add("open");
+        const rect = btn.getBoundingClientRect();
+        const menuHeight = menu.offsetHeight || 200;
+        const menuWidth = menu.offsetWidth || 180;
+        const openUp = rect.bottom + menuHeight > window.innerHeight - 8;
+        menu.classList.toggle("open-up", openUp);
+        const left = Math.max(8, Math.min(window.innerWidth - menuWidth - 8, rect.right - menuWidth));
+        menu.style.left = `${left}px`;
+        if (openUp) {
+          menu.style.top = "auto";
+          menu.style.bottom = `${window.innerHeight - rect.top + 6}px`;
+        } else {
+          menu.style.top = `${rect.bottom + 6}px`;
+          menu.style.bottom = "auto";
+        }
+      } else {
+        menu.classList.remove("open");
+      }
+    });
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".lang-select-wrap") && !e.target.closest(".theme-preset-wrap")) menu.classList.remove("open");
+    });
+  }
+  const themePresets = {
+    GitHub: { accent: "#0969DA", bg: "#FFFFFF", fg: "#1F2328" },
+    Dark: { accent: "#58a6ff", bg: "#0d1117", fg: "#e6edf3" },
+    Midnight: { accent: "#7c72ff", bg: "#161b22", fg: "#c9d1d9" },
+    Ocean: { accent: "#3bc9db", bg: "#0a1929", fg: "#d0e7ff" },
+    Forest: { accent: "#3fb950", bg: "#0d1f12", fg: "#b4e6b4" },
+    Sunset: { accent: "#f78166", bg: "#1c1210", fg: "#f0d9c8" }
+  };
+  const uiFonts = ["System default", "Inter", "Segoe UI", "Roboto", "JetBrains Mono", "Fira Code", "Cascadia Code"];
+  const fontWeights = ["Regular", "Medium", "Semi Bold", "Bold"];
+  if (settings.uiFont === "SF Pro" || settings.uiFont && !uiFonts.includes(settings.uiFont)) {
+    settings.uiFont = "System default";
+    localStorage.setItem("cilamai-settings", JSON.stringify(settings));
+  }
+  document.documentElement.style.setProperty("--ui-font", settings.uiFont && settings.uiFont !== "System default" ? `'${settings.uiFont}', sans-serif` : 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif');
+  if (settings.fontWeight) {
+    document.documentElement.style.setProperty("--ui-font-weight", settings.fontWeight.toLowerCase().replace(" ", ""));
+  }
+  function addChevronSvg(btn) {
+    const existing = btn.querySelector("svg");
+    if (existing) existing.remove();
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", "12");
+    svg.setAttribute("height", "12");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2.5");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    svg.innerHTML = '<polyline points="6 9 12 15 18 9"/>';
+    btn.appendChild(svg);
+  }
+  function initAppearanceMenus() {
+    const presetMenu = document.getElementById("theme-preset-menu");
+    const presetBtn = document.getElementById("theme-preset-btn");
+    if (presetMenu && presetBtn) {
+      presetMenu.innerHTML = "";
+      Object.keys(themePresets).forEach((name) => {
+        const opt = document.createElement("button");
+        opt.type = "button";
+        opt.className = "lang-option";
+        opt.textContent = name;
+        if (name === (settings.themePreset || "GitHub")) opt.classList.add("selected");
+        opt.addEventListener("click", () => {
+          const preset = themePresets[name];
+          if (!preset) return;
+          settings.themePreset = name;
+          settings.accentColor = preset.accent;
+          settings.bgColor = preset.bg;
+          settings.fgColor = preset.fg;
+          settings.customColorsActive = true;
+          localStorage.setItem("cilamai-settings", JSON.stringify(settings));
+          applyCustomColors();
+          presetBtn.textContent = name;
+          addChevronSvg(presetBtn);
+          presetMenu.classList.remove("open");
+          presetMenu.querySelectorAll(".lang-option").forEach((o) => o.classList.remove("selected"));
+          opt.classList.add("selected");
+        });
+        presetMenu.appendChild(opt);
+      });
+      presetBtn.textContent = settings.themePreset || "GitHub";
+      addChevronSvg(presetBtn);
+      initDropdownToggle(presetBtn, presetMenu);
+    }
+    const fontMenu2 = document.getElementById("theme-ui-font-menu");
+    const fontBtn = document.getElementById("theme-ui-font-btn");
+    if (fontMenu2 && fontBtn) {
+      fontMenu2.innerHTML = "";
+      uiFonts.forEach((name) => {
+        const opt = document.createElement("button");
+        opt.type = "button";
+        opt.className = "lang-option";
+        opt.textContent = name;
+        if (name === (settings.uiFont || "System default")) opt.classList.add("selected");
+        opt.addEventListener("click", () => {
+          settings.uiFont = name;
+          localStorage.setItem("cilamai-settings", JSON.stringify(settings));
+          document.documentElement.style.setProperty("--ui-font", name === "System default" ? "system-ui, sans-serif" : `'${name}', sans-serif`);
+          if (window.electron?.setUiFont) window.electron.setUiFont(name);
+          fontBtn.textContent = name;
+          addChevronSvg(fontBtn);
+          fontMenu2.classList.remove("open");
+          fontMenu2.querySelectorAll(".lang-option").forEach((o) => o.classList.remove("selected"));
+          opt.classList.add("selected");
+        });
+        fontMenu2.appendChild(opt);
+      });
+      fontBtn.textContent = settings.uiFont || "System default";
+      addChevronSvg(fontBtn);
+      initDropdownToggle(fontBtn, fontMenu2);
+    }
+    const weightMenu = document.getElementById("theme-font-weight-menu");
+    const weightBtn = document.getElementById("theme-font-weight-btn");
+    if (weightMenu && weightBtn) {
+      weightMenu.innerHTML = "";
+      fontWeights.forEach((name) => {
+        const opt = document.createElement("button");
+        opt.type = "button";
+        opt.className = "lang-option";
+        opt.textContent = name;
+        if (name === (settings.fontWeight || "Regular")) opt.classList.add("selected");
+        opt.addEventListener("click", () => {
+          settings.fontWeight = name;
+          localStorage.setItem("cilamai-settings", JSON.stringify(settings));
+          document.documentElement.style.setProperty("--ui-font-weight", name.toLowerCase().replace(" ", ""));
+          weightBtn.textContent = name;
+          addChevronSvg(weightBtn);
+          weightMenu.classList.remove("open");
+          weightMenu.querySelectorAll(".lang-option").forEach((o) => o.classList.remove("selected"));
+          opt.classList.add("selected");
+        });
+        weightMenu.appendChild(opt);
+      });
+      weightBtn.textContent = settings.fontWeight || "Regular";
+      addChevronSvg(weightBtn);
+      initDropdownToggle(weightBtn, weightMenu);
+    }
+  }
+  function applyCustomColors() {
+    const accentInput = document.getElementById("theme-accent-color");
+    const bgInput = document.getElementById("theme-bg-color");
+    const fgInput = document.getElementById("theme-fg-color");
+    const accentHex = document.getElementById("theme-accent-hex");
+    const bgHex = document.getElementById("theme-bg-hex");
+    const fgHex = document.getElementById("theme-fg-hex");
+    const accent = settings.accentColor || "#0969DA";
+    const bg = settings.bgColor || "#FFFFFF";
+    const fg = settings.fgColor || "#1F2328";
+    if (accentInput) accentInput.value = accent;
+    if (bgInput) bgInput.value = bg;
+    if (fgInput) fgInput.value = fg;
+    if (accentHex) accentHex.textContent = accent;
+    if (bgHex) bgHex.textContent = bg;
+    if (fgHex) fgHex.textContent = fg;
+    if (settings.customColorsActive) applyCustomColorsVars2();
+  }
+  function hexToRgb(hex) {
+    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (!m) return null;
+    return { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) };
+  }
+  function rgbToHex(r, g, b) {
+    return "#" + [r, g, b].map((x) => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, "0")).join("");
+  }
+  function isColorDark(hex) {
+    const c = hexToRgb(hex);
+    if (!c) return false;
+    return (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255 < 0.5;
+  }
+  function lighten(hex, amt) {
+    const c = hexToRgb(hex);
+    if (!c) return hex;
+    return rgbToHex(c.r + (255 - c.r) * amt, c.g + (255 - c.g) * amt, c.b + (255 - c.b) * amt);
+  }
+  function darken(hex, amt) {
+    const c = hexToRgb(hex);
+    if (!c) return hex;
+    return rgbToHex(c.r * (1 - amt), c.g * (1 - amt), c.b * (1 - amt));
+  }
+  function applyCustomColorsVars2() {
+    const accent = settings.accentColor || "#0969DA";
+    const bg = settings.bgColor || "#FFFFFF";
+    const fg = settings.fgColor || "#1F2328";
+    const root = document.documentElement;
+    const dark = isColorDark(bg);
+    root.style.setProperty("--accent", accent);
+    root.style.setProperty("--bg", bg);
+    root.style.setProperty("--text", fg);
+    root.style.setProperty("--surface", dark ? lighten(bg, 0.08) : darken(bg, 0.03));
+    root.style.setProperty("--surface-2", dark ? lighten(bg, 0.14) : darken(bg, 0.06));
+    root.style.setProperty("--border", dark ? lighten(bg, 0.22) : darken(bg, 0.1));
+    root.style.setProperty("--hover", dark ? lighten(bg, 0.18) : darken(bg, 0.08));
+    root.style.setProperty("--text-dim", dark ? lighten(fg, 0.45) : darken(fg, 0.4));
+    root.style.setProperty("--border-focus", accent);
+    root.style.setProperty("--accent-text", isColorDark(accent) ? "#fff" : "#000");
+    root.style.setProperty("--bubble-user", dark ? lighten(bg, 0.16) : darken(bg, 0.07));
+    root.style.setProperty("--scrollbar-thumb", dark ? lighten(bg, 0.3) : darken(bg, 0.15));
+    window.electron?.setCustomColors?.({ accent, bg, fg });
+  }
+  function clearCustomColorsVars2() {
+    const root = document.documentElement;
+    const vars = ["--accent", "--bg", "--text", "--surface", "--surface-2", "--border", "--hover", "--text-dim", "--border-focus", "--accent-text", "--bubble-user", "--scrollbar-thumb"];
+    vars.forEach((v) => root.style.removeProperty(v));
+    window.electron?.setCustomColors?.({ accent: null, bg: null, fg: null });
+  }
+  function initAppearanceColorInputs() {
+    const accentInput = document.getElementById("theme-accent-color");
+    const bgInput = document.getElementById("theme-bg-color");
+    const fgInput = document.getElementById("theme-fg-color");
+    const accentHex = document.getElementById("theme-accent-hex");
+    const bgHex = document.getElementById("theme-bg-hex");
+    const fgHex = document.getElementById("theme-fg-hex");
+    function handleAccent(e) {
+      settings.accentColor = e.target.value;
+      settings.customColorsActive = true;
+      if (accentHex) accentHex.textContent = e.target.value;
+      localStorage.setItem("cilamai-settings", JSON.stringify(settings));
+      applyCustomColorsVars2();
+    }
+    function handleBg(e) {
+      settings.bgColor = e.target.value;
+      settings.customColorsActive = true;
+      if (bgHex) bgHex.textContent = e.target.value;
+      localStorage.setItem("cilamai-settings", JSON.stringify(settings));
+      applyCustomColorsVars2();
+    }
+    function handleFg(e) {
+      settings.fgColor = e.target.value;
+      settings.customColorsActive = true;
+      if (fgHex) fgHex.textContent = e.target.value;
+      localStorage.setItem("cilamai-settings", JSON.stringify(settings));
+      applyCustomColorsVars2();
+    }
+    if (accentInput) accentInput.addEventListener("input", handleAccent);
+    if (bgInput) bgInput.addEventListener("input", handleBg);
+    if (fgInput) fgInput.addEventListener("input", handleFg);
+    applyCustomColors();
+  }
+  initAppearanceMenus();
+  initAppearanceColorInputs();
+  const importBtn = document.getElementById("theme-import-btn");
+  if (importBtn) {
+    importBtn.addEventListener("click", () => {
+      const input2 = document.createElement("input");
+      input2.type = "file";
+      input2.accept = ".json";
+      input2.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const imported = JSON.parse(ev.target.result);
+            if (imported.accentColor) settings.accentColor = imported.accentColor;
+            if (imported.bgColor) settings.bgColor = imported.bgColor;
+            if (imported.fgColor) settings.fgColor = imported.fgColor;
+            if (imported.uiFont) settings.uiFont = imported.uiFont;
+            if (imported.fontWeight) settings.fontWeight = imported.fontWeight;
+            if (imported.themePreset) settings.themePreset = imported.themePreset;
+            settings.customColorsActive = true;
+            localStorage.setItem("cilamai-settings", JSON.stringify(settings));
+            applyCustomColors();
+            initAppearanceMenus();
+            window.electron?.showNotification?.("Theme imported successfully", "success");
+          } catch {
+            window.electron?.showNotification?.("Invalid theme file", "error");
+          }
+        };
+        reader.readAsText(file);
+      });
+      input2.click();
+    });
+  }
+  const copyBtn = document.getElementById("theme-copy-btn");
+  if (copyBtn) {
+    copyBtn.addEventListener("click", () => {
+      const data = JSON.stringify({
+        accentColor: settings.accentColor,
+        bgColor: settings.bgColor,
+        fgColor: settings.fgColor,
+        uiFont: settings.uiFont,
+        fontWeight: settings.fontWeight,
+        themePreset: settings.themePreset
+      }, null, 2);
+      navigator.clipboard.writeText(data).then(() => {
+        window.electron?.showNotification?.("Theme copied to clipboard", "success");
+      }).catch(() => {
+        window.electron?.showNotification?.("Failed to copy theme", "error");
+      });
+    });
+  }
   document.querySelectorAll('input[name="provider"]').forEach((radio) => {
     if (radio.value === provider) radio.checked = true;
     radio.addEventListener("change", () => {
       if (!radio.checked) return;
       provider = radio.value;
       settings.provider = provider;
-      localStorage.setItem("ollama-settings", JSON.stringify(settings));
+      localStorage.setItem("cilamai-settings", JSON.stringify(settings));
       loadModels();
     });
   });
@@ -54035,7 +53641,7 @@ async function init() {
         baseUrl = value;
         settings.url = value;
       }
-      localStorage.setItem("ollama-settings", JSON.stringify(settings));
+      localStorage.setItem("cilamai-settings", JSON.stringify(settings));
       loadModels();
     });
   }
@@ -54045,7 +53651,7 @@ async function init() {
     keyInput.addEventListener("change", () => {
       apiKey = keyInput.value.trim();
       settings.apiKey = apiKey;
-      localStorage.setItem("ollama-settings", JSON.stringify(settings));
+      localStorage.setItem("cilamai-settings", JSON.stringify(settings));
     });
   }
   const orgInput = document.querySelector("#org-id");
@@ -54054,7 +53660,7 @@ async function init() {
     orgInput.addEventListener("change", () => {
       orgId = orgInput.value.trim();
       settings.orgId = orgId;
-      localStorage.setItem("ollama-settings", JSON.stringify(settings));
+      localStorage.setItem("cilamai-settings", JSON.stringify(settings));
     });
   }
   document.querySelector("#refresh-models")?.addEventListener("click", async () => {
@@ -54107,7 +53713,7 @@ async function init() {
       opt.addEventListener("click", () => {
         const size = opt.dataset.fontSize;
         settings.fontSize = size;
-        localStorage.setItem("ollama-settings", JSON.stringify(settings));
+        localStorage.setItem("cilamai-settings", JSON.stringify(settings));
         applyFont(size);
         fontMenu.hidden = true;
       });
@@ -54208,9 +53814,50 @@ async function init() {
     else document.body.classList.remove("shimmer-enabled");
     shimmerCheck.addEventListener("change", () => {
       settings.shimmerEffect = shimmerCheck.checked;
-      localStorage.setItem("ollama-settings", JSON.stringify(settings));
+      localStorage.setItem("cilamai-settings", JSON.stringify(settings));
       if (settings.shimmerEffect) document.body.classList.add("shimmer-enabled");
       else document.body.classList.remove("shimmer-enabled");
+    });
+  }
+  document.querySelectorAll(".setting-segmented").forEach((group) => {
+    const key = group.querySelector(".segmented-btn")?.dataset.segmented;
+    if (key) {
+      const saved = settings[key];
+      if (saved) {
+        group.querySelectorAll(".segmented-btn").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.value === saved);
+        });
+      }
+    }
+    group.addEventListener("click", (e) => {
+      const btn = e.target.closest(".segmented-btn");
+      if (!btn) return;
+      group.querySelectorAll(".segmented-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      const prefKey = btn.dataset.segmented;
+      if (prefKey) {
+        settings[prefKey] = btn.dataset.value;
+        localStorage.setItem("cilamai-settings", JSON.stringify(settings));
+      }
+    });
+  });
+  const prefPointerCursors = document.querySelector("#pref-pointer-cursors");
+  if (prefPointerCursors) {
+    prefPointerCursors.checked = settings.pointerCursors !== false;
+    if (settings.pointerCursors !== false) document.body.classList.add("pointer-cursors");
+    prefPointerCursors.addEventListener("change", () => {
+      settings.pointerCursors = prefPointerCursors.checked;
+      localStorage.setItem("cilamai-settings", JSON.stringify(settings));
+      document.body.classList.toggle("pointer-cursors", prefPointerCursors.checked);
+    });
+  }
+  const prefUiFontSize = document.querySelector("#pref-ui-font-size");
+  if (prefUiFontSize) {
+    if (settings.uiFontSize) prefUiFontSize.value = settings.uiFontSize;
+    prefUiFontSize.addEventListener("change", () => {
+      settings.uiFontSize = prefUiFontSize.value;
+      localStorage.setItem("cilamai-settings", JSON.stringify(settings));
+      document.documentElement.style.setProperty("--ui-font-scale", `${prefUiFontSize.value / 16}`);
     });
   }
   const selectModel = (fullName) => {
@@ -54220,7 +53867,7 @@ async function init() {
     name.textContent = displayName;
     name.dataset.fullModel = fullName;
     settings.model = fullName;
-    localStorage.setItem("ollama-settings", JSON.stringify(settings));
+    localStorage.setItem("cilamai-settings", JSON.stringify(settings));
     const compInput = document.querySelector(".composer-input");
     if (compInput) compInput.setAttribute("placeholder", `Message ${displayName}`);
     showNotification(`Model set to ${displayName}`, "info");
@@ -54364,7 +54011,7 @@ async function init() {
         settings.zaiApiKey = raw;
       }
     }
-    localStorage.setItem("ollama-settings", JSON.stringify(settings));
+    localStorage.setItem("cilamai-settings", JSON.stringify(settings));
     const keyInput2 = document.querySelector("#api-key");
     if (keyInput2) keyInput2.value = apiKey;
     const opencodeInput = document.getElementById("opencode-api-key");
@@ -54409,7 +54056,7 @@ async function init() {
       changed = true;
     }
     if (changed) {
-      localStorage.setItem("ollama-settings", JSON.stringify(settings));
+      localStorage.setItem("cilamai-settings", JSON.stringify(settings));
       loadModels();
     }
   });
@@ -54447,7 +54094,7 @@ async function init() {
             saveApiKey(args.slice(1).join(":"), target);
           }
           settings.model = target;
-          localStorage.setItem("ollama-settings", JSON.stringify(settings));
+          localStorage.setItem("cilamai-settings", JSON.stringify(settings));
           await loadModels();
           const opt = document.querySelector(`.model-option[data-model="${target}"]`);
           if (opt) {
@@ -54503,7 +54150,7 @@ async function init() {
         else if (mode === "off") showThinking = false;
         else if (mode === "toggle" || !mode) showThinking = !showThinking;
         settings.showThinking = showThinking;
-        localStorage.setItem("ollama-settings", JSON.stringify(settings));
+        localStorage.setItem("cilamai-settings", JSON.stringify(settings));
         showNotification(showThinking ? "Thinking shown" : "Thinking hidden", "warning");
       },
       "thought": () => {
@@ -54512,7 +54159,7 @@ async function init() {
         else if (mode === "off") showThinking = false;
         else if (mode === "toggle" || !mode) showThinking = !showThinking;
         settings.showThinking = showThinking;
-        localStorage.setItem("ollama-settings", JSON.stringify(settings));
+        localStorage.setItem("cilamai-settings", JSON.stringify(settings));
         showNotification(showThinking ? "Thinking shown" : "Thinking hidden", "warning");
       },
       "context-window-boost": () => {
@@ -54974,6 +54621,65 @@ async function init() {
       attachMenu.hidden = true;
     }
   });
+  const micBtn = document.querySelector("[data-mic-toggle]");
+  const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (micBtn) {
+    if (!SpeechRecognitionCtor) {
+      micBtn.hidden = true;
+    } else {
+      const speechLangFor = () => {
+        if (currentLang === "zh" || currentLang === "zh-TW") return currentLang === "zh-TW" ? "zh-TW" : "zh-CN";
+        return localeData && localeData.speechLang || currentLang || "en-US";
+      };
+      recognition = new SpeechRecognitionCtor();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = speechLangFor();
+      recognition.onresult = (event) => {
+        const input2 = document.querySelector(".composer-input");
+        if (!input2) return;
+        let finalText = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const res = event.results[i];
+          if (res.isFinal) finalText += res[0].transcript;
+        }
+        if (finalText) {
+          const start = input2.selectionStart ?? input2.value.length;
+          const end = input2.selectionEnd ?? input2.value.length;
+          const merged = (input2.value.slice(0, start) + finalText + input2.value.slice(end)).replace(/\s{2,}/g, " ");
+          input2.value = merged;
+          const pos = start + finalText.length;
+          input2.setSelectionRange(pos, pos);
+          input2.dispatchEvent(new Event("input"));
+        }
+      };
+      recognition.onerror = (e) => {
+        if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+          showWarning(tf("micPermission", "Microphone access was denied."));
+        } else if (e.error !== "aborted" && e.error !== "no-speech") {
+          showWarning(tf("micError", "Voice input stopped."));
+        }
+        stopRecognition();
+      };
+      recognition.onend = () => stopRecognition();
+      micBtn.addEventListener("click", () => {
+        const input2 = document.querySelector(".composer-input");
+        if (recognizing) {
+          stopRecognition();
+          return;
+        }
+        if (input2) input2.focus();
+        try {
+          recognition.lang = speechLangFor();
+          recognition.start();
+          recognizing = true;
+          micBtn.classList.add("listening");
+        } catch {
+          stopRecognition();
+        }
+      });
+    }
+  }
   const RESET_INTERVAL = 24 * 60 * 60 * 1e3;
   let creditUsed = 0;
   let creditLimit = 100;
@@ -55418,15 +55124,7 @@ async function init() {
       localStorage.removeItem("cilamai-user");
       window.electron?.stopStream?.();
       await window.electron?.signOut?.();
-      updateUserUI();
-      creditUsed = 0;
-      creditLimit = 100;
-      creditResetAt = Date.now() + RESET_INTERVAL;
-      creditSpent = 0;
-      await loadCredits();
-      closeUserMenu();
-      if (creditMenu) creditMenu.hidden = true;
-      showNotification("Signed out successfully", "info");
+      window.location.href = "./signin.html";
     }, {
       message: "Are you sure you want to sign out?",
       confirmLabel: "Sign Out"
@@ -55771,7 +55469,7 @@ async function init() {
       const combo = normalizeKey(e);
       hotkeys[action] = combo;
       settings.hotkeys = { ...hotkeys };
-      localStorage.setItem("ollama-settings", JSON.stringify(settings));
+      localStorage.setItem("cilamai-settings", JSON.stringify(settings));
       renderComboKeys(input2.querySelector(".hotkey-keys"), combo);
       input2.classList.remove("empty");
       stopRecording(input2);
@@ -55797,7 +55495,7 @@ async function init() {
       if (action && DEFAULT_HOTKEYS[action]) {
         hotkeys[action] = DEFAULT_HOTKEYS[action];
         settings.hotkeys = { ...hotkeys };
-        localStorage.setItem("ollama-settings", JSON.stringify(settings));
+        localStorage.setItem("cilamai-settings", JSON.stringify(settings));
         const input3 = row.querySelector(".hotkey-input");
         if (input3) {
           renderComboKeys(input3.querySelector(".hotkey-keys"), hotkeys[action]);
@@ -55813,261 +55511,11 @@ async function init() {
   document.querySelector("#reset-hotkeys")?.addEventListener("click", () => {
     hotkeys = { ...DEFAULT_HOTKEYS };
     settings.hotkeys = { ...hotkeys };
-    localStorage.setItem("ollama-settings", JSON.stringify(settings));
+    localStorage.setItem("cilamai-settings", JSON.stringify(settings));
     renderHotkeys();
     showNotification(tf("hotkeysReset", "Hotkeys reset to defaults"), "warning");
   });
   renderHotkeys();
-  const mcpServerListEl = document.querySelector("#mcp-server-list");
-  const addMcpBtn = document.querySelector("#add-mcp-server-btn");
-  const mcpDialogOverlay = document.querySelector("#mcp-dialog-overlay");
-  const mcpDialogClose = document.querySelector("#mcp-dialog-close");
-  const mcpDialogCancel = document.querySelector("#mcp-dialog-cancel");
-  const mcpServerForm = document.querySelector("#mcp-server-form");
-  const mcpDialogTitle = document.querySelector("#mcp-dialog-title");
-  const mcpEditId = document.querySelector("#mcp-edit-id");
-  const mcpNameInput = document.querySelector("#mcp-name");
-  const mcpTypeSelect = document.querySelector("#mcp-type");
-  const mcpCommandInput = document.querySelector("#mcp-command");
-  const mcpArgsInput = document.querySelector("#mcp-args");
-  const mcpUrlInput = document.querySelector("#mcp-url");
-  const mcpEnvInput = document.querySelector("#mcp-env");
-  const mcpCommandGroup = document.querySelector("#mcp-command-group");
-  const mcpArgsGroup = document.querySelector("#mcp-args-group");
-  const mcpUrlGroup = document.querySelector("#mcp-url-group");
-  const DEFAULT_MCP_SERVERS = [
-    {
-      id: "mcp-fs",
-      name: "Filesystem",
-      type: "stdio",
-      command: "npx",
-      args: "-y @modelcontextprotocol/server-filesystem C:\\Users\\omg\\Desktop",
-      url: "",
-      env: "",
-      enabled: true
-    },
-    {
-      id: "mcp-brave",
-      name: "Brave Search",
-      type: "stdio",
-      command: "npx",
-      args: "-y @modelcontextprotocol/server-brave-search",
-      url: "",
-      env: '{\n  "BRAVE_API_KEY": ""\n}',
-      enabled: false
-    },
-    {
-      id: "mcp-memory",
-      name: "Memory",
-      type: "stdio",
-      command: "npx",
-      args: "-y @modelcontextprotocol/server-memory",
-      url: "",
-      env: "",
-      enabled: false
-    }
-  ];
-  let mcpServers = [];
-  try {
-    const savedMcp = localStorage.getItem("cilamai-mcp-servers");
-    mcpServers = savedMcp ? JSON.parse(savedMcp) : DEFAULT_MCP_SERVERS;
-  } catch {
-    mcpServers = DEFAULT_MCP_SERVERS;
-  }
-  const saveMcpServers = () => {
-    try {
-      localStorage.setItem("cilamai-mcp-servers", JSON.stringify(mcpServers));
-    } catch {
-    }
-  };
-  const updateMcpTypeFields = (type) => {
-    if (type === "sse") {
-      if (mcpCommandGroup) mcpCommandGroup.hidden = true;
-      if (mcpArgsGroup) mcpArgsGroup.hidden = true;
-      if (mcpUrlGroup) mcpUrlGroup.hidden = false;
-      if (mcpCommandInput) mcpCommandInput.required = false;
-      if (mcpUrlInput) mcpUrlInput.required = true;
-    } else {
-      if (mcpCommandGroup) mcpCommandGroup.hidden = false;
-      if (mcpArgsGroup) mcpArgsGroup.hidden = false;
-      if (mcpUrlGroup) mcpUrlGroup.hidden = true;
-      if (mcpCommandInput) mcpCommandInput.required = true;
-      if (mcpUrlInput) mcpUrlInput.required = false;
-    }
-  };
-  const openMcpAddModal = () => {
-    if (!mcpDialogOverlay) return;
-    if (mcpEditId) mcpEditId.value = "";
-    if (mcpDialogTitle) mcpDialogTitle.textContent = "Add MCP Server";
-    if (mcpNameInput) mcpNameInput.value = "";
-    if (mcpTypeSelect) mcpTypeSelect.value = "stdio";
-    if (mcpCommandInput) mcpCommandInput.value = "npx";
-    if (mcpArgsInput) mcpArgsInput.value = "";
-    if (mcpUrlInput) mcpUrlInput.value = "";
-    if (mcpEnvInput) mcpEnvInput.value = "";
-    updateMcpTypeFields("stdio");
-    mcpDialogOverlay.hidden = false;
-    mcpNameInput?.focus();
-  };
-  const openMcpEditModal = (server) => {
-    if (!mcpDialogOverlay) return;
-    if (mcpEditId) mcpEditId.value = server.id;
-    if (mcpDialogTitle) mcpDialogTitle.textContent = "Edit MCP Server";
-    if (mcpNameInput) mcpNameInput.value = server.name || "";
-    if (mcpTypeSelect) mcpTypeSelect.value = server.type || "stdio";
-    if (mcpCommandInput) mcpCommandInput.value = server.command || "";
-    if (mcpArgsInput) mcpArgsInput.value = server.args || "";
-    if (mcpUrlInput) mcpUrlInput.value = server.url || "";
-    if (mcpEnvInput) mcpEnvInput.value = server.env || "";
-    updateMcpTypeFields(server.type || "stdio");
-    mcpDialogOverlay.hidden = false;
-  };
-  const closeMcpModal = () => {
-    if (mcpDialogOverlay) mcpDialogOverlay.hidden = true;
-  };
-  const renderMcpServers = () => {
-    if (!mcpServerListEl) return;
-    mcpServerListEl.innerHTML = "";
-    if (mcpServers.length === 0) {
-      mcpServerListEl.innerHTML = `<div class="mcp-empty-state">No MCP servers configured. Click "+ Add MCP Server" to get started.</div>`;
-      return;
-    }
-    mcpServers.forEach((server) => {
-      const card = document.createElement("div");
-      card.className = "mcp-server-card";
-      const info = document.createElement("div");
-      info.className = "mcp-card-info";
-      const titleRow = document.createElement("div");
-      titleRow.className = "mcp-card-title-row";
-      const nameSpan = document.createElement("span");
-      nameSpan.className = "mcp-card-name";
-      nameSpan.textContent = server.name;
-      titleRow.appendChild(nameSpan);
-      const cmdSpan = document.createElement("span");
-      cmdSpan.className = "mcp-card-cmd";
-      cmdSpan.textContent = server.type === "stdio" ? `${server.command} ${server.args || ""}` : server.url || "SSE URL";
-      info.appendChild(titleRow);
-      info.appendChild(cmdSpan);
-      const actions = document.createElement("div");
-      actions.className = "mcp-card-actions";
-      const toggleLabel = document.createElement("label");
-      toggleLabel.className = "setting-check";
-      const toggleInput = document.createElement("input");
-      toggleInput.type = "checkbox";
-      toggleInput.checked = !!server.enabled;
-      toggleInput.addEventListener("change", () => {
-        server.enabled = toggleInput.checked;
-        saveMcpServers();
-        renderMcpServers();
-        showNotification(`${server.name}: ${server.enabled ? "Enabled" : "Disabled"}`, "warning");
-      });
-      const switchSpan = document.createElement("span");
-      switchSpan.className = "switch";
-      const thumb = document.createElement("span");
-      thumb.className = "switch-thumb";
-      switchSpan.appendChild(thumb);
-      toggleLabel.appendChild(toggleInput);
-      toggleLabel.appendChild(switchSpan);
-      const editBtn = document.createElement("button");
-      editBtn.type = "button";
-      editBtn.className = "mcp-icon-btn";
-      editBtn.title = "Edit Server";
-      editBtn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
-      editBtn.addEventListener("click", () => openMcpEditModal(server));
-      const delBtn = document.createElement("button");
-      delBtn.type = "button";
-      delBtn.className = "mcp-icon-btn danger";
-      delBtn.title = "Delete Server";
-      delBtn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
-      delBtn.addEventListener("click", () => {
-        mcpServers = mcpServers.filter((s) => s.id !== server.id);
-        saveMcpServers();
-        renderMcpServers();
-        showNotification(`${server.name} removed`, "warning");
-      });
-      actions.appendChild(toggleLabel);
-      actions.appendChild(editBtn);
-      actions.appendChild(delBtn);
-      card.appendChild(info);
-      card.appendChild(actions);
-      mcpServerListEl.appendChild(card);
-    });
-  };
-  mcpTypeSelect?.addEventListener("change", (e) => {
-    updateMcpTypeFields(e.target.value);
-  });
-  addMcpBtn?.addEventListener("click", openMcpAddModal);
-  mcpDialogClose?.addEventListener("click", closeMcpModal);
-  mcpDialogCancel?.addEventListener("click", closeMcpModal);
-  mcpDialogOverlay?.addEventListener("click", (e) => {
-    if (e.target === mcpDialogOverlay) closeMcpModal();
-  });
-  document.querySelectorAll("[data-mcp-tpl]").forEach((chip) => {
-    chip.addEventListener("click", () => {
-      const tpl = chip.getAttribute("data-mcp-tpl");
-      if (tpl === "filesystem") {
-        if (mcpNameInput) mcpNameInput.value = "Filesystem";
-        if (mcpTypeSelect) mcpTypeSelect.value = "stdio";
-        if (mcpCommandInput) mcpCommandInput.value = "npx";
-        if (mcpArgsInput) mcpArgsInput.value = "-y @modelcontextprotocol/server-filesystem C:\\Users\\omg\\Desktop";
-        if (mcpUrlInput) mcpUrlInput.value = "";
-        if (mcpEnvInput) mcpEnvInput.value = "";
-      } else if (tpl === "brave") {
-        if (mcpNameInput) mcpNameInput.value = "Brave Search";
-        if (mcpTypeSelect) mcpTypeSelect.value = "stdio";
-        if (mcpCommandInput) mcpCommandInput.value = "npx";
-        if (mcpArgsInput) mcpArgsInput.value = "-y @modelcontextprotocol/server-brave-search";
-        if (mcpUrlInput) mcpUrlInput.value = "";
-        if (mcpEnvInput) mcpEnvInput.value = '{\n  "BRAVE_API_KEY": "YOUR_API_KEY"\n}';
-      } else if (tpl === "github") {
-        if (mcpNameInput) mcpNameInput.value = "GitHub";
-        if (mcpTypeSelect) mcpTypeSelect.value = "stdio";
-        if (mcpCommandInput) mcpCommandInput.value = "npx";
-        if (mcpArgsInput) mcpArgsInput.value = "-y @modelcontextprotocol/server-github";
-        if (mcpUrlInput) mcpUrlInput.value = "";
-        if (mcpEnvInput) mcpEnvInput.value = '{\n  "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_TOKEN"\n}';
-      } else if (tpl === "memory") {
-        if (mcpNameInput) mcpNameInput.value = "Memory";
-        if (mcpTypeSelect) mcpTypeSelect.value = "stdio";
-        if (mcpCommandInput) mcpCommandInput.value = "npx";
-        if (mcpArgsInput) mcpArgsInput.value = "-y @modelcontextprotocol/server-memory";
-        if (mcpUrlInput) mcpUrlInput.value = "";
-        if (mcpEnvInput) mcpEnvInput.value = "";
-      }
-      if (mcpTypeSelect) updateMcpTypeFields(mcpTypeSelect.value);
-    });
-  });
-  mcpServerForm?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const id = mcpEditId?.value?.trim() || `mcp-${Date.now()}`;
-    const name = mcpNameInput?.value?.trim() || "MCP Server";
-    const type = mcpTypeSelect?.value || "stdio";
-    const command = mcpCommandInput?.value?.trim() || "";
-    const args = mcpArgsInput?.value?.trim() || "";
-    const url = mcpUrlInput?.value?.trim() || "";
-    const env = mcpEnvInput?.value?.trim() || "";
-    const existingIndex = mcpServers.findIndex((s) => s.id === id);
-    const serverObj = {
-      id,
-      name,
-      type,
-      command,
-      args,
-      url,
-      env,
-      enabled: existingIndex >= 0 ? mcpServers[existingIndex].enabled : true
-    };
-    if (existingIndex >= 0) {
-      mcpServers[existingIndex] = serverObj;
-    } else {
-      mcpServers.push(serverObj);
-    }
-    saveMcpServers();
-    renderMcpServers();
-    closeMcpModal();
-    showNotification(`${name} saved successfully`, "warning");
-  });
-  renderMcpServers();
   document.addEventListener("keydown", (e) => {
     if (document.querySelector(".hotkey-input.recording")) return;
     const target = e.target;
@@ -56088,6 +55536,7 @@ async function init() {
   form?.addEventListener("submit", async (e) => {
     e.preventDefault();
     hideCommandsMenu();
+    stopRecognition();
     const text = input?.value.trim();
     if (!text && pendingImages.length === 0) return;
     if (!currentUser) {
@@ -56379,11 +55828,6 @@ async function init() {
   const remaining = Math.max(0, 5e3 - (Date.now() - started));
   setTimeout(() => {
     hideStartup();
-    if (!currentUser) {
-      setTimeout(() => {
-        window.electron?.openSigninWindow?.();
-      }, 300);
-    }
   }, remaining);
   const MAX_STARTUP_TIMEOUT = 8e3;
   setTimeout(hideStartup, MAX_STARTUP_TIMEOUT);

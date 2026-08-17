@@ -67,7 +67,6 @@ export async function chatSendStream({ url, model, messages, provider, apiKey, e
     res = await fetch(url, {
       method: 'POST',
       headers,
-      signal,
       body: JSON.stringify({ model, messages, stream: true })
     })
     if (!res.ok) {
@@ -88,6 +87,15 @@ export async function chatSendStream({ url, model, messages, provider, apiKey, e
   // Accumulates partial <think> blocks that span multiple stream chunks
   let thinkBuffer = ''
   let inThinkTag = false
+
+  // Abort by cancelling the *response* reader only, not the request body upload.
+  // Aborting the POST body itself tears down the upload data pipe and surfaces the
+  // "chunked_data_pipe_upload_data_stream OnSizeReceived failed" network error.
+  let aborted = false
+  if (signal) {
+    if (signal.aborted) aborted = true
+    signal.addEventListener('abort', () => { aborted = true })
+  }
 
   // Route text through <think>...</think> splitter.
   // Content inside tags goes to onReasoning; everything else goes to onChunk.
@@ -130,6 +138,7 @@ export async function chatSendStream({ url, model, messages, provider, apiKey, e
   }
 
   while (true) {
+    if (aborted) break
     const { done, value } = await reader.read()
     if (done) break
     buffer += decoder.decode(value, { stream: true })
@@ -177,6 +186,9 @@ export async function chatSendStream({ url, model, messages, provider, apiKey, e
         routeContent(chunk.message?.content ?? '')
       }
     }
+  }
+  if (aborted) {
+    try { await reader.cancel() } catch {}
   }
   return { ok: true }
 }

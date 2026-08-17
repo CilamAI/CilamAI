@@ -1471,6 +1471,22 @@ async function init() {
     document.documentElement.style.setProperty('--ui-font-weight', settings.fontWeight.toLowerCase().replace(' ', ''))
   }
 
+  function addChevronSvg(btn) {
+    const existing = btn.querySelector('svg')
+    if (existing) existing.remove()
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    svg.setAttribute('width', '12')
+    svg.setAttribute('height', '12')
+    svg.setAttribute('viewBox', '0 0 24 24')
+    svg.setAttribute('fill', 'none')
+    svg.setAttribute('stroke', 'currentColor')
+    svg.setAttribute('stroke-width', '2.5')
+    svg.setAttribute('stroke-linecap', 'round')
+    svg.setAttribute('stroke-linejoin', 'round')
+    svg.innerHTML = '<polyline points="6 9 12 15 18 9"/>'
+    btn.appendChild(svg)
+  }
+
   function initAppearanceMenus() {
     const presetMenu = document.getElementById('theme-preset-menu')
     const presetBtn = document.getElementById('theme-preset-btn')
@@ -1493,6 +1509,7 @@ async function init() {
           localStorage.setItem('cilamai-settings', JSON.stringify(settings))
           applyCustomColors()
           presetBtn.textContent = name
+          addChevronSvg(presetBtn)
           presetMenu.classList.remove('open')
           presetMenu.querySelectorAll('.lang-option').forEach((o) => o.classList.remove('selected'))
           opt.classList.add('selected')
@@ -1500,6 +1517,7 @@ async function init() {
         presetMenu.appendChild(opt)
       })
       presetBtn.textContent = settings.themePreset || 'GitHub'
+      addChevronSvg(presetBtn)
       initDropdownToggle(presetBtn, presetMenu)
     }
 
@@ -1517,7 +1535,9 @@ async function init() {
           settings.uiFont = name
           localStorage.setItem('cilamai-settings', JSON.stringify(settings))
           document.documentElement.style.setProperty('--ui-font', name === 'System default' ? 'system-ui, sans-serif' : `'${name}', sans-serif`)
+          if (window.electron?.setUiFont) window.electron.setUiFont(name)
           fontBtn.textContent = name
+          addChevronSvg(fontBtn)
           fontMenu.classList.remove('open')
           fontMenu.querySelectorAll('.lang-option').forEach((o) => o.classList.remove('selected'))
           opt.classList.add('selected')
@@ -1525,6 +1545,7 @@ async function init() {
         fontMenu.appendChild(opt)
       })
       fontBtn.textContent = settings.uiFont || 'System default'
+      addChevronSvg(fontBtn)
       initDropdownToggle(fontBtn, fontMenu)
     }
 
@@ -1543,6 +1564,7 @@ async function init() {
           localStorage.setItem('cilamai-settings', JSON.stringify(settings))
           document.documentElement.style.setProperty('--ui-font-weight', name.toLowerCase().replace(' ', ''))
           weightBtn.textContent = name
+          addChevronSvg(weightBtn)
           weightMenu.classList.remove('open')
           weightMenu.querySelectorAll('.lang-option').forEach((o) => o.classList.remove('selected'))
           opt.classList.add('selected')
@@ -1550,6 +1572,7 @@ async function init() {
         weightMenu.appendChild(opt)
       })
       weightBtn.textContent = settings.fontWeight || 'Regular'
+      addChevronSvg(weightBtn)
       initDropdownToggle(weightBtn, weightMenu)
     }
   }

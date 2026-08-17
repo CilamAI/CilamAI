@@ -11,7 +11,7 @@ function applyTheme(themeName) {
 
 async function loadTheme() {
   try {
-    const raw = localStorage.getItem('ollama-settings')
+    const raw = localStorage.getItem('cilamai-settings')
     if (raw) {
       const parsed = JSON.parse(raw)
       if (parsed.theme) currentTheme = parsed.theme
@@ -38,7 +38,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () 
 async function loadLocale() {
   let lang = 'en'
   try {
-    const raw = localStorage.getItem('ollama-settings')
+    const raw = localStorage.getItem('cilamai-settings')
     if (raw) {
       const parsed = JSON.parse(raw)
       if (parsed.language) lang = parsed.language

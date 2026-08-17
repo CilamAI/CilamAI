@@ -349,8 +349,16 @@ ipcMain.handle('app:set-language', (_event, lang) => {
 
 let currentTheme = 'dark'
 
+const themeFile = () => join(app.getPath('userData'), 'theme.json')
+
+try {
+  const savedTheme = readFileSync(themeFile(), 'utf8')
+  if (savedTheme) currentTheme = savedTheme.trim()
+} catch {}
+
 function broadcastTheme(theme) {
   currentTheme = theme
+  try { writeFileSync(themeFile(), theme) } catch {}
   BrowserWindow.getAllWindows().forEach((w) => {
     if (!w.isDestroyed()) {
       w.webContents.send('app:theme-changed', theme)
@@ -364,6 +372,42 @@ ipcMain.handle('app:set-theme', (_event, theme) => {
 })
 
 ipcMain.handle('app:get-theme', () => ({ theme: currentTheme }))
+
+let currentCustomColors = { accent: null, bg: null, fg: null }
+
+function broadcastCustomColors(colors) {
+  currentCustomColors = colors
+  BrowserWindow.getAllWindows().forEach((w) => {
+    if (!w.isDestroyed()) {
+      w.webContents.send('app:custom-colors-changed', colors)
+    }
+  })
+}
+
+ipcMain.handle('app:set-custom-colors', (_event, colors) => {
+  broadcastCustomColors(colors)
+  return { ok: true, colors }
+})
+
+ipcMain.handle('app:get-custom-colors', () => ({ colors: currentCustomColors }))
+
+let currentUiFont = 'System default'
+
+function broadcastUiFont(uiFont) {
+  currentUiFont = uiFont
+  BrowserWindow.getAllWindows().forEach((w) => {
+    if (!w.isDestroyed()) {
+      w.webContents.send('app:ui-font-changed', uiFont)
+    }
+  })
+}
+
+ipcMain.handle('app:set-ui-font', (_event, uiFont) => {
+  broadcastUiFont(uiFont)
+  return { ok: true, uiFont }
+})
+
+ipcMain.handle('app:get-ui-font', () => ({ uiFont: currentUiFont }))
 
 ipcMain.on('app:console-log', (_event, msg) => console.log(msg))
 ipcMain.on('app:console-info', (_event, msg) => console.info(msg))
@@ -1500,6 +1544,9 @@ function openSigninWindow() {
 
   signinWindow.webContents.on('did-finish-load', () => {
     signinWindow.webContents.send('app:theme-changed', currentTheme)
+    if (currentCustomColors.accent) {
+      signinWindow.webContents.send('app:custom-colors-changed', currentCustomColors)
+    }
   })
 
   signinWindow.on('closed', () => {
@@ -1554,6 +1601,9 @@ function openFeedbackWindow() {
 
   feedbackWindow.webContents.on('did-finish-load', () => {
     feedbackWindow.webContents.send('app:theme-changed', currentTheme)
+    if (currentCustomColors.accent) {
+      feedbackWindow.webContents.send('app:custom-colors-changed', currentCustomColors)
+    }
   })
 
   feedbackWindow.on('closed', () => {

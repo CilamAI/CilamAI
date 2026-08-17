@@ -6,8 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CilamAI</title>
   <link rel="icon" href="./assets/favicon-C0RpBe3M.ico" />
-  <script type="module" crossorigin src="./assets/index-D9cxsj3q.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/style-BBLsgr0A.css">
+  <script type="module" crossorigin src="./assets/index-Db1RlrFS.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/style-B_7FTBW6.css">
 </head>
 
 <body>
@@ -87,7 +87,7 @@
       <circle cx="12" cy="13" r="4" />
     </symbol>
     <symbol id="icon-20" viewBox="0 0 24 24">
-      <path d="m6 9 6 6 6-6" />
+      <polyline points="6 9 12 15 18 9" />
     </symbol>
     <symbol id="icon-21" viewBox="0 0 24 24">
       <path
@@ -251,16 +251,12 @@
   </svg>
 
   <div class="startup-loading" id="startup-loading">
-    <svg class="md3-morph-indicator" viewBox="0 0 48 48" width="56" height="56">
-      <path fill="currentColor">
-        <animate attributeName="d" dur="3.6s" repeatCount="indefinite"
-          values="M 12 12 C 18 12 30 12 36 12 C 36 18 36 30 36 36 C 30 36 18 36 12 36 C 12 30 12 18 12 12 Z;
-                  M 24 5 C 34 5 43 14 43 24 C 43 34 34 43 24 43 C 14 43 5 34 5 24 C 5 14 14 5 24 5 Z;
-                  M 24 4 C 32 12 36 16 44 24 C 36 32 32 36 24 44 C 16 36 12 32 4 24 C 12 16 16 12 24 4 Z;
-                  M 24 7 C 27 16 32 21 41 24 C 32 27 27 32 24 41 C 21 32 16 27 7 24 C 16 21 21 16 24 7 Z;
-                  M 12 12 C 18 12 30 12 36 12 C 36 18 36 30 36 36 C 30 36 18 36 12 36 C 12 30 12 18 12 12 Z" />
-      </path>
-    </svg>
+    <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+      <svg class="md-spinner" viewBox="0 0 24 24" width="48" height="48" style="color: #acacac;">
+        <path fill="currentColor" d="M12 2C12 7.52 16.48 12 22 12C16.48 12 12 16.48 12 22C12 16.48 7.52 12 2 12C7.52 12 12 7.52 12 2Z"/>
+      </svg>
+    </div>
+
   </div>
 
   <section class="onboarding" data-onboarding hidden>
@@ -504,6 +500,14 @@
             </div>
           </div>
         </div>
+        <button type="button" class="composer-btn mic" aria-label="Voice input" data-mic-toggle>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+            <line x1="12" y1="19" x2="12" y2="23" />
+            <line x1="8" y1="23" x2="16" y2="23" />
+          </svg>
+        </button>
         <button type="submit" class="composer-btn send" aria-label="Send">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
             stroke-linecap="round" stroke-linejoin="round">
@@ -520,167 +524,263 @@
 
     <section class="settings-view" hidden>
       <h2 data-i18n="settings">Settings</h2>
-      <div class="setting-field theme-setting">
-        <span data-i18n="theme">Theme</span>
-        <div class="theme-options">
-          <label class="theme-card">
-            <input type="radio" name="theme" value="dark" />
-            <svg viewBox="0 0 96 60" class="theme-preview" aria-hidden="true">
-              <use href="#icon-24"></use>
-            </svg>
-            <span data-i18n="dark">Dark</span>
-          </label>
-          <label class="theme-card">
-            <input type="radio" name="theme" value="system" />
-            <svg viewBox="0 0 96 60" class="theme-preview" aria-hidden="true">
-              <use href="#icon-25"></use>
-            </svg>
-            <span data-i18n="system">System</span>
-          </label>
-          <label class="theme-card">
-            <input type="radio" name="theme" value="light" />
-            <svg viewBox="0 0 96 60" class="theme-preview" aria-hidden="true">
-              <use href="#icon-26"></use>
-            </svg>
-            <span data-i18n="light">Light</span>
-          </label>
-          <label class="theme-card">
-            <input type="radio" name="theme" value="blue" />
-            <svg viewBox="0 0 96 60" class="theme-preview" aria-hidden="true">
-              <use href="#icon-27"></use>
-            </svg>
-            <span data-i18n="blue">Blue</span>
-          </label>
-          <label class="theme-card">
-            <input type="radio" name="theme" value="red" />
-            <svg viewBox="0 0 96 60" class="theme-preview" aria-hidden="true">
-              <use href="#icon-28"></use>
-            </svg>
-            <span data-i18n="red">Red</span>
-          </label>
-          <label class="theme-card">
-            <input type="radio" name="theme" value="yellow" />
-            <svg viewBox="0 0 96 60" class="theme-preview" aria-hidden="true">
-              <use href="#icon-29"></use>
-            </svg>
-            <span data-i18n="yellow">Yellow</span>
-          </label>
-          <label class="theme-card">
-            <input type="radio" name="theme" value="green" />
-            <svg viewBox="0 0 96 60" class="theme-preview" aria-hidden="true">
-              <use href="#icon-30"></use>
-            </svg>
-            <span data-i18n="green">Green</span>
-          </label>
-          <label class="theme-card">
-            <input type="radio" name="theme" value="black" />
-            <svg viewBox="0 0 96 60" class="theme-preview" aria-hidden="true">
-              <use href="#icon-31"></use>
-            </svg>
-            <span data-i18n="black">Black</span>
-          </label>
-        </div>
-      </div>
-      <hr class="setting-divider" />
-      <div class="setting-field">
-        <h3 class="setting-section" data-i18n="startup">Startup</h3> <label class="setting-check">
-          <input type="checkbox" id="startup-launch" />
-          <span class="switch" aria-hidden="true"><span class="switch-thumb"></span></span>
-          <span data-i18n="launchStartup">Launch on startup</span>
-      </div>
-      <hr class="setting-divider" />
-      <div class="setting-field">
-        <h3 class="setting-section" data-i18n="appearance">General</h3>
-        <label class="setting-check">
-          <input type="checkbox" id="shimmer-effect" checked />
-          <span class="switch" aria-hidden="true"><span class="switch-thumb"></span></span>
-          <span data-i18n="enableShimmer">Shimmer Effect</span>
-        </label>
-      </div>
-      <hr class="setting-divider" />
-      <div class="setting-field">
-        <h3 class="setting-section" data-i18n="font">Font</h3>
-        <div class="setting-row">
-          <span data-i18n="chatTextSize">Chat text size</span>
-          <div class="font-select">
-            <button type="button" class="font-select-btn" id="font-select-toggle">
-              <span id="font-select-label">Default (14px)</span>
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <use href="#icon-20"></use>
-              </svg>
-            </button>
-            <div class="font-select-menu" hidden>
-              <button type="button" class="font-option" data-font-size="13">Small (13px)</button>
-              <button type="button" class="font-option" data-font-size="14">Default (14px)</button>
-              <button type="button" class="font-option" data-font-size="15">Large (15px)</button>
-              <button type="button" class="font-option" data-font-size="17">Extra large (17px)</button>
+      <div class="settings-group">
+        <div class="settings-group-title">Preferences</div>
+        <div class="settings-card">
+          <div class="setting-field">
+            <div class="setting-field-info">
+              <span class="setting-section">Use pointer cursors</span>
+              <span class="setting-desc">Change the cursor to a pointer when hovering over interactive elements</span>
+            </div>
+            <label class="setting-check">
+              <input type="checkbox" id="pref-pointer-cursors" checked />
+              <span class="switch" aria-hidden="true"><span class="switch-thumb"></span></span>
+            </label>
+          </div>
+          <div class="setting-field">
+            <div class="setting-field-info">
+              <span class="setting-section">Reduce motion</span>
+              <span class="setting-desc">Reduce animations or match your system</span>
+            </div>
+            <div class="setting-segmented">
+              <button type="button" class="segmented-btn active" data-segmented="pref-reduce-motion" data-value="system">System</button>
+              <button type="button" class="segmented-btn" data-segmented="pref-reduce-motion" data-value="on">On</button>
+              <button type="button" class="segmented-btn" data-segmented="pref-reduce-motion" data-value="off">Off</button>
+            </div>
+          </div>
+          <div class="setting-field">
+            <div class="setting-field-info">
+              <span class="setting-section">UI font size</span>
+              <span class="setting-desc">Adjust the base size used for the CilamAI UI</span>
+            </div>
+            <div class="setting-number">
+              <input type="number" id="pref-ui-font-size" class="setting-number-input" value="16" min="12" max="24" />
+              <span class="setting-number-unit">px</span>
+            </div>
+          </div>
+          <div class="setting-field">
+            <div class="setting-field-info">
+              <span class="setting-section">Diff markers</span>
+              <span class="setting-desc">Show changes using colors or +/- markers</span>
+            </div>
+            <div class="setting-segmented">
+              <button type="button" class="segmented-btn active" data-segmented="pref-diff-markers" data-value="color">Color</button>
+              <button type="button" class="segmented-btn" data-segmented="pref-diff-markers" data-value="markers">+/-</button>
             </div>
           </div>
         </div>
       </div>
-      <hr class="setting-divider" />
-      <div class="setting-field">
-        <h3 class="setting-section" data-i18n="language">Language</h3>
-        <div class="setting-row">
-          <span data-i18n="appLanguage">App language</span>
-          <div class="lang-select">
-            <button type="button" class="lang-select-btn" id="lang-select-toggle">
-              <span id="lang-select-label">English</span>
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <use href="#icon-20"></use>
-              </svg>
-            </button>
-            <div class="lang-select-menu" hidden>
-              <button type="button" class="lang-option" data-lang="en">English</button>
-              <button type="button" class="lang-option" data-lang="ko">한국어 (Korean)</button>
-              <button type="button" class="lang-option" data-lang="tr">Türkçe (Turkish)</button>
-              <button type="button" class="lang-option" data-lang="ru">Русский (Russian)</button>
-              <button type="button" class="lang-option" data-lang="zh">简体中文 (Chinese)</button>
-              <button type="button" class="lang-option" data-lang="zh-TW">繁體中文 (Traditional Chinese)</button>
-              <button type="button" class="lang-option" data-lang="ja">日本語 (Japanese)</button>
-              <button type="button" class="lang-option" data-lang="es">Español (Spanish)</button>
-              <button type="button" class="lang-option" data-lang="fr">Français (French)</button>
-              <button type="button" class="lang-option" data-lang="de">Deutsch (German)</button>
-              <button type="button" class="lang-option" data-lang="pt">Português (Portuguese)</button>
-              <button type="button" class="lang-option" data-lang="it">Italiano (Italian)</button>
-              <button type="button" class="lang-option" data-lang="ar">العربية (Arabic)</button>
-              <button type="button" class="lang-option" data-lang="hi">हिन्दी (Hindi)</button>
-              <button type="button" class="lang-option" data-lang="vi">Tiếng Việt (Vietnamese)</button>
-              <button type="button" class="lang-option" data-lang="id">Bahasa Indonesia (Indonesian)</button>
-              <button type="button" class="lang-option" data-lang="pl">Polski (Polish)</button>
-              <button type="button" class="lang-option" data-lang="uk">Українська (Ukrainian)</button>
-              <button type="button" class="lang-option" data-lang="nl">Nederlands (Dutch)</button>
+      <div class="settings-group">
+        <div class="settings-group-title">Appearance</div>
+        <div class="settings-card">
+          <div class="setting-field theme-setting">
+            <div class="setting-field-info">
+              <span class="setting-section" data-i18n="theme">Theme</span>
+            </div>
+            <div class="theme-options-large">
+              <label class="theme-card-large">
+                <input type="radio" name="theme" value="system" />
+                <div class="theme-preview-large theme-preview-system">
+                  <div class="tp-sidebar">
+                    <div class="tp-bar"></div>
+                    <div class="tp-bar short"></div>
+                    <div class="tp-bar"></div>
+                  </div>
+                  <div class="tp-main">
+                    <div class="tp-bar wide"></div>
+                    <div class="tp-bar wide short"></div>
+                    <div class="tp-bar wide"></div>
+                  </div>
+                </div>
+                <span>System</span>
+              </label>
+              <label class="theme-card-large">
+                <input type="radio" name="theme" value="light" />
+                <div class="theme-preview-large theme-preview-light">
+                  <div class="tp-sidebar">
+                    <div class="tp-bar"></div>
+                    <div class="tp-bar short"></div>
+                    <div class="tp-bar"></div>
+                  </div>
+                  <div class="tp-main">
+                    <div class="tp-bar wide"></div>
+                    <div class="tp-bar wide short"></div>
+                    <div class="tp-bar wide"></div>
+                  </div>
+                </div>
+                <span>Light</span>
+              </label>
+              <label class="theme-card-large">
+                <input type="radio" name="theme" value="dark" />
+                <div class="theme-preview-large theme-preview-dark">
+                  <div class="tp-sidebar">
+                    <div class="tp-bar"></div>
+                    <div class="tp-bar short"></div>
+                    <div class="tp-bar"></div>
+                  </div>
+                  <div class="tp-main">
+                    <div class="tp-bar wide"></div>
+                    <div class="tp-bar wide short"></div>
+                    <div class="tp-bar wide"></div>
+                  </div>
+                </div>
+                <span>Dark</span>
+              </label>
+            </div>
+          </div>
+          <div class="setting-field">
+            <div class="setting-field-info">
+              <span class="setting-section">Custom theme</span>
+              <span class="setting-desc">Personalize accent, background, foreground colors and UI font</span>
+            </div>
+            <div class="theme-custom-row">
+              <button type="button" class="font-select-btn" id="theme-import-btn">Import</button>
+              <button type="button" class="font-select-btn" id="theme-copy-btn">Copy theme</button>
+              <div class="theme-preset-wrap">
+                <button type="button" class="theme-preset-btn" id="theme-preset-btn">GitHub <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                <div class="theme-preset-menu" id="theme-preset-menu"></div>
+              </div>
+            </div>
+          </div>
+          <div class="setting-field">
+            <div class="setting-field-info">
+              <span class="setting-section">Accent</span>
+              <span class="setting-desc">Primary interactive color</span>
+            </div>
+            <div class="color-picker-row">
+              <input type="color" id="theme-accent-color" class="color-input" value="#0969DA" />
+              <span class="color-hex-label" id="theme-accent-hex">#0969DA</span>
+            </div>
+          </div>
+          <div class="setting-field">
+            <div class="setting-field-info">
+              <span class="setting-section">Background</span>
+              <span class="setting-desc">Main background color</span>
+            </div>
+            <div class="color-picker-row">
+              <input type="color" id="theme-bg-color" class="color-input" value="#FFFFFF" />
+              <span class="color-hex-label" id="theme-bg-hex">#FFFFFF</span>
+            </div>
+          </div>
+          <div class="setting-field">
+            <div class="setting-field-info">
+              <span class="setting-section">Foreground</span>
+              <span class="setting-desc">Main text color</span>
+            </div>
+            <div class="color-picker-row">
+              <input type="color" id="theme-fg-color" class="color-input" value="#1F2328" />
+              <span class="color-hex-label" id="theme-fg-hex">#1F2328</span>
+            </div>
+          </div>
+          <div class="setting-field">
+            <div class="setting-field-info">
+              <span class="setting-section">UI font</span>
+              <span class="setting-desc">Font used across the interface</span>
+            </div>
+            <div class="font-select-row">
+              <div class="lang-select-wrap">
+                <button type="button" class="lang-select-btn" id="theme-ui-font-btn">System default <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                <div class="lang-select-menu" id="theme-ui-font-menu"></div>
+              </div>
+            </div>
+          </div>
+          <div class="setting-field">
+            <div class="setting-field-info">
+              <span class="setting-section">Font weight</span>
+              <span class="setting-desc">Weight of the UI font</span>
+            </div>
+            <div class="font-select-row">
+              <div class="lang-select-wrap">
+                <button type="button" class="lang-select-btn" id="theme-font-weight-btn">Regular <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                <div class="lang-select-menu" id="theme-font-weight-menu"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="settings-group">
+        <div class="settings-group-title">General</div>
+        <div class="settings-card">
+          <div class="setting-field">
+            <div class="setting-field-info">
+              <span class="setting-section" data-i18n="startup">Startup</span>
+              <span class="setting-desc" data-i18n="launchStartup">Launch on startup</span>
+            </div>
+            <label class="setting-check">
+              <input type="checkbox" id="startup-launch" />
+              <span class="switch" aria-hidden="true"><span class="switch-thumb"></span></span>
+            </label>
+          </div>
+          <div class="setting-field">
+            <div class="setting-field-info">
+              <span class="setting-section" data-i18n="enableShimmer">Shimmer Effect</span>
+              <span class="setting-desc">Show a shimmer animation on the welcome screen</span>
+            </div>
+            <label class="setting-check">
+              <input type="checkbox" id="shimmer-effect" checked />
+              <span class="switch" aria-hidden="true"><span class="switch-thumb"></span></span>
+            </label>
+          </div>
+          <div class="setting-field">
+            <div class="setting-field-info">
+              <span class="setting-section" data-i18n="chatTextSize">Chat text size</span>
+              <span class="setting-desc">Adjust the font size for chat messages</span>
+            </div>
+            <div class="font-select">
+              <button type="button" class="font-select-btn" id="font-select-toggle">
+                <span id="font-select-label">Default (14px)</span>
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <use href="#icon-20"></use>
+                </svg>
+              </button>
+              <div class="font-select-menu" hidden>
+                <button type="button" class="font-option" data-font-size="13">Small (13px)</button>
+                <button type="button" class="font-option" data-font-size="14">Default (14px)</button>
+                <button type="button" class="font-option" data-font-size="15">Large (15px)</button>
+                <button type="button" class="font-option" data-font-size="17">Extra large (17px)</button>
+              </div>
+            </div>
+          </div>
+          <div class="setting-field">
+            <div class="setting-field-info">
+              <span class="setting-section" data-i18n="appLanguage">Language</span>
+              <span class="setting-desc">Language for the app UI</span>
+            </div>
+            <div class="lang-select">
+              <button type="button" class="lang-select-btn" id="lang-select-toggle">
+                <span id="lang-select-label">English</span>
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <use href="#icon-20"></use>
+                </svg>
+              </button>
+              <div class="lang-select-menu" hidden>
+                <button type="button" class="lang-option" data-lang="en">English</button>
+                <button type="button" class="lang-option" data-lang="ko">한국어 (Korean)</button>
+                <button type="button" class="lang-option" data-lang="tr">Türkçe (Turkish)</button>
+                <button type="button" class="lang-option" data-lang="ru">Русский (Russian)</button>
+                <button type="button" class="lang-option" data-lang="zh">简体中文 (Chinese)</button>
+                <button type="button" class="lang-option" data-lang="zh-TW">繁體中文 (Traditional Chinese)</button>
+                <button type="button" class="lang-option" data-lang="ja">日本語 (Japanese)</button>
+                <button type="button" class="lang-option" data-lang="es">Español (Spanish)</button>
+                <button type="button" class="lang-option" data-lang="fr">Français (French)</button>
+                <button type="button" class="lang-option" data-lang="de">Deutsch (German)</button>
+                <button type="button" class="lang-option" data-lang="pt">Português (Portuguese)</button>
+                <button type="button" class="lang-option" data-lang="it">Italiano (Italian)</button>
+                <button type="button" class="lang-option" data-lang="ar">العربية (Arabic)</button>
+                <button type="button" class="lang-option" data-lang="hi">हिन्दी (Hindi)</button>
+                <button type="button" class="lang-option" data-lang="vi">Tiếng Việt (Vietnamese)</button>
+                <button type="button" class="lang-option" data-lang="id">Bahasa Indonesia (Indonesian)</button>
+                <button type="button" class="lang-option" data-lang="pl">Polski (Polish)</button>
+                <button type="button" class="lang-option" data-lang="uk">Українська (Ukrainian)</button>
+                <button type="button" class="lang-option" data-lang="nl">Nederlands (Dutch)</button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-
-      <hr class="setting-divider" />
-      <div class="setting-field">
-        <div class="setting-head">
-          <h3 class="setting-section" data-i18n="hotkeys">Hotkeys</h3>
-        </div>
-        <p class="setting-desc" data-i18n="hotkeysDesc">Click a shortcut to record a new key combination.</p>
-        <div class="hotkeys-list" id="hotkeys-list"></div>
-        <div class="hotkeys-actions">
-          <button type="button" class="setting-btn" id="reset-hotkeys" data-i18n="resetToDefaults">Reset to
-            defaults</button>
-        </div>
-      </div>
-      <hr class="setting-divider" />
-      <div class="setting-field">
-        <div class="setting-head">
-          <h3 class="setting-section" data-i18n="mcpTools">MCP Tools</h3>
-        </div>
-        <p class="setting-desc" data-i18n="mcpToolsDesc">Configure Model Context Protocol (MCP) servers and tools to extend AI capabilities.</p>
-        <div class="mcp-server-list" id="mcp-server-list"></div>
-        <div class="mcp-actions">
-          <button type="button" class="setting-btn" id="add-mcp-server-btn" data-i18n="addMcpServer">+ Add MCP Server</button>
-        </div>
-      </div>
-
     </section>
 
 
@@ -985,6 +1085,8 @@
     </div>
   </div>
 
+  <!-- Sign-in now in signin.html (shown on npm start) -->
+
   <div class="auth-dialog-overlay" hidden>
     <div class="auth-dialog">
       <div class="auth-dialog-logo">
@@ -1016,62 +1118,6 @@
         <a href="#" data-action="signup" data-i18n="signUp">Sign up</a>
       </p>
     </div>
-  </div>
-
-  <div class="mcp-dialog-overlay" id="mcp-dialog-overlay" hidden>
-    <div class="mcp-dialog">
-      <div class="mcp-dialog-head">
-        <h3 id="mcp-dialog-title" data-i18n="addMcpServer">Add MCP Server</h3>
-        <button type="button" class="mcp-dialog-close" id="mcp-dialog-close" aria-label="Close">&times;</button>
-      </div>
-      <p class="mcp-dialog-desc" data-i18n="mcpModalDesc">Configure a Model Context Protocol (MCP) server to provide tools and context to the AI model.</p>
-
-      <div class="mcp-quick-templates">
-        <span class="mcp-templates-label" data-i18n="quickTemplates">Quick Templates:</span>
-        <div class="mcp-template-chips">
-          <button type="button" class="mcp-chip" data-mcp-tpl="filesystem">Filesystem</button>
-          <button type="button" class="mcp-chip" data-mcp-tpl="brave">Brave Search</button>
-          <button type="button" class="mcp-chip" data-mcp-tpl="github">GitHub</button>
-          <button type="button" class="mcp-chip" data-mcp-tpl="memory">Memory</button>
-        </div>
-      </div>
-
-      <form id="mcp-server-form" class="mcp-form">
-        <input type="hidden" id="mcp-edit-id" value="" />
-        <div class="mcp-form-group">
-          <label for="mcp-name" data-i18n="serverName">Server Name</label>
-          <input type="text" id="mcp-name" class="mcp-input" placeholder="e.g. filesystem" required />
-        </div>
-        <div class="mcp-form-group">
-          <label for="mcp-type" data-i18n="transportType">Transport Type</label>
-          <select id="mcp-type" class="mcp-input mcp-select">
-            <option value="stdio">stdio (Local Command)</option>
-            <option value="sse">SSE (Server-Sent Events URL)</option>
-          </select>
-        </div>
-        <div class="mcp-form-group" id="mcp-command-group">
-          <label for="mcp-command" data-i18n="command">Command</label>
-          <input type="text" id="mcp-command" class="mcp-input" placeholder="e.g. npx" required />
-        </div>
-        <div class="mcp-form-group" id="mcp-args-group">
-          <label for="mcp-args" data-i18n="arguments">Arguments (space separated)</label>
-          <input type="text" id="mcp-args" class="mcp-input" placeholder="e.g. -y @modelcontextprotocol/server-filesystem C:\Users\omg\Desktop" />
-        </div>
-        <div class="mcp-form-group" id="mcp-url-group" hidden>
-          <label for="mcp-url" data-i18n="sseUrl">SSE URL</label>
-          <input type="url" id="mcp-url" class="mcp-input" placeholder="http://localhost:8000/sse" />
-        </div>
-        <div class="mcp-form-group">
-          <label for="mcp-env" data-i18n="envVars">Environment Variables (JSON format, optional)</label>
-          <textarea id="mcp-env" class="mcp-input mcp-textarea" placeholder='{ "BRAVE_API_KEY": "..." }' rows="2"></textarea>
-        </div>
-        <div class="mcp-dialog-actions">
-          <button type="button" class="mcp-btn secondary" id="mcp-dialog-cancel" data-i18n="cancel">Cancel</button>
-          <button type="submit" class="mcp-btn primary" id="mcp-dialog-save" data-i18n="saveServer">Save Server</button>
-        </div>
-      </form>
-    </div>
-  </div>
   </div>
 
   <div class="notification" role="alert" hidden>

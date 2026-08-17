@@ -55,10 +55,10 @@
       "icon": "resources/icon.ico"
     },
     "portable": {
-      "artifactName": "${productName}-0.1.0.1-Portable.${ext}"
+      "artifactName": "${productName}Portable.${ext}"
     },
     "nsis": {
-      "artifactName": "${productName}-0.1.0.1-Setup.${ext}",
+      "artifactName": "${productName}Setup.${ext}",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
@@ -81,6 +81,7 @@
     "electron@43.3.0": true
   },
   "dependencies": {
+    "@material/progress-indicator": "^14.0.0",
     "highlight.js": "^11.11.1",
     "pngjs": "^7.0.0"
   }
