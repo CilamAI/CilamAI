@@ -1798,20 +1798,20 @@ body.shimmer-enabled .theme-card:has(input:checked) > * {
 
 .composer-btn.mic {
   background: transparent;
-  border: 1px solid var(--border);
+  border: none;
   color: var(--text-dim);
   flex-shrink: 0;
 }
 
 .composer-btn.mic:hover {
   color: var(--text);
-  background: var(--hover);
+  background: transparent;
 }
 
 .composer-btn.mic.listening {
-  color: var(--accent-text);
-  background: var(--accent);
-  border-color: var(--accent);
+  color: var(--accent);
+  background: transparent;
+  border-color: transparent;
 }
 
 .attach-menu-wrap {
